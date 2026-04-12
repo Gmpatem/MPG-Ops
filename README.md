@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MPG Ops
+
+A mobile-first SaaS system for service businesses (salons, barbershops, spas).
+
+## Overview
+
+MPG Ops helps service business owners move from notebooks and manual systems to a digital platform, eliminating:
+- Missed bookings
+- Poor customer tracking  
+- Unclear daily revenue
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **UI Components:** shadcn/ui
+- **Backend:** Supabase (PostgreSQL + Auth)
+- **Validation:** Zod
+- **Deployment:** Vercel
+
+## Project Structure
+
+```
+mpg-ops/
+├── docs/                   # Project documentation
+│   ├── 00-project-brief.md
+│   ├── 01-product-scope.md
+│   ├── 02-user-flows.md
+│   ├── 03-tech-stack.md
+│   ├── 04-architecture.md
+│   ├── 05-database-schema.md
+│   ├── 06-ui-rules.md
+│   ├── 07-ai-rules.md
+│   ├── 08-progress-tracker.md
+│   ├── 09-decisions-log.md
+│   ├── 10-handoff.md
+│   └── 11-known-issues.md
+├── prompts/                # AI agent prompts
+│   ├── master-agent-prompt.md
+│   ├── kimi-coder-prompt.md
+│   ├── claude-code-prompt.md
+│   └── codex-prompt.md
+├── src/
+│   ├── app/               # Next.js App Router
+│   ├── components/        # React components
+│   ├── lib/               # Utilities and helpers
+│   └── types/             # TypeScript types
+├── public/                # Static assets
+└── ...config files
+```
+
+## Documentation
+
+All project documentation lives in `/docs`. Start with `00-project-brief.md` for context.
+
+## AI Workflow
+
+Before any coding session, AI agents must:
+1. Read relevant docs in `/docs`
+2. Check `10-handoff.md` for current state
+3. Follow rules in `07-ai-rules.md`
+4. Update `08-progress-tracker.md` after work
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## MVP Status
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+See `docs/08-progress-tracker.md` for current development status.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Project Location:** `E:\mpg-ops`
