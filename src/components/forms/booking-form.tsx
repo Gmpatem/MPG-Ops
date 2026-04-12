@@ -21,6 +21,7 @@ import {
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { FormStatus } from '@/components/form-status';
 
 interface Customer {
   id: string;
@@ -107,11 +108,7 @@ export function BookingForm({ action, customers, services }: BookingFormProps) {
 
   return (
     <form action={handleSubmit} className="space-y-5 pt-2">
-      {error && (
-        <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <FormStatus type="error" message={error} />}
 
       {/* Customer Select */}
       <div className="space-y-2">

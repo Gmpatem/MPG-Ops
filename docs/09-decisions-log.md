@@ -430,6 +430,68 @@ Each entry includes:
 - **Rationale:** Users need clear feedback and ability to recover from errors
 - **Impact:** All list pages show ErrorState when data fetching fails
 
+### 2026-04-13: Phase 7.5 - UX Feedback & Polish
+
+#### DEC-041: Standardized Form Status Component
+- **Date:** 2026-04-13
+- **Context:** Forms need consistent success/error feedback display
+- **Decision:** Create `FormStatus` component in `src/components/form-status.tsx`
+  - Supports success and error variants
+  - Includes appropriate icons (CheckCircle, AlertCircle)
+  - Consistent styling with borders
+  - Used across all forms
+- **Alternatives:** Inline divs with conditional classes, Alert component
+- **Rationale:** Consistent UX, reusable, easier to maintain, clearer visual feedback
+- **Impact:** All forms now use FormStatus for submit-level messages
+
+#### DEC-042: ButtonLoading Component
+- **Date:** 2026-04-13
+- **Context:** Need consistent button loading state with spinner
+- **Decision:** Create `ButtonLoading` component in `src/components/ui/button-loading.tsx`
+  - Wraps Button with loading state
+  - Shows spinner and loading text
+  - Prevents duplicate submits via disabled state
+  - Maintains button dimensions during loading
+- **Alternatives:** Manual spinner implementation in each button
+- **Rationale:** Reusable, consistent UX, prevents code duplication
+- **Impact:** Available for use across all forms (forms already have loading states)
+
+#### DEC-043: Global Error Boundary
+- **Date:** 2026-04-13
+- **Context:** Need to catch and display errors gracefully at route level
+- **Decision:** Create `error.tsx` in `src/app/(dashboard)/`
+  - Catches errors in dashboard routes
+  - Shows user-friendly error message
+  - Includes retry and navigation options
+  - Logs errors for monitoring
+- **Alternatives:** Error handling in each page component
+- **Rationale:** Next.js convention, catches unexpected errors, prevents app crashes
+- **Impact:** All dashboard routes have error boundary protection
+
+#### DEC-044: Global Not Found Page
+- **Date:** 2026-04-13
+- **Context:** Need 404 page for non-existent routes
+- **Decision:** Create `not-found.tsx` in `src/app/`
+  - Clean, centered design
+  - Icon in muted circle
+  - Navigation options (Home, Dashboard)
+  - Consistent with empty state patterns
+- **Alternatives:** Default Next.js 404, inline not-found handling
+- **Rationale:** Professional appearance, helpful navigation options, consistent branding
+- **Impact:** All unknown routes show branded 404 page
+
+#### DEC-045: EmptyState Reusable Component
+- **Date:** 2026-04-13
+- **Context:** Empty states should be consistent across modules
+- **Decision:** Create `EmptyState` component in `src/components/empty-state.tsx`
+  - Accepts icon, title, description
+  - Optional primary and secondary actions
+  - Consistent styling with existing empty states
+  - Mobile-friendly layout
+- **Alternatives:** Keep inline empty states
+- **Rationale:** Reusable, consistent, easier to maintain, flexible for future use
+- **Impact:** Available for future use; existing empty states kept as-is (already consistent)
+
 ---
 
 ## Pending Decisions

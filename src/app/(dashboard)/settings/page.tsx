@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/error-state';
+import { FormStatus } from '@/components/form-status';
 import { getCurrentBusiness, updateBusiness } from '@/app/actions/business';
 
 export default function SettingsPage() {
@@ -205,15 +206,7 @@ export default function SettingsPage() {
 
           {/* Message */}
           {message && (
-            <div
-              className={`p-3 rounded-md text-sm ${
-                message.type === 'success'
-                  ? 'bg-green-50 text-green-600'
-                  : 'bg-red-50 text-red-600'
-              }`}
-            >
-              {message.text}
-            </div>
+            <FormStatus type={message.type} message={message.text} />
           )}
 
           {/* Actions */}

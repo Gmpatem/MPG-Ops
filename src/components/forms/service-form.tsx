@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { FormStatus } from '@/components/form-status';
 
 interface ServiceFormProps {
   action: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
@@ -62,11 +63,7 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
 
   return (
     <form action={handleSubmit} className="space-y-5 pt-2">
-      {error && (
-        <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <FormStatus type="error" message={error} />}
 
       {/* Service Name */}
       <div className="space-y-2">

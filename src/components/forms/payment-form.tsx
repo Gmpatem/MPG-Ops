@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { FormStatus } from '@/components/form-status';
 import {
   Select,
   SelectContent,
@@ -61,11 +62,7 @@ export function PaymentForm({ action, defaultAmount, bookingId }: PaymentFormPro
     <form action={handleSubmit} className="space-y-5 pt-2">
       <input type="hidden" name="bookingId" value={bookingId} />
 
-      {error && (
-        <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <FormStatus type="error" message={error} />}
 
       {/* Amount */}
       <div className="space-y-2">
