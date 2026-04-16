@@ -158,16 +158,82 @@ function StepShell({
   );
 }
 
-// ─── Step 1: Welcome ──────────────────────────────────────────────────────────
+// ─── Landing Service Card ─────────────────────────────────────────────────────
 
-function StepWelcome({
+function LandingServiceCard({
+  service,
+  onBook,
+}: {
+  service: PublicService;
+  onBook: () => void;
+}) {
+  const name = service.public_title ?? service.name;
+  const desc = service.public_description ?? service.description;
+
+  return (
+    <div
+      className={`rounded-xl border bg-card overflow-hidden ${
+        service.is_featured ? 'border-amber-200 bg-amber-50/30' : ''
+      }`}
+    >
+      <div className="px-4 py-3.5">
+        {/* Row 1: name + price */}
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {service.is_featured && (
+              <Star className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            )}
+            <span className="font-semibold text-sm leading-snug">{name}</span>
+            {service.promo_badge && (
+              <Badge className="text-xs shrink-0 bg-primary/10 text-primary border-0 px-1.5 ml-0.5">
+                {service.promo_badge}
+              </Badge>
+            )}
+          </div>
+          <span className="text-sm font-bold text-primary shrink-0 leading-snug">
+            ₱{service.price.toFixed(0)}
+          </span>
+        </div>
+
+        {/* Row 2: duration + promo text */}
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
+          <Clock className="w-3 h-3 shrink-0" />
+          <span>{service.duration_minutes} min</span>
+          {service.promo_text && (
+            <>
+              <span aria-hidden>·</span>
+              <span className="text-primary font-medium">{service.promo_text}</span>
+            </>
+          )}
+        </div>
+
+        {/* Optional description */}
+        {desc && (
+          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{desc}</p>
+        )}
+
+        {/* Book button */}
+        <Button
+          onClick={onBook}
+          className="w-full h-10 text-sm font-semibold rounded-lg"
+        >
+          Book Now
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 1: Service-First Landing ────────────────────────────────────────────
+
+function ServiceFirstLanding({
   business,
   services,
-  onNext,
+  onSelectService,
 }: {
   business: PublicBusiness;
   services: PublicService[];
-  onNext: () => void;
+  onSelectService: (service: PublicService) => void;
 }) {
   const typeLabels: Record<string, string> = {
     salon: 'Hair Salon',
@@ -176,103 +242,50 @@ function StepWelcome({
   };
 
   const settings: PublicSiteSettings = business.public_site_settings ?? {};
-  const headline = settings.headline ?? 'Book an Appointment';
-  const subtitle = settings.subtitle ?? 'Book your appointment online — it only takes a minute.';
   const instructions = settings.instructions ?? null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-10 text-center">
-        <div className="max-w-sm w-full">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Scissors className="w-6 h-6 text-primary" />
+    <div className="min-h-screen bg-background">
+      {/* Business identity */}
+      <div className="px-4 pt-8 pb-5 max-w-lg mx-auto">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
+          {typeLabels[business.business_type] ?? 'Service Business'}
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight mb-1">{business.name}</h1>
+        <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+          <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />
+          No account required · Book in seconds
+        </p>
+
+        {instructions && (
+          <div className="mt-4 rounded-lg border bg-muted/40 px-3 py-2.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+              Please note
+            </p>
+            <p className="text-sm">{instructions}</p>
           </div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
-            {typeLabels[business.business_type] ?? 'Service Business'}
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">{business.name}</h1>
-          <p className="text-base font-medium mb-1">{headline}</p>
-          <p className="text-sm text-muted-foreground mb-3">{subtitle}</p>
-
-          {/* Optional instructions notice */}
-          {instructions && (
-            <div className="rounded-lg border bg-muted/40 px-4 py-3 text-left mb-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
-                Please note
-              </p>
-              <p className="text-sm">{instructions}</p>
-            </div>
-          )}
-
-          {/* Trust cues + service count */}
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-5">
-            <span className="flex items-center gap-1">
-              <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
-              No account needed
-            </span>
-            <span aria-hidden>·</span>
-            <span>{services.length} {services.length === 1 ? 'service' : 'services'}</span>
-          </div>
-
-          <Button
-            onClick={onNext}
-            size="lg"
-            className="w-full h-14 text-base font-semibold rounded-xl"
-          >
-            Book an Appointment
-          </Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Free · Quick · No signup required
-          </p>
-        </div>
+        )}
       </div>
 
-      {/* Service preview */}
-      {services.length > 0 && (
-        <div className="px-4 pb-6">
-          <div className="max-w-sm mx-auto">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-3 text-center">
-              Services
-            </p>
-            <div className="space-y-2">
-              {services.slice(0, 3).map((s) => (
-                <div
-                  key={s.id}
-                  className={`flex items-center justify-between rounded-lg border bg-card px-3 py-2.5 ${
-                    s.is_featured ? 'border-amber-200 bg-amber-50/50' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {s.is_featured && (
-                      <Star className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    )}
-                    <span className="text-sm font-medium truncate">
-                      {s.public_title ?? s.name}
-                    </span>
-                    {s.promo_badge && (
-                      <Badge className="text-xs shrink-0 bg-primary/10 text-primary border-0 px-1.5">
-                        {s.promo_badge}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <span className="text-xs text-muted-foreground">{s.duration_minutes} min</span>
-                    <Badge variant="secondary" className="text-xs">
-                      ₱{s.price.toFixed(0)}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-              {services.length > 3 && (
-                <p className="text-xs text-muted-foreground text-center pt-1">
-                  +{services.length - 3} more…
-                </p>
-              )}
-            </div>
-          </div>
+      {/* Services list */}
+      <div className="px-4 pb-12 max-w-lg mx-auto">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          {services.length === 1 ? '1 Service' : `${services.length} Services`}
+        </p>
+        <div className="space-y-2.5">
+          {services.map((service) => (
+            <LandingServiceCard
+              key={service.id}
+              service={service}
+              onBook={() => onSelectService(service)}
+            />
+          ))}
         </div>
-      )}
+        <p className="text-xs text-muted-foreground text-center mt-6 flex items-center justify-center gap-1.5">
+          <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
+          Free to book · Instant confirmation
+        </p>
+      </div>
     </div>
   );
 }
@@ -753,6 +766,11 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
     setState((s) => ({ ...s, [key]: value }));
   }
 
+  // Called from landing — preselects service and jumps straight to date step
+  function handleSelectService(service: PublicService) {
+    setState((s) => ({ ...s, service, step: 3 }));
+  }
+
   async function handleConfirm() {
     if (!state.service || !state.date || !state.time) return;
     setIsSubmitting(true);
@@ -810,7 +828,11 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
 
   if (state.step === 1) {
     return (
-      <StepWelcome business={business} services={services} onNext={next} />
+      <ServiceFirstLanding
+        business={business}
+        services={services}
+        onSelectService={handleSelectService}
+      />
     );
   }
 
