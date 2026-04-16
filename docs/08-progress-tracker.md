@@ -285,6 +285,52 @@ The MVP is complete:
 
 ---
 
+## Phase 14: Public Booking Polish, Autofill & Global Loading Bar ✅
+
+**Date:** 2026-04-16
+
+### 14.1 Public Booking Page (StepWelcome)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Hero outer padding | ✅ Complete | py-16 → py-10 |
+| Icon size | ✅ Complete | w-16 → w-12, w-8 icon → w-6 |
+| Type label style | ✅ Complete | text-sm → text-xs uppercase tracking-widest |
+| Business name spacing | ✅ Complete | mb-3 → mb-2 |
+| Headline prominence | ✅ Complete | text-muted-foreground → text-base font-medium |
+| Trust cues row | ✅ Complete | Replaces verbose services count + trust footer |
+| Trust footer | ✅ Complete | "Free · Quick · No signup required" |
+| Service preview padding | ✅ Complete | pb-8 → pb-6 |
+
+### 14.2 Booking Form Autofill
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| localStorage read on mount | ✅ Complete | useEffect in BookingWizard, key: mpg_guest |
+| localStorage write on success | ✅ Complete | In handleConfirm after successful booking |
+| Fields remembered | ✅ Complete | name, phone, email |
+| SSR-safe | ✅ Complete | localStorage access inside useEffect only |
+
+### 14.3 Login Button Spinner
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Loader2 spinner import | ✅ Complete | From lucide-react |
+| Spinner in button | ✅ Complete | Shows during isLoading, alongside "Signing in..." text |
+
+### 14.4 Global Navigation Progress Bar
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| NavigationProgress component | ✅ Complete | src/components/navigation-progress.tsx |
+| nav-progress keyframe | ✅ Complete | In globals.css |
+| Root layout integration | ✅ Complete | Above ToastProvider in layout.tsx |
+| Suspense boundary | ✅ Complete | Wraps useSearchParams correctly |
+
+**Phase 14 Progress: 100%**
+
+---
+
 ## Phase 13: Bookings & Customers Workspace Refinement ✅
 
 **Date:** 2026-04-16

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 type LoginResult =
   | { error: string; code: 'account_not_found' }
@@ -76,7 +77,14 @@ export function LoginForm() {
         className="w-full h-12"
         disabled={isLoading}
       >
-        {isLoading ? 'Signing in...' : 'Sign In'}
+        {isLoading ? (
+          <>
+            <Loader2 className="animate-spin" />
+            Signing in...
+          </>
+        ) : (
+          'Sign In'
+        )}
       </Button>
     </form>
   );

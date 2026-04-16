@@ -3,8 +3,37 @@
 ## Session Information
 
 **Session Date:** 2026-04-16
-**Session Type:** Phase 13 — Bookings & Customers Workspace Refinement
+**Session Type:** Phase 14 — Public Booking Polish, Autofill & Global Loading Bar
 **Status:** ✅ Complete
+
+---
+
+## What Was Completed (Phase 14)
+
+### Public Booking Polish, Autofill & Global Loading Bar
+
+**booking-wizard.tsx — StepWelcome:**
+- py-16 → py-10, icon w-16/w-8 → w-12/w-6, tighter mb values throughout
+- Headline elevated from `text-muted-foreground` to `text-base font-medium`
+- Type label: `text-xs font-semibold uppercase tracking-widest`
+- Services-count paragraph + bottom trust paragraph replaced with compact inline trust cue row (CheckCircle + "No account needed · N services")
+- Footer text: "Free · Quick · No signup required" (from mt-4 to mt-2)
+
+**booking-wizard.tsx — Autofill:**
+- useEffect reads `mpg_guest` from localStorage on mount → pre-fills name, phone, email in WizardState
+- handleConfirm writes `mpg_guest` after successful submission
+- Fully SSR-safe (localStorage only touched inside useEffect)
+
+**login-form.tsx — Spinner:**
+- Loader2 from lucide-react, `animate-spin`, rendered alongside "Signing in..." text inside the submit button during isLoading
+
+**navigation-progress.tsx (new file):**
+- Slim `h-0.5` fixed bar at z-9999; uses usePathname + useSearchParams inside Suspense
+- Remounts inner div on route change, triggering CSS @keyframes `nav-progress` (scaleX 5%→92%→100%, then fade)
+
+**globals.css:** Added `@keyframes nav-progress`
+
+**layout.tsx:** `<NavigationProgress />` mounted above ToastProvider
 
 ---
 

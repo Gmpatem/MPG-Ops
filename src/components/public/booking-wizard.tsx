@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -183,21 +183,21 @@ function StepWelcome({
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-10 text-center">
         <div className="max-w-sm w-full">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <Scissors className="w-8 h-8 text-primary" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Scissors className="w-6 h-6 text-primary" />
           </div>
-          <p className="text-sm font-medium text-primary mb-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
             {typeLabels[business.business_type] ?? 'Service Business'}
           </p>
-          <h1 className="text-3xl font-bold tracking-tight mb-3">{business.name}</h1>
-          <p className="text-muted-foreground mb-2">{headline}</p>
-          <p className="text-sm text-muted-foreground mb-4">{subtitle}</p>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">{business.name}</h1>
+          <p className="text-base font-medium mb-1">{headline}</p>
+          <p className="text-sm text-muted-foreground mb-3">{subtitle}</p>
 
           {/* Optional instructions notice */}
           {instructions && (
-            <div className="rounded-lg border bg-muted/40 px-4 py-3 text-left mb-4">
+            <div className="rounded-lg border bg-muted/40 px-4 py-3 text-left mb-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                 Please note
               </p>
@@ -205,9 +205,15 @@ function StepWelcome({
             </div>
           )}
 
-          <p className="text-sm text-muted-foreground mb-8">
-            {services.length} service{services.length !== 1 ? 's' : ''} available
-          </p>
+          {/* Trust cues + service count */}
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-5">
+            <span className="flex items-center gap-1">
+              <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
+              No account needed
+            </span>
+            <span aria-hidden>·</span>
+            <span>{services.length} {services.length === 1 ? 'service' : 'services'}</span>
+          </div>
 
           <Button
             onClick={onNext}
@@ -216,15 +222,15 @@ function StepWelcome({
           >
             Book an Appointment
           </Button>
-          <p className="text-xs text-muted-foreground mt-4">
-            No account needed. Free and instant.
+          <p className="text-xs text-muted-foreground mt-2">
+            Free · Quick · No signup required
           </p>
         </div>
       </div>
 
       {/* Service preview */}
       {services.length > 0 && (
-        <div className="px-4 pb-8">
+        <div className="px-4 pb-6">
           <div className="max-w-sm mx-auto">
             <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-3 text-center">
               Services
@@ -718,6 +724,23 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Restore guest details from a previous booking on this device
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('mpg_guest');
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { name?: unknown; phone?: unknown; email?: unknown };
+      setState((s) => ({
+        ...s,
+        name: typeof saved.name === 'string' ? saved.name : s.name,
+        phone: typeof saved.phone === 'string' ? saved.phone : s.phone,
+        email: typeof saved.email === 'string' ? saved.email : s.email,
+      }));
+    } catch {
+      // localStorage unavailable or parse error — silently ignore
+    }
+  }, []);
+
   function next() {
     setState((s) => ({ ...s, step: (s.step + 1) as WizardState['step'] }));
   }
@@ -750,6 +773,16 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
       setSubmitError(result.error);
       setIsSubmitting(false);
       return;
+    }
+
+    // Persist guest details for faster repeat bookings on this device
+    try {
+      localStorage.setItem(
+        'mpg_guest',
+        JSON.stringify({ name: state.name, phone: state.phone, email: state.email })
+      );
+    } catch {
+      // localStorage unavailable — silently ignore
     }
 
     // Navigate to success page with query params

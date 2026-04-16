@@ -711,6 +711,37 @@ None at this time.
 
 ---
 
+### 2026-04-16: Public Booking Polish, Autofill & Global Loading Bar
+
+#### DEC-016: Tighter StepWelcome hero spacing
+- **Date:** 2026-04-16
+- **Context:** The welcome screen used py-16 with a large icon, verbose spacing, and two separate paragraphs for trust/count that together created excessive dead space, especially on small mobile screens.
+- **Decision:** Reduce py-16 → py-10, shrink icon (w-16→w-12), tighten mb values throughout. Replace the disconnected services-count paragraph and trust-footer paragraph with a single compact inline trust cue row (CheckCircle + "No account needed · N services").
+- **Rationale:** Every reduction in dead space and redundant copy brings the CTA closer to the top and makes the page feel more intentional and production-ready.
+- **Impact:** Cleaner first impression; CTA visible sooner; trust cues more prominent.
+
+#### DEC-017: Guest autofill via localStorage
+- **Date:** 2026-04-16
+- **Context:** Repeat users (e.g. regular customers) had to retype their name, phone, and email every visit.
+- **Decision:** In BookingWizard useEffect, read { name, phone, email } from localStorage key 'mpg_guest'. Write on successful booking submission. No SSR risk — all localStorage access is inside useEffect.
+- **Rationale:** localStorage is the simplest, no-account, privacy-friendly way to persist guest details. Notes deliberately excluded (context-specific per booking).
+- **Impact:** Returning guests find Step 5 pre-filled; they remain in full control and can edit.
+
+#### DEC-018: Login button Loader2 spinner
+- **Date:** 2026-04-16
+- **Context:** Login button already had isLoading state and "Signing in…" text but no visual spinner, making the loading state feel incomplete.
+- **Decision:** Add Loader2 (lucide-react) with animate-spin class inside the button. Button's built-in gap-1.5 handles spacing automatically.
+- **Rationale:** Standard loading pattern; consistent with lucide icon usage in the app; no layout shift.
+- **Impact:** Login feels polished and responsive.
+
+#### DEC-019: Custom CSS NavigationProgress bar (no new dependency)
+- **Date:** 2026-04-16
+- **Context:** App needed a top progress bar for navigation feedback. Options: nextjs-toploader (new dep) or custom usePathname-based component.
+- **Decision:** Custom Progress component using usePathname + useSearchParams inside Suspense. On path/params change, remounts an animated div using a @keyframes nav-progress animation (scale 5%→92%→100%, then opacity 0) over 550ms.
+- **Alternatives:** nextjs-toploader — fires before/during navigation but requires npm install.
+- **Rationale:** Zero new dependencies. For this app's navigation patterns (mostly fast client transitions), firing after navigation is acceptable; the completing-bar animation is a standard polish cue users recognize.
+- **Impact:** Subtle slim bar appears on every route transition; feels premium; no routing side effects.
+
 ### 2026-04-16: Bookings & Customers Workspace Refinement
 
 #### DEC-013: Booking rows instead of individual cards
