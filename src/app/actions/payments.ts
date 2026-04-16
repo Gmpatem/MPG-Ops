@@ -105,11 +105,15 @@ export async function getDailyRevenue(date: string): Promise<number> {
     return 0;
   }
 
+  const start = `${date}T00:00:00.000Z`;
+  const end = `${date}T23:59:59.999Z`;
+
   const { data: payments } = await supabase
     .from('payments')
     .select('amount')
     .eq('business_id', businessId)
-    .eq('created_at::date', date);
+    .gte('created_at', start)
+    .lt('created_at', end);
 
   return payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
 }
@@ -133,12 +137,15 @@ export async function getTodayPaymentsCount(): Promise<number> {
   }
 
   const today = new Date().toISOString().split('T')[0];
+  const start = `${today}T00:00:00.000Z`;
+  const end = `${today}T23:59:59.999Z`;
 
   const { count } = await supabase
     .from('payments')
     .select('*', { count: 'exact', head: true })
     .eq('business_id', businessId)
-    .eq('created_at::date', today);
+    .gte('created_at', start)
+    .lt('created_at', end);
 
   return count || 0;
 }

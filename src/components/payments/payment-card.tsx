@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, User, Scissors, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 
-type PaymentMethod = 'cash' | 'gcash' | 'card' | 'other';
+import type { Enums } from '@/lib/supabase/database.types';
+
+type PaymentMethod = Enums<'payment_method'>;
 
 interface Payment {
   id: string;
@@ -26,9 +28,8 @@ interface PaymentCardProps {
 export function PaymentCard({ payment }: PaymentCardProps) {
   const methodLabels: Record<PaymentMethod, string> = {
     cash: 'Cash',
-    gcash: 'GCash',
     card: 'Card',
-    other: 'Other',
+    mobile_money: 'Mobile Money',
   };
 
   return (

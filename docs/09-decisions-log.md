@@ -492,6 +492,199 @@ Each entry includes:
 - **Rationale:** Reusable, consistent, easier to maintain, flexible for future use
 - **Impact:** Available for future use; existing empty states kept as-is (already consistent)
 
+### 2026-04-13: Phase 9 - Internal Flow Completion (Phase 1)
+
+#### DEC-046: Dashboard Today's Schedule
+- **Date:** 2026-04-13
+- **Context:** Dashboard only showed aggregate counts, not actual appointments
+- **Decision:** Replace Business Information card with Today's Schedule section
+  - Fetches today's bookings via `getBookingsByDate`
+  - Shows time range, customer name, service, and status badge
+  - Empty state with CTA when no bookings exist
+- **Alternatives:** Keep Business Info card and add schedule below it
+- **Rationale:** Schedule is the most important operational info for a business owner; Business Info is redundant with Settings page
+- **Impact:** Dashboard now functions as a true daily operations hub
+
+#### DEC-047: Minimal Custom Toast System
+- **Date:** 2026-04-13
+- **Context:** Sheets closed silently after success, giving users no confirmation
+- **Decision:** Build a minimal custom toast system instead of installing a library
+  - `ToastProvider` with React Context
+  - Auto-dismisses after 3 seconds
+  - Fixed position at bottom-center above mobile nav
+  - No external dependencies
+- **Alternatives:** Install sonner or react-hot-toast, use Alert banners
+- **Rationale:** Smallest possible solution, no bundle bloat, fully controlled, matches existing patterns
+- **Impact:** All CRUD success actions now show toast confirmation
+
+#### DEC-048: Extract Mobile Bottom Nav to Client Component
+- **Date:** 2026-04-13
+- **Context:** Bottom nav had no active state because layout was a Server Component
+- **Decision:** Extract bottom navigation into `MobileBottomNav` client component
+  - Uses `usePathname()` for active route detection
+  - Active item gets `text-primary` and small indicator dot
+- **Alternatives:** Pass pathname from layout as prop, use CSS :active
+- **Rationale:** `usePathname()` requires client component; clean separation keeps layout as server component
+- **Impact:** Mobile navigation now clearly indicates current page
+
+#### DEC-049: OperatingHoursEditor Serializes to Hidden JSON Field
+- **Date:** 2026-04-14
+- **Context:** Operating hours is a JSONB field; needed an ergonomic weekly editor
+- **Decision:** Client component manages state per day; serializes full hours object to a hidden `operating_hours` input on each change
+- **Alternatives:** Individual form fields per day/time; separate API call for hours
+- **Rationale:** Hidden JSON field is the simplest approach that works with existing form action pattern and requires no schema changes
+- **Impact:** Works in both onboarding and settings without duplicating logic
+
+#### DEC-050: Dashboard Quick Actions Open Sheets Directly
+- **Date:** 2026-04-14
+- **Context:** Dashboard quick actions previously navigated to pages; slowed daily workflow
+- **Decision:** `DashboardQuickActions` client component renders sheets directly from dashboard; fetches customers/services lazily only when booking sheet opens
+- **Alternatives:** Pass data from server component; navigate to pages
+- **Rationale:** Lazy fetch avoids unnecessary DB calls; sheets give faster UX without leaving the dashboard
+- **Impact:** Dashboard page remains a server component; quick actions are usable without page navigation
+
+#### DEC-051: Password Reset via Supabase PKCE with Auth Callback Route
+- **Date:** 2026-04-14
+- **Context:** No self-service password reset existed (MVP-005)
+- **Decision:** Standard Supabase PKCE reset flow: `resetPasswordForEmail` → email link → `/auth/callback?code=` → `/reset-password` → `updateUser`
+- **Alternatives:** Token-in-hash flow (older Supabase approach)
+- **Rationale:** PKCE is the current Supabase recommended approach for SSR apps; callback route handles code exchange securely server-side
+- **Impact:** Closes MVP-005; requires `NEXT_PUBLIC_SITE_URL` env var for production redirect
+
+#### DEC-052: Public Flow Uses Business UUID in URL (No Slug Column)
+- **Date:** 2026-04-14
+- **Context:** Public booking route needs a stable business identifier in the URL
+- **Decision:** Use the existing `businesses.id` (UUID) as the URL parameter — `/book/[businessId]`
+- **Alternatives:** Add a `slug` TEXT column to businesses (requires DB migration + uniqueness handling)
+- **Rationale:** UUID requires no schema change, is collision-free, and is sufficient for MVP. The booking URL is shared by the owner, not typed manually. Can be upgraded to a friendly slug post-MVP.
+- **Impact:** Booking URLs look like `/book/abc123-...`. Owner copies the link from Settings.
+
+#### DEC-053: Public Booking Bypasses RLS via Service Role Key (Server-Only)
+- **Date:** 2026-04-14
+- **Context:** Supabase RLS blocks all unauthenticated reads/writes. Public booking needs to read services and write customers/bookings without a user session.
+- **Decision:** Create `src/lib/supabase/admin.ts` using `SUPABASE_SERVICE_ROLE_KEY` (no `NEXT_PUBLIC_` prefix). Use only in server actions inside `public-booking.ts`.
+- **Alternatives:** Add public read/insert RLS policies in Supabase dashboard; use Supabase Edge Functions
+- **Rationale:** Service role in server-only code is the standard Supabase recommendation for this pattern. Key is never exposed to the browser. Input is validated with Zod and business/service ownership is verified manually before any write.
+- **Impact:** Requires `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` and Vercel env. Documented in `.env.example`.
+
+#### DEC-054: Public Bookings Created with Status `scheduled`
+- **Date:** 2026-04-14
+- **Context:** Needed to decide whether public bookings go in as `scheduled` or `pending`
+- **Decision:** Use `scheduled` — same as internally-created bookings
+- **Alternatives:** Introduce `pending` status requiring owner approval
+- **Rationale:** The booking_status enum already includes `scheduled`. Using it keeps the internal dashboard consistent — owner sees all bookings in one list without a separate approval workflow. MVP scope does not include owner approval flows. Can add `pending` + confirmation screen post-MVP if needed.
+- **Impact:** Public bookings appear immediately in `/bookings` and dashboard schedule.
+
+#### DEC-055: Time Slots Use Operating Hours with 30-Min Intervals
+- **Date:** 2026-04-14
+- **Context:** No booking-slot availability system exists; needed a simple MVP-safe time picker
+- **Decision:** Generate 30-minute intervals from business operating_hours (if set), falling back to 9am–6pm. If the business is closed on the selected day, show a "Closed" message and prompt re-selection.
+- **Alternatives:** True availability engine (checks existing bookings); Google Calendar-style slots
+- **Rationale:** True availability requires conflict detection (out of scope per constraints). Fixed intervals are clear, predictable, and sufficient for MVP. Owner manually avoids double-booking.
+- **Impact:** No slot conflict detection. Documented as ISS-002.
+
+---
+
+#### DEC-056: public_site_settings Stored as JSONB on businesses Table
+- **Date:** 2026-04-16
+- **Context:** Need to persist public booking site customization (headline, subtitle, instructions, accent color) without creating a new table.
+- **Decision:** Add a single `public_site_settings JSONB DEFAULT '{}'` column to the existing `businesses` table. Required migration: `ALTER TABLE businesses ADD COLUMN public_site_settings JSONB DEFAULT '{}';`
+- **Alternatives:** New `public_site_settings` table; store as multiple columns; use operating_hours field as a combined blob
+- **Rationale:** JSONB matches the existing `operating_hours` pattern already used in `businesses`. Avoids a new table and JOIN for a small, optional feature. All fields are optional so `'{}'` is a valid default.
+- **Impact:** Schema migration required before the customization feature is active. Code degrades gracefully (shows defaults) if the column is not yet added.
+
+#### DEC-057: Accent Color Applied via Server-Rendered style Tag
+- **Date:** 2026-04-16
+- **Context:** Accent color theming for the public page must work at runtime (not at build time) since each business can choose a different color.
+- **Decision:** Inject a `<style>` tag with `:root { --primary: ...; }` CSS variable overrides in the public booking Server Component. Color values come from a hardcoded safe map (5 options), not raw user input.
+- **Alternatives:** Tailwind arbitrary values; CSS-in-JS; generating separate CSS files per accent
+- **Rationale:** CSS variable override is the simplest runtime approach. No XSS risk since values are from a controlled constant map, never from user input directly. Works with the existing shadcn/ui token system.
+- **Impact:** Accent color only applies to the public booking page (`/book/[businessId]`). Admin UI is unaffected.
+
+#### DEC-058: Public Site Card Added to Dashboard (Not Just Settings)
+- **Date:** 2026-04-16
+- **Context:** Business owners need quick access to their public booking link without navigating to Settings every time.
+- **Decision:** Added a "Your Public Booking Site" card directly on the main dashboard with copy link, open, and customize buttons.
+- **Alternatives:** Settings-only access; a dedicated "Booking Site" nav item
+- **Rationale:** The dashboard is the first screen owners see. Surfacing the booking link there makes it easy to share after each work session without extra navigation.
+- **Impact:** Dashboard has one extra card. Does not affect any data fetching (businessId already available).
+
+#### DEC-059: Per-Service Public Fields Stored as Columns (not JSONB)
+- **Date:** 2026-04-16
+- **Context:** Need to add per-service public presentation fields (show/hide, featured, public title, description, promo, display order).
+- **Decision:** Add 7 individual columns to `services` rather than a JSONB blob, and add a partial index for the public listing query.
+- **Alternatives:** Single `public_settings JSONB` column on services; a new `service_public_settings` join table
+- **Rationale:** These columns are all directly filterable (especially `show_on_public_booking` and `is_featured`). SQL indexes on individual boolean/int columns are faster than GIN indexes on JSONB for this workload. The column count is low enough that this isn't a maintenance burden.
+- **Impact:** Migration `20260416000002_service_public_fields.sql` must be applied. Partial index `idx_services_public_listing` covers the most common public query.
+
+#### DEC-060: Supabase TypeScript Types Bypassed with `as any[]` for New Columns
+- **Date:** 2026-04-16
+- **Context:** The Supabase-generated TypeScript types in this project didn't include the new migration columns (`show_on_public_booking`, `public_title`, etc.) because they were added after initial setup.
+- **Decision:** Cast `data` as `any[]` before `.map()` in the two server actions that query new columns (`public-booking.ts`, `public-services.ts`). All field values are cast individually to their correct types inside the map.
+- **Alternatives:** Regenerate Supabase types (`supabase gen types typescript`); maintain a manual override types file
+- **Rationale:** Type regeneration requires the Supabase CLI and a live DB connection. The `any[]` cast is contained to exactly the two map calls, and per-field type casts provide the same runtime safety as before. Regenerate types post-migration for a cleaner codebase.
+- **Impact:** *Superseded by DEC-062*. This was a temporary workaround.
+
+#### DEC-062: Hand-Crafted Supabase Database Types
+- **Date:** 2026-04-16
+- **Context:** The temporary `as any[]` casts needed a proper fix. Generating types via `supabase gen types` wasn't feasible in this environment, so a manual type source was required.
+- **Decision:** Create `src/lib/supabase/database.types.ts` containing a complete, hand-crafted `Database` interface matching the live Supabase schema (including all tables, enums, and JSONB helpers). Wire the `Database` generic into `createClient`, `createServerClient`, and `createAdminClient`.
+- **Alternatives:** Keep the `as any[]` workarounds; generate types via CLI; use `supabase-to-zod`
+- **Rationale:** Manual types provide full end-to-end type safety with zero external dependencies. The file is a single source of truth that can be updated incrementally when schema changes. It eliminates all temporary casts and prevents stale local interfaces from drifting.
+- **Impact:** All `as any[]` casts removed. `public-booking.ts`, `public-services.ts`, dashboard actions, settings page, services page, and payments all use generated types. `npx tsc --noEmit` and `npm run build` pass cleanly.
+
+#### DEC-061: Per-Service Save (vs. Batch Save) on `/services/public`
+- **Date:** 2026-04-16
+- **Context:** Considered whether to have one "Save All" button or per-row save for the public service management page.
+- **Decision:** Per-service save — each `ServicePublicCard` manages its own state and save call independently.
+- **Alternatives:** Single form with one Save All button; optimistic batch update
+- **Rationale:** Business owners are more likely to tweak one or two services at a time. Per-service save means no risk of accidentally clearing edits on another service. Simpler state management — no top-level shared form state.
+- **Impact:** More granular UX. Each save shows inline feedback on only the relevant card.
+
+#### DEC-063: Remount Keys for Sheet-Based Forms Using Base UI Uncontrolled Inputs
+- **Date:** 2026-04-16
+- **Context:** Base UI `Input` and `Switch` warned that "a component is changing the default value state of an uncontrolled FieldControl after being initialized." This happened because `ServiceSheet`, `CustomerSheet`, `BookingSheet`, and `PaymentSheet` reused the same form instance when switching create/edit modes or different records.
+- **Decision:** Add a stable React `key` to each form component inside its Sheet wrapper (`key={record?.id ?? 'new'}`). Also ensure every `defaultValue` and `defaultChecked` receives a non-undefined fallback (`?? ''`, `?? 0`, `?? 30`).
+- **Alternatives:** Convert all inputs to fully controlled (more state management); ignore the warning (would leave console noise and potential bugs)
+- **Rationale:** Remounting is the minimal fix — it preserves the uncontrolled form pattern, requires no additional state, and aligns with React's reconciliation model. Stable fallbacks prevent `undefined` defaults during first render.
+- **Impact:** Warning eliminated in Service, Customer, Booking, and Payment forms. No behavioral changes for users.
+
+#### DEC-064: Empty `operating_hours` JSONB Treated as Unconfigured in Public Booking
+- **Date:** 2026-04-16
+- **Context:** Public booking wizard showed "Closed on this day" for every date when `businesses.operating_hours` was `{}` (the JSONB default). `getTimeSlots` checked `if (operatingHours)` which is truthy for `{}`, then `operatingHours[dayName]` was `undefined`, causing an early `return []`.
+- **Decision:** Guard with `Object.keys(operatingHours).length > 0` before treating `operatingHours` as configured. If empty or null, fall back to default 9am–6pm slots. Also fix `todayString()` to use local date getters instead of `toISOString()` to avoid UTC timezone skew.
+- **Alternatives:** Change DB default to `NULL`; require operating hours setup before public booking is enabled; normalize `{}` to `null` in the server action.
+- **Rationale:** The DB default is `{}` and many businesses were created before operating hours were configurable. The client-side guard is the safest, least invasive fix — it preserves backward compatibility and doesn't require a migration.
+- **Impact:** Public booking works immediately for businesses with empty `operating_hours`. Configured hours still respected exactly as before.
+
+#### DEC-065: Auto-Generate Business Slug Server-Side with Collision Handling
+- **Date:** 2026-04-16
+- **Context:** Onboarding failed because `businesses.slug` is NOT NULL in the live DB, but `setupBusiness` never inserted a slug. The form also had no slug field.
+- **Decision:** Create `lib/slug.ts` with `generateSlug()` and `generateUniqueSlug()`. In `setupBusiness`, derive the slug from the business name (or an optional user-provided slug), query the DB for collisions, and append a numeric suffix (`-2`, `-3`, etc.) until unique. Include the slug in the `businesses` insert.
+- **Alternatives:** Make `slug` nullable in the database; require users to manually type a slug; generate slug client-side only.
+- **Rationale:** Server-side generation guarantees a valid slug regardless of client behavior. Collision handling prevents insert failures from duplicate names. Optional user override gives flexibility without adding friction.
+- **Impact:** Onboarding now succeeds for all new businesses. Slug is guaranteed non-empty and URL-safe.
+
+#### DEC-066: Onboarding Form Refactored into Step Wizard for Mobile
+- **Date:** 2026-04-16
+- **Context:** The onboarding form was a single long page with many fields, causing excessive vertical scrolling on phones.
+- **Decision:** Convert `BusinessSetupForm` into a 4-step wizard (Business Basics → Contact → Location/Hours → Review). Each step has a progress bar, per-step validation, large touch targets, and hidden inputs so the existing server action pattern is preserved.
+- **Alternatives:** Keep single-page form with sticky submit button; use a multi-page route approach; install a form-wizard library.
+- **Rationale:** Breaking the form into steps dramatically improves mobile completion rates without adding dependencies or changing server-side logic. Hidden inputs keep the uncontrolled server-action pattern intact.
+- **Impact:** Onboarding is now mobile-first, easier to complete, and visually aligned with the public booking wizard.
+
+#### DEC-067: Login is for Existing Users Only — Remove Onboarding Redirect
+- **Date:** 2026-04-16
+- **Context:** The `login` action redirected successful logins to `/onboarding` when no business existed. This violated the product rule that login is only for existing users and onboarding is only for new account creation. The dashboard also redirected authenticated users without a business to onboarding.
+- **Decision:** 
+  1. Update `login` to query `profiles` via the admin client before signing in. Return a typed `account_not_found` error (with register CTA) if the profile doesn't exist, or `wrong_password` if sign-in fails.
+  2. Redirect successful logins directly to `/dashboard` with no onboarding fallback.
+  3. Remove the `/onboarding` redirect from `dashboard/page.tsx` and replace it with an empty state.
+  4. Update `getCurrentBusiness` to also check `business_members` so member logins resolve correctly.
+- **Alternatives:** Keep onboarding as a fallback for all logged-in users without a business; use Supabase auth error messages directly in UI.
+- **Rationale:** Enforcing the product boundary between login (existing users) and registration/onboarding (new users) eliminates confusion and redirect loops. Pre-login profile lookup lets us provide actionable, friendly error messages without breaking Supabase's secure auth flow.
+- **Impact:** Existing users always land on the dashboard after login. New users are guided to register when their email isn't found. No more onboarding redirect loops.
+
 ---
 
 ## Pending Decisions
@@ -506,4 +699,4 @@ None at this time.
 
 ---
 
-*Last Updated: 2026-04-13*
+*Last Updated: 2026-04-16*

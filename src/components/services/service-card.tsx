@@ -5,17 +5,10 @@ import { Button } from '@/components/ui/button';
 import { ServiceStatusBadge } from './service-status-badge';
 import { Scissors } from 'lucide-react';
 
-interface Service {
-  id: string;
-  name: string;
-  category: string | null;
-  duration_minutes: number;
-  price: number;
-  is_active: boolean;
-}
+import type { Tables } from '@/lib/supabase/database.types';
 
 interface ServiceCardProps {
-  service: Service;
+  service: Tables<'services'>;
   onEdit: () => void;
   onToggleStatus: () => void;
 }

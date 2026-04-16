@@ -3,13 +3,31 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { loginSchema, registerSchema, businessSetupSchema } from '@/schemas/auth';
+import { generateUniqueSlug } from '@/lib/slug';
+import type { Json } from '@/lib/supabase/database.types';
 
 export async function login(formData: FormData) {
   const data = loginSchema.parse({
     email: formData.get('email'),
     password: formData.get('password'),
   });
+
+  // Check whether the account exists in our app before attempting sign-in
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('email', data.email)
+    .maybeSingle();
+
+  if (!profile) {
+    return {
+      error: 'Business account not found. Please register instead.',
+      code: 'account_not_found' as const,
+    };
+  }
 
   const supabase = await createClient();
 
@@ -19,25 +37,13 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    return {
+      error: 'Wrong password.',
+      code: 'wrong_password' as const,
+    };
   }
 
   revalidatePath('/', 'layout');
-  
-  // Check if user has a business
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    const { data: business } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('owner_id', user.id)
-      .single();
-    
-    if (!business) {
-      redirect('/onboarding');
-    }
-  }
-  
   redirect('/dashboard');
 }
 
@@ -78,11 +84,23 @@ export async function logout() {
 export async function setupBusiness(formData: FormData) {
   const data = businessSetupSchema.parse({
     name: formData.get('name'),
+    slug: formData.get('slug'),
     businessType: formData.get('businessType'),
     phone: formData.get('phone'),
     email: formData.get('email'),
     address: formData.get('address'),
   });
+
+  // Parse operating hours if provided
+  let operatingHours: Record<string, unknown> = {};
+  const rawHours = formData.get('operating_hours');
+  if (rawHours && typeof rawHours === 'string') {
+    try {
+      operatingHours = JSON.parse(rawHours);
+    } catch {
+      // ignore malformed JSON
+    }
+  }
 
   const supabase = await createClient();
   
@@ -92,12 +110,23 @@ export async function setupBusiness(formData: FormData) {
     return { error: 'Not authenticated' };
   }
 
+  // Generate unique slug
+  const slugBase = (data.slug ?? data.name).trim();
+  const slug = await generateUniqueSlug(slugBase, async (candidate) => {
+    const { data: existing } = await supabase
+      .from('businesses')
+      .select('id')
+      .eq('slug', candidate)
+      .maybeSingle();
+    return !!existing;
+  });
+
   // Create or update profile
   const { error: profileError } = await supabase
     .from('profiles')
     .upsert({
       id: user.id,
-      email: user.email,
+      email: user.email || '',
       updated_at: new Date().toISOString(),
     });
 
@@ -111,10 +140,12 @@ export async function setupBusiness(formData: FormData) {
     .insert({
       owner_id: user.id,
       name: data.name,
+      slug,
       business_type: data.businessType,
       phone: data.phone || null,
       email: data.email || null,
       address: data.address || null,
+      operating_hours: operatingHours as Json,
     })
     .select('id')
     .single();
@@ -137,5 +168,47 @@ export async function setupBusiness(formData: FormData) {
   }
 
   revalidatePath('/', 'layout');
+  redirect('/dashboard');
+}
+
+export async function forgotPassword(formData: FormData) {
+  const email = (formData.get('email') as string)?.trim();
+  if (!email) {
+    return { error: 'Email is required' };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || ''}/auth/callback?next=/reset-password`,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function resetPassword(formData: FormData) {
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  if (!password || password.length < 6) {
+    return { error: 'Password must be at least 6 characters' };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: "Passwords don't match" };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: error.message };
+  }
+
   redirect('/dashboard');
 }

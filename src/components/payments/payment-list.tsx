@@ -3,7 +3,9 @@
 import { PaymentCard } from './payment-card';
 import { PaymentEmptyState } from './payment-empty-state';
 
-type PaymentMethod = 'cash' | 'gcash' | 'card' | 'other';
+import type { Enums } from '@/lib/supabase/database.types';
+
+type PaymentMethod = Enums<'payment_method'>;
 
 interface Payment {
   id: string;

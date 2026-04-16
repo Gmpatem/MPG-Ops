@@ -78,7 +78,7 @@ export async function createBooking(formData: FormData) {
   return { success: true };
 }
 
-export async function updateBookingStatus(bookingId: string, status: 'scheduled' | 'completed' | 'cancelled') {
+export async function updateBookingStatus(bookingId: string, status: 'scheduled' | 'completed' | 'cancelled' | 'no_show') {
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
@@ -158,6 +158,99 @@ export async function getTodayBookingsCount(): Promise<number> {
     .eq('booking_date', today);
 
   return count || 0;
+}
+
+export async function updateBooking(bookingId: string, formData: FormData) {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: 'Not authenticated' };
+  }
+
+  const businessId = await getCurrentBusinessId(user.id);
+  if (!businessId) {
+    return { error: 'No business found' };
+  }
+
+  const data = bookingSchema.parse({
+    customerId: formData.get('customerId'),
+    serviceId: formData.get('serviceId'),
+    bookingDate: formData.get('bookingDate'),
+    startTime: formData.get('startTime'),
+    notes: formData.get('notes'),
+  });
+
+  // Get service duration to calculate end time
+  const { data: service } = await supabase
+    .from('services')
+    .select('duration_minutes')
+    .eq('id', data.serviceId)
+    .eq('business_id', businessId)
+    .single();
+
+  if (!service) {
+    return { error: 'Service not found' };
+  }
+
+  // Calculate end time
+  const [hours, minutes] = data.startTime.split(':').map(Number);
+  const startDateTime = new Date();
+  startDateTime.setHours(hours, minutes, 0, 0);
+  const endDateTime = new Date(startDateTime.getTime() + service.duration_minutes * 60000);
+  const endTime = `${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}`;
+
+  const { error } = await supabase
+    .from('bookings')
+    .update({
+      customer_id: data.customerId,
+      service_id: data.serviceId,
+      booking_date: data.bookingDate,
+      start_time: data.startTime,
+      end_time: endTime,
+      notes: data.notes || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', bookingId)
+    .eq('business_id', businessId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath('/bookings');
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+export async function getBookingsByCustomer(customerId: string) {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return [];
+  }
+
+  const businessId = await getCurrentBusinessId(user.id);
+  if (!businessId) {
+    return [];
+  }
+
+  const { data: bookings } = await supabase
+    .from('bookings')
+    .select(`
+      id,
+      booking_date,
+      start_time,
+      status,
+      service:services(name, price),
+      payment:payments(amount, status)
+    `)
+    .eq('business_id', businessId)
+    .eq('customer_id', customerId)
+    .order('booking_date', { ascending: false });
+
+  return bookings || [];
 }
 
 export async function getTodayCompletedCount(): Promise<number> {

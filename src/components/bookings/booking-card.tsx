@@ -2,10 +2,8 @@
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookingStatusBadge } from './booking-status-badge';
-import { Clock, User, Scissors, CheckCircle } from 'lucide-react';
-
-type BookingStatus = 'scheduled' | 'completed' | 'cancelled';
+import { BookingStatusBadge, BookingStatus } from './booking-status-badge';
+import { Clock, User, Scissors, CheckCircle, Pencil } from 'lucide-react';
 
 interface Booking {
   id: string;
@@ -27,14 +25,18 @@ interface BookingCardProps {
   onMarkCompleted: () => void;
   onCancel: () => void;
   onRecordPayment: () => void;
+  onMarkNoShow: () => void;
+  onEdit: () => void;
 }
 
-export function BookingCard({ 
-  booking, 
-  payment, 
-  onMarkCompleted, 
-  onCancel, 
-  onRecordPayment 
+export function BookingCard({
+  booking,
+  payment,
+  onMarkCompleted,
+  onCancel,
+  onRecordPayment,
+  onMarkNoShow,
+  onEdit,
 }: BookingCardProps) {
   const isScheduled = booking.status === 'scheduled';
   const isCompleted = booking.status === 'completed';
@@ -42,7 +44,7 @@ export function BookingCard({
 
   return (
     <Card className="p-4 rounded-xl border bg-card">
-      {/* Top row: Time and Status */}
+      {/* Top row: Time, Status, Edit */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-muted-foreground" />
@@ -50,7 +52,16 @@ export function BookingCard({
             {booking.start_time} - {booking.end_time}
           </span>
         </div>
-        <BookingStatusBadge status={booking.status} />
+        <div className="flex items-center gap-2">
+          <BookingStatusBadge status={booking.status} />
+          <button
+            onClick={onEdit}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded"
+            aria-label="Edit booking"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Customer */}
@@ -69,14 +80,22 @@ export function BookingCard({
 
       {/* Actions for Scheduled */}
       {isScheduled && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             onClick={onMarkCompleted}
-            className="flex-1 h-10 text-sm"
+            className="flex-1 h-10 text-sm min-w-30"
           >
             Mark Completed
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMarkNoShow}
+            className="h-10 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+          >
+            No-Show
           </Button>
           <Button
             variant="ghost"

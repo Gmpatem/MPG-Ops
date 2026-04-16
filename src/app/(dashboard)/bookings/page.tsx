@@ -7,11 +7,12 @@ import { BookingList } from '@/components/bookings/booking-list';
 import { BookingSheet } from '@/components/bookings/booking-sheet';
 import { BookingEmptyState } from '@/components/bookings/booking-empty-state';
 import { PaymentSheet } from '@/components/payments/payment-sheet';
-import { createBooking, updateBookingStatus, getBookingsByDate } from '@/app/actions/bookings';
+import { createBooking, updateBooking, updateBookingStatus, getBookingsByDate } from '@/app/actions/bookings';
 import { getCustomers } from '@/app/actions/customers';
 import { getServices } from '@/app/actions/services';
 import { recordPayment, getPayments } from '@/app/actions/payments';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/toast';
 import { format, addDays, subDays } from 'date-fns';
 import { LoadingPage } from '@/components/loading-page';
 import { ErrorState } from '@/components/error-state';
@@ -23,15 +24,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-type BookingStatus = 'scheduled' | 'completed' | 'cancelled';
+type BookingStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
 
 interface Booking {
   id: string;
+  customer_id: string;
+  service_id: string;
+  booking_date: string;
   customer: { name: string };
   service: { name: string; duration_minutes: number; price: number };
   start_time: string;
   end_time: string;
   status: BookingStatus;
+  notes: string | null;
 }
 
 interface Payment {
@@ -53,9 +58,21 @@ interface Service {
 
 type StatusFilter = 'all' | BookingStatus;
 
+interface EditingBooking {
+  id: string;
+  customer_id: string;
+  service_id: string;
+  booking_date: string;
+  start_time: string;
+  notes: string | null;
+}
+
 export default function BookingsPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isBookingSheetOpen, setIsBookingSheetOpen] = useState(false);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [editingBooking, setEditingBooking] = useState<EditingBooking | null>(null);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -115,6 +132,25 @@ export default function BookingsPage() {
     setIsBookingSheetOpen(false);
   }, []);
 
+  const handleEditBooking = useCallback((bookingId: string) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+    setEditingBooking({
+      id: booking.id,
+      customer_id: booking.customer_id,
+      service_id: booking.service_id,
+      booking_date: booking.booking_date,
+      start_time: booking.start_time,
+      notes: booking.notes,
+    });
+    setIsEditSheetOpen(true);
+  }, [bookings]);
+
+  const handleCloseEditSheet = useCallback(() => {
+    setIsEditSheetOpen(false);
+    setEditingBooking(null);
+  }, []);
+
   const handleClosePaymentSheet = useCallback(() => {
     setIsPaymentSheetOpen(false);
     setSelectedBookingId('');
@@ -136,6 +172,7 @@ export default function BookingsPage() {
       if (result.success) {
         await refreshData();
         router.refresh();
+        toast({ title: 'Booking created successfully' });
         return { success: true };
       }
       return result;
@@ -150,6 +187,7 @@ export default function BookingsPage() {
       if (result.success) {
         await refreshData();
         router.refresh();
+        toast({ title: 'Booking marked as completed' });
       }
     } catch (err) {
       // Error handled silently
@@ -162,9 +200,39 @@ export default function BookingsPage() {
       if (result.success) {
         await refreshData();
         router.refresh();
+        toast({ title: 'Booking cancelled' });
       }
     } catch (err) {
       // Error handled silently
+    }
+  };
+
+  const handleMarkNoShow = async (bookingId: string) => {
+    try {
+      const result = await updateBookingStatus(bookingId, 'no_show');
+      if (result.success) {
+        await refreshData();
+        router.refresh();
+        toast({ title: 'Booking marked as no-show' });
+      }
+    } catch (err) {
+      // Error handled silently
+    }
+  };
+
+  const handleUpdateBooking = async (formData: FormData) => {
+    if (!editingBooking) return { error: 'No booking selected' };
+    try {
+      const result = await updateBooking(editingBooking.id, formData);
+      if (result.success) {
+        await refreshData();
+        router.refresh();
+        toast({ title: 'Booking updated successfully' });
+        return { success: true };
+      }
+      return result;
+    } catch (err) {
+      return { error: 'Failed to update booking' };
     }
   };
 
@@ -180,6 +248,7 @@ export default function BookingsPage() {
       if (result.success) {
         await refreshData();
         router.refresh();
+        toast({ title: 'Payment recorded successfully' });
         return { success: true };
       }
       return result;
@@ -302,7 +371,7 @@ export default function BookingsPage() {
             value={statusFilter}
             onValueChange={(value) => value && setStatusFilter(value as StatusFilter)}
           >
-            <SelectTrigger className="w-[160px] h-10" aria-label="Filter bookings by status">
+            <SelectTrigger className="w-40 h-10" aria-label="Filter bookings by status">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -310,6 +379,7 @@ export default function BookingsPage() {
               <SelectItem value="scheduled">Scheduled</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="no_show">No Show</SelectItem>
             </SelectContent>
           </Select>
           <span className="text-sm text-muted-foreground">
@@ -343,6 +413,8 @@ export default function BookingsPage() {
           onMarkCompleted={handleMarkCompleted}
           onCancel={handleCancel}
           onRecordPayment={handleRecordPayment}
+          onMarkNoShow={handleMarkNoShow}
+          onEdit={handleEditBooking}
           onAddBooking={handleAddBooking}
         />
       )}
@@ -354,6 +426,17 @@ export default function BookingsPage() {
         customers={customers}
         services={services}
         onSubmit={handleCreateBooking}
+      />
+
+      {/* Edit Booking Sheet */}
+      <BookingSheet
+        isOpen={isEditSheetOpen}
+        onClose={handleCloseEditSheet}
+        customers={customers}
+        services={services}
+        initialData={editingBooking ?? undefined}
+        bookingId={editingBooking?.id}
+        onSubmit={handleUpdateBooking}
       />
 
       {/* Record Payment Sheet */}

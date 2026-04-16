@@ -16,6 +16,7 @@ export const registerSchema = z.object({
 
 export const businessSetupSchema = z.object({
   name: z.string().min(1, 'Business name is required'),
+  slug: z.string().optional(),
   businessType: z.enum(['salon', 'barbershop', 'spa'], {
     message: 'Please select a business type',
   }),

@@ -2,8 +2,7 @@
 
 import { BookingCard } from './booking-card';
 import { BookingEmptyState } from './booking-empty-state';
-
-type BookingStatus = 'scheduled' | 'completed' | 'cancelled';
+import { BookingStatus } from './booking-status-badge';
 
 interface Booking {
   id: string;
@@ -26,6 +25,8 @@ interface BookingListProps {
   onMarkCompleted: (bookingId: string) => void;
   onCancel: (bookingId: string) => void;
   onRecordPayment: (bookingId: string, defaultAmount: number) => void;
+  onMarkNoShow: (bookingId: string) => void;
+  onEdit: (bookingId: string) => void;
   onAddBooking: () => void;
 }
 
@@ -35,6 +36,8 @@ export function BookingList({
   onMarkCompleted,
   onCancel,
   onRecordPayment,
+  onMarkNoShow,
+  onEdit,
   onAddBooking,
 }: BookingListProps) {
   if (bookings.length === 0) {
@@ -54,6 +57,8 @@ export function BookingList({
           onMarkCompleted={() => onMarkCompleted(booking.id)}
           onCancel={() => onCancel(booking.id)}
           onRecordPayment={() => onRecordPayment(booking.id, booking.service.price)}
+          onMarkNoShow={() => onMarkNoShow(booking.id)}
+          onEdit={() => onEdit(booking.id)}
         />
       ))}
     </div>

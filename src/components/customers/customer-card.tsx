@@ -14,14 +14,15 @@ interface Customer {
 interface CustomerCardProps {
   customer: Customer;
   onEdit: () => void;
+  onView: () => void;
 }
 
-export function CustomerCard({ customer, onEdit }: CustomerCardProps) {
+export function CustomerCard({ customer, onEdit, onView }: CustomerCardProps) {
   return (
     <Card className="p-4 rounded-xl border bg-card">
       {/* Top row: Name */}
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
           <User className="w-5 h-5 text-primary" />
         </div>
         <div className="min-w-0 flex-1">
@@ -35,13 +36,13 @@ export function CustomerCard({ customer, onEdit }: CustomerCardProps) {
       <div className="space-y-2 mb-4">
         {customer.phone && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Phone className="w-4 h-4 flex-shrink-0" />
+            <Phone className="w-4 h-4 shrink-0" />
             <span className="truncate">{customer.phone}</span>
           </div>
         )}
         {customer.email && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Mail className="w-4 h-4 flex-shrink-0" />
+            <Mail className="w-4 h-4 shrink-0" />
             <span className="truncate">{customer.email}</span>
           </div>
         )}
@@ -52,15 +53,25 @@ export function CustomerCard({ customer, onEdit }: CustomerCardProps) {
         )}
       </div>
 
-      {/* Action */}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onEdit}
-        className="w-full h-10 text-sm"
-      >
-        Edit
-      </Button>
+      {/* Actions */}
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onView}
+          className="flex-1 h-10 text-sm"
+        >
+          View
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onEdit}
+          className="flex-1 h-10 text-sm"
+        >
+          Edit
+        </Button>
+      </div>
     </Card>
   );
 }

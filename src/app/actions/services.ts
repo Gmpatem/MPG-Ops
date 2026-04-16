@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { serviceSchema } from '@/schemas/service';
+import type { Tables } from '@/lib/supabase/database.types';
 
 async function getCurrentBusinessId(userId: string): Promise<string | null> {
   const supabase = await createClient();
@@ -130,7 +131,7 @@ export async function toggleServiceStatus(serviceId: string, isActive: boolean) 
   return { success: true };
 }
 
-export async function getServices() {
+export async function getServices(): Promise<Tables<'services'>[]> {
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
@@ -149,7 +150,7 @@ export async function getServices() {
     .eq('business_id', businessId)
     .order('created_at', { ascending: false });
 
-  return services || [];
+  return services ?? [];
 }
 
 export async function getServiceCount(): Promise<number> {

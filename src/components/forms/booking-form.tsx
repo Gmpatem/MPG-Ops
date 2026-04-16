@@ -34,18 +34,33 @@ interface Service {
   duration_minutes: number;
 }
 
+interface InitialBookingData {
+  customer_id: string;
+  service_id: string;
+  booking_date: string;
+  start_time: string;
+  notes: string | null;
+}
+
 interface BookingFormProps {
   action: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
   customers: Customer[];
   services: Service[];
+  initialData?: InitialBookingData;
 }
 
-export function BookingForm({ action, customers, services }: BookingFormProps) {
+export function BookingForm({ action, customers, services, initialData }: BookingFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedService, setSelectedService] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    if (initialData?.booking_date) {
+      const [y, m, d] = initialData.booking_date.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    return new Date();
+  });
+  const [selectedService, setSelectedService] = useState<string>(initialData?.service_id ?? '');
   const [endTime, setEndTime] = useState<string>('');
 
   // Calculate end time when service or start time changes
@@ -115,7 +130,7 @@ export function BookingForm({ action, customers, services }: BookingFormProps) {
         <Label htmlFor="customerId" className="text-sm font-medium">
           Customer *
         </Label>
-        <Select name="customerId">
+        <Select name="customerId" defaultValue={initialData?.customer_id}>
           <SelectTrigger className={`h-12 ${errors.customerId ? 'border-red-500' : ''}`}>
             <SelectValue placeholder="Select a customer" />
           </SelectTrigger>
@@ -137,7 +152,7 @@ export function BookingForm({ action, customers, services }: BookingFormProps) {
         <Label htmlFor="serviceId" className="text-sm font-medium">
           Service *
         </Label>
-        <Select name="serviceId" onValueChange={(value: string | null) => setSelectedService(value || '')}>
+        <Select name="serviceId" defaultValue={initialData?.service_id} onValueChange={(value: string | null) => setSelectedService(value || '')}>
           <SelectTrigger className={`h-12 ${errors.serviceId ? 'border-red-500' : ''}`}>
             <SelectValue placeholder="Select a service" />
           </SelectTrigger>
@@ -191,6 +206,7 @@ export function BookingForm({ action, customers, services }: BookingFormProps) {
             id="startTime"
             name="startTime"
             type="time"
+            defaultValue={initialData?.start_time ?? ''}
             className={`h-12 ${errors.startTime ? 'border-red-500' : ''}`}
             onChange={(e) => {
               if (selectedServiceData && e.target.value) {
@@ -226,7 +242,8 @@ export function BookingForm({ action, customers, services }: BookingFormProps) {
           id="notes"
           name="notes"
           placeholder="Any special requests or notes..."
-          className="min-h-[80px] resize-none"
+          defaultValue={initialData?.notes ?? ''}
+          className="min-h-20 resize-none"
         />
       </div>
 
@@ -237,7 +254,7 @@ export function BookingForm({ action, customers, services }: BookingFormProps) {
           className="w-full h-12 text-base font-medium"
           disabled={isLoading}
         >
-          {isLoading ? 'Saving...' : 'Create Booking'}
+          {isLoading ? 'Saving...' : initialData ? 'Update Booking' : 'Create Booking'}
         </Button>
       </div>
     </form>

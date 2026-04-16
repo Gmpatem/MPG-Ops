@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Plus, Search, X } from 'lucide-react';
 import { CustomerList } from '@/components/customers/customer-list';
 import { CustomerSheet } from '@/components/customers/customer-sheet';
+import { CustomerDetailSheet } from '@/components/customers/customer-detail-sheet';
 import { CustomerEmptyState } from '@/components/customers/customer-empty-state';
 import { createCustomer, updateCustomer, getCustomers } from '@/app/actions/customers';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/toast';
 import { LoadingPage } from '@/components/loading-page';
 import { ErrorState } from '@/components/error-state';
 import { Input } from '@/components/ui/input';
@@ -22,7 +24,10 @@ interface Customer {
 
 export default function CustomersPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +68,16 @@ export default function CustomersPage() {
     setIsSheetOpen(true);
   }, []);
 
+  const handleViewCustomer = useCallback((customer: Customer) => {
+    setViewingCustomer(customer);
+    setIsDetailOpen(true);
+  }, []);
+
+  const handleCloseDetail = useCallback(() => {
+    setIsDetailOpen(false);
+    setViewingCustomer(null);
+  }, []);
+
   const handleEditCustomer = useCallback((customer: Customer) => {
     setEditingCustomer(customer);
     setIsSheetOpen(true);
@@ -80,6 +95,7 @@ export default function CustomersPage() {
         const data = await getCustomers();
         setCustomers(data);
         router.refresh();
+        toast({ title: 'Customer added successfully' });
         return { success: true };
       }
       return result;
@@ -96,6 +112,7 @@ export default function CustomersPage() {
         const data = await getCustomers();
         setCustomers(data);
         router.refresh();
+        toast({ title: 'Customer updated successfully' });
         return { success: true };
       }
       return result;
@@ -229,6 +246,7 @@ export default function CustomersPage() {
         <CustomerList
           customers={filteredCustomers}
           onEditCustomer={handleEditCustomer}
+          onViewCustomer={handleViewCustomer}
           onAddCustomer={handleAddCustomer}
         />
       )}
@@ -239,6 +257,13 @@ export default function CustomersPage() {
         onClose={handleCloseSheet}
         customer={editingCustomer}
         onSubmit={editingCustomer ? handleUpdateCustomer : handleCreateCustomer}
+      />
+
+      {/* Customer Detail Sheet */}
+      <CustomerDetailSheet
+        isOpen={isDetailOpen}
+        onClose={handleCloseDetail}
+        customer={viewingCustomer}
       />
     </div>
   );

@@ -1,6 +1,8 @@
 'use client';
 
 import { CreditCard } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export function PaymentEmptyState() {
   return (
@@ -11,9 +13,14 @@ export function PaymentEmptyState() {
       <h3 className="text-lg font-semibold text-foreground mb-2">
         No payments yet
       </h3>
-      <p className="text-sm text-muted-foreground max-w-xs">
+      <p className="text-sm text-muted-foreground max-w-xs mb-4">
         Payments will appear here when you record them for completed bookings.
       </p>
+      <Link href="/bookings">
+        <Button variant="outline" size="sm">
+          Go to Bookings
+        </Button>
+      </Link>
     </div>
   );
 }

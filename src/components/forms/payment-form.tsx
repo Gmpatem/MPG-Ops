@@ -95,9 +95,8 @@ export function PaymentForm({ action, defaultAmount, bookingId }: PaymentFormPro
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="cash">Cash</SelectItem>
-            <SelectItem value="gcash">GCash</SelectItem>
             <SelectItem value="card">Card</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
+            <SelectItem value="mobile_money">Mobile Money</SelectItem>
           </SelectContent>
         </Select>
         {errors.method && (

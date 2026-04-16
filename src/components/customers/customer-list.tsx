@@ -14,12 +14,14 @@ interface Customer {
 interface CustomerListProps {
   customers: Customer[];
   onEditCustomer: (customer: Customer) => void;
+  onViewCustomer: (customer: Customer) => void;
   onAddCustomer: () => void;
 }
 
 export function CustomerList({
   customers,
   onEditCustomer,
+  onViewCustomer,
   onAddCustomer,
 }: CustomerListProps) {
   if (customers.length === 0) {
@@ -33,6 +35,7 @@ export function CustomerList({
           key={customer.id}
           customer={customer}
           onEdit={() => onEditCustomer(customer)}
+          onView={() => onViewCustomer(customer)}
         />
       ))}
     </div>

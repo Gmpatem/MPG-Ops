@@ -41,6 +41,7 @@ export function CustomerSheet({ isOpen, onClose, customer, onSubmit }: CustomerS
           </SheetDescription>
         </SheetHeader>
         <CustomerForm
+          key={customer?.id ?? 'new-customer'}
           action={async (formData) => {
             const result = await onSubmit(formData);
             if (result.success) {

@@ -20,25 +20,42 @@ interface Service {
   duration_minutes: number;
 }
 
+interface InitialBookingData {
+  customer_id: string;
+  service_id: string;
+  booking_date: string;
+  start_time: string;
+  notes: string | null;
+}
+
 interface BookingSheetProps {
   isOpen: boolean;
   onClose: () => void;
   customers: Customer[];
   services: Service[];
+  initialData?: InitialBookingData;
+  bookingId?: string;
   onSubmit: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
 }
 
-export function BookingSheet({ isOpen, onClose, customers, services, onSubmit }: BookingSheetProps) {
+export function BookingSheet({ isOpen, onClose, customers, services, initialData, bookingId, onSubmit }: BookingSheetProps) {
+  const isEditMode = !!initialData;
+
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader className="pb-4">
-          <SheetTitle className="text-xl">Add Booking</SheetTitle>
+          <SheetTitle className="text-xl">
+            {isEditMode ? 'Edit Booking' : 'Add Booking'}
+          </SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
-            Schedule a new appointment for a customer.
+            {isEditMode
+              ? 'Update the booking details below.'
+              : 'Schedule a new appointment for a customer.'}
           </SheetDescription>
         </SheetHeader>
         <BookingForm
+          key={bookingId ?? 'new-booking'}
           action={async (formData) => {
             const result = await onSubmit(formData);
             if (result.success) {
@@ -48,6 +65,7 @@ export function BookingSheet({ isOpen, onClose, customers, services, onSubmit }:
           }}
           customers={customers}
           services={services}
+          initialData={initialData}
         />
       </SheetContent>
     </Sheet>

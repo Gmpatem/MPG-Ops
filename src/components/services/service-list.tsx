@@ -3,18 +3,11 @@
 import { ServiceCard } from './service-card';
 import { ServiceEmptyState } from './service-empty-state';
 
-interface Service {
-  id: string;
-  name: string;
-  category: string | null;
-  duration_minutes: number;
-  price: number;
-  is_active: boolean;
-}
+import type { Tables } from '@/lib/supabase/database.types';
 
 interface ServiceListProps {
-  services: Service[];
-  onEditService: (service: Service) => void;
+  services: Tables<'services'>[];
+  onEditService: (service: Tables<'services'>) => void;
   onToggleStatus: (serviceId: string, currentStatus: boolean) => void;
   onAddService: () => void;
 }

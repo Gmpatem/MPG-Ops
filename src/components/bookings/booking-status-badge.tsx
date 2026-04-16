@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 
-type BookingStatus = 'scheduled' | 'completed' | 'cancelled';
+export type BookingStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
 
 interface BookingStatusBadgeProps {
   status: BookingStatus;
@@ -21,6 +21,10 @@ export function BookingStatusBadge({ status }: BookingStatusBadgeProps) {
     cancelled: {
       label: 'Cancelled',
       className: 'bg-red-100 text-red-800 hover:bg-red-100',
+    },
+    no_show: {
+      label: 'No Show',
+      className: 'bg-gray-100 text-gray-700 hover:bg-gray-100',
     },
   };
 

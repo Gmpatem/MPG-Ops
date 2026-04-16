@@ -9,19 +9,12 @@ import {
 } from '@/components/ui/sheet';
 import { ServiceForm } from '@/components/forms/service-form';
 
-interface Service {
-  id: string;
-  name: string;
-  category: string | null;
-  duration_minutes: number;
-  price: number;
-  is_active: boolean;
-}
+import type { Tables } from '@/lib/supabase/database.types';
 
 interface ServiceSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  service?: Service | null;
+  service?: Tables<'services'> | null;
   onSubmit: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
 }
 
@@ -42,6 +35,7 @@ export function ServiceSheet({ isOpen, onClose, service, onSubmit }: ServiceShee
           </SheetDescription>
         </SheetHeader>
         <ServiceForm
+          key={service?.id ?? 'new-service'}
           action={async (formData) => {
             const result = await onSubmit(formData);
             if (result.success) {

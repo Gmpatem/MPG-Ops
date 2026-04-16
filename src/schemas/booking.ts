@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const bookingStatusSchema = z.enum(['scheduled', 'completed', 'cancelled']);
+export const bookingStatusSchema = z.enum(['scheduled', 'completed', 'cancelled', 'no_show']);
 
 export const bookingSchema = z.object({
   customerId: z.string().min(1, 'Customer is required'),

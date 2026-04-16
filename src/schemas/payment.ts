@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const paymentMethodSchema = z.enum(['cash', 'gcash', 'card', 'other']);
+export const paymentMethodSchema = z.enum(['cash', 'card', 'mobile_money']);
 
 export const paymentSchema = z.object({
   bookingId: z.string().min(1, 'Booking is required'),

@@ -75,7 +75,7 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
           name="name"
           type="text"
           placeholder="e.g. Haircut"
-          defaultValue={initialData?.name}
+          defaultValue={initialData?.name ?? ''}
           className={`h-12 ${errors.name ? 'border-red-500' : ''}`}
         />
         {errors.name && (
@@ -93,7 +93,7 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
           name="category"
           type="text"
           placeholder="e.g. Hair, Beard, Massage, Facial"
-          defaultValue={initialData?.category}
+          defaultValue={initialData?.category ?? ''}
           className="h-12"
         />
       </div>
@@ -110,7 +110,7 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
             type="number"
             min={1}
             placeholder="30"
-            defaultValue={initialData?.durationMinutes || 30}
+            defaultValue={initialData?.durationMinutes ?? 30}
             className={`h-12 ${errors.durationMinutes ? 'border-red-500' : ''}`}
           />
           {errors.durationMinutes && (
@@ -129,7 +129,7 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
             min={0}
             step="1"
             placeholder="500"
-            defaultValue={initialData?.price || 0}
+            defaultValue={initialData?.price ?? 0}
             className={`h-12 ${errors.price ? 'border-red-500' : ''}`}
           />
           {errors.price && (

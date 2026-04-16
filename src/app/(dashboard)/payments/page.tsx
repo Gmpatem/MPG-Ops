@@ -18,10 +18,12 @@ import {
 } from '@/components/ui/select';
 import { isWithinInterval, subDays, startOfDay, parseISO } from 'date-fns';
 
+import type { Enums } from '@/lib/supabase/database.types';
+
 interface Payment {
   id: string;
   amount: number;
-  method: 'cash' | 'gcash' | 'card' | 'other';
+  method: Enums<'payment_method'>;
   created_at: string;
   booking: {
     booking_date: string;

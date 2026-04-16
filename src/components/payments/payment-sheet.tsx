@@ -28,6 +28,7 @@ export function PaymentSheet({ isOpen, onClose, bookingId, defaultAmount, onSubm
           </SheetDescription>
         </SheetHeader>
         <PaymentForm
+          key={bookingId}
           action={async (formData) => {
             const result = await onSubmit(formData);
             if (result.success) {

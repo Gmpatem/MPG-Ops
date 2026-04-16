@@ -72,7 +72,7 @@ export function CustomerForm({ action, initialData }: CustomerFormProps) {
           name="name"
           type="text"
           placeholder="e.g. John Doe"
-          defaultValue={initialData?.name}
+          defaultValue={initialData?.name ?? ''}
           className={`h-12 ${errors.name ? 'border-red-500' : ''}`}
         />
         {errors.name && (
