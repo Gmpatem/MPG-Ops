@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormStatus } from '@/components/form-status';
 import { resetPassword } from '@/app/actions/auth';
+import { LanguageSwitcher } from '@/components/language-switcher/language-switcher';
+import { useI18n } from '@/lib/i18n/i18n-provider';
 
 export default function ResetPasswordPage() {
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +26,7 @@ export default function ResetPasswordPage() {
       }
       // On success, resetPassword redirects to /dashboard
     } catch {
-      setError('An unexpected error occurred.');
+      setError(t('auth.resetPassword.error'));
     } finally {
       setIsLoading(false);
     }
@@ -32,15 +35,15 @@ export default function ResetPasswordPage() {
   return (
     <Card className="w-full">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Set new password</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center">{t('auth.resetPassword.title')}</CardTitle>
         <CardDescription className="text-center">
-          Enter your new password below.
+          {t('auth.resetPassword.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="password">New Password</Label>
+            <Label htmlFor="password">{t('auth.resetPassword.newPassword')}</Label>
             <Input
               id="password"
               name="password"
@@ -53,7 +56,7 @@ export default function ResetPasswordPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{t('auth.resetPassword.confirmPassword')}</Label>
             <Input
               id="confirmPassword"
               name="confirmPassword"
@@ -72,9 +75,12 @@ export default function ResetPasswordPage() {
             className="w-full h-12"
             disabled={isLoading}
           >
-            {isLoading ? 'Updating...' : 'Update Password'}
+            {isLoading ? t('auth.resetPassword.updating') : t('auth.resetPassword.updatePassword')}
           </Button>
         </form>
+        <div className="mt-4 flex justify-center">
+          <LanguageSwitcher variant="minimal" />
+        </div>
       </CardContent>
     </Card>
   );

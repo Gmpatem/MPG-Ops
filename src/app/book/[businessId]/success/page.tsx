@@ -1,34 +1,24 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Calendar, Clock, Scissors, User } from 'lucide-react';
+import {
+  formatTime12h,
+  formatBookingDate,
+  formatDurationMinutes,
+} from '@/lib/booking-dates';
 
 interface SuccessPageProps {
   params: Promise<{ businessId: string }>;
   searchParams: Promise<{
     business?: string;
     service?: string;
+    services?: string;
     date?: string;
     time?: string;
     name?: string;
+    duration?: string;
+    price?: string;
   }>;
-}
-
-function formatTime(time: string): string {
-  const [h, m] = time.split(':').map(Number);
-  const period = h < 12 ? 'AM' : 'PM';
-  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
-}
-
-function formatDate(dateStr: string): string {
-  const [y, mo, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, mo - 1, d);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 export default async function BookingSuccessPage({ params, searchParams }: SuccessPageProps) {
@@ -36,26 +26,28 @@ export default async function BookingSuccessPage({ params, searchParams }: Succe
   const sp = await searchParams;
 
   const businessName = sp.business ?? 'the business';
-  const serviceName = sp.service ?? 'your service';
+  const servicesText = sp.services ?? sp.service ?? 'your service';
   const date = sp.date ?? '';
   const time = sp.time ?? '';
   const customerName = sp.name ?? 'you';
+  const duration = sp.duration ? parseInt(sp.duration, 10) : null;
+  const price = sp.price ? parseFloat(sp.price) : null;
 
   const details = [
     {
       icon: <Scissors className="w-4 h-4" />,
-      label: 'Service',
-      value: serviceName,
+      label: 'Services',
+      value: servicesText,
     },
     {
       icon: <Calendar className="w-4 h-4" />,
       label: 'Date',
-      value: date ? formatDate(date) : '—',
+      value: date ? formatBookingDate(date) : '—',
     },
     {
       icon: <Clock className="w-4 h-4" />,
       label: 'Time',
-      value: time ? formatTime(time) : '—',
+      value: time ? formatTime12h(time) : '—',
     },
     {
       icon: <User className="w-4 h-4" />,
@@ -88,15 +80,25 @@ export default async function BookingSuccessPage({ params, searchParams }: Succe
             {details.map((row, i) => (
               <div
                 key={i}
-                className={`flex items-center gap-3 px-4 py-3 ${
+                className={`flex items-start gap-3 px-4 py-3 ${
                   i < details.length - 1 ? 'border-b' : ''
                 }`}
               >
                 <span className="text-muted-foreground shrink-0">{row.icon}</span>
-                <span className="text-sm text-muted-foreground w-14 shrink-0">{row.label}</span>
+                <span className="text-sm text-muted-foreground w-16 shrink-0">{row.label}</span>
                 <span className="text-sm font-medium">{row.value}</span>
               </div>
             ))}
+            {(duration !== null || price !== null) && (
+              <div className="flex items-center justify-between gap-3 px-4 py-3 bg-primary/5 border-t border-primary/10">
+                <span className="text-sm text-muted-foreground">Total</span>
+                <span className="text-sm font-semibold text-primary">
+                  {price !== null && `₱${price.toFixed(2)}`}
+                  {price !== null && duration !== null && ' • '}
+                  {duration !== null && formatDurationMinutes(duration)}
+                </span>
+              </div>
+            )}
           </div>
 
           <p className="text-sm text-muted-foreground mb-6">

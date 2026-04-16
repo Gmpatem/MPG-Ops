@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/i18n-provider';
 
 type LoginResult =
   | { error: string; code: 'account_not_found' }
@@ -18,6 +19,7 @@ type LoginResult =
   | undefined;
 
 export function LoginForm() {
+  const { t } = useI18n();
   const [result, setResult] = useState<LoginResult>(undefined);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,12 +45,12 @@ export function LoginForm() {
           href="/register"
           className={cn(buttonVariants({ variant: 'outline' }), 'w-full h-12 inline-flex')}
         >
-          Create an account
+          {t('auth.login.createAccount')}
         </Link>
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t('auth.login.email')}</Label>
         <Input
           id="email"
           name="email"
@@ -60,7 +62,7 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t('auth.login.password')}</Label>
         <Input
           id="password"
           name="password"
@@ -80,10 +82,10 @@ export function LoginForm() {
         {isLoading ? (
           <>
             <Loader2 className="animate-spin" />
-            Signing in...
+            {t('auth.login.signingIn')}
           </>
         ) : (
-          'Sign In'
+          t('auth.login.signIn')
         )}
       </Button>
     </form>

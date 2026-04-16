@@ -22,23 +22,23 @@ export function ServiceCard({ service, onEdit, onToggleStatus }: ServiceCardProp
         ${!service.is_active ? 'bg-muted/30 border-muted' : ''}
       `}
     >
-      {/* Image */}
-      {service.image_url ? (
-        <div className="w-full h-24 sm:h-28 bg-muted">
+      {/* Image area — fixed height for grid alignment */}
+      <div className="w-full h-28 sm:h-32 bg-muted/60 overflow-hidden">
+        {service.image_url ? (
           <img
             src={service.image_url}
             alt={service.name}
             className="w-full h-full object-cover"
           />
-        </div>
-      ) : (
-        <div className="w-full h-16 sm:h-20 bg-muted/60 flex items-center justify-center">
-          <div className="flex items-center gap-1.5 text-muted-foreground/70">
-            <ImageOff className="w-4 h-4" />
-            <span className="text-xs">No image</span>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="flex items-center gap-1.5 text-muted-foreground/60">
+              <ImageOff className="w-4 h-4" />
+              <span className="text-xs">No image</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="p-3 sm:p-4">
         {/* Top row: Name + Meta / Status + Toggle */}
@@ -63,7 +63,7 @@ export function ServiceCard({ service, onEdit, onToggleStatus }: ServiceCardProp
         </div>
 
         {/* Bottom row: Duration • Price / Edit */}
-        <div className="flex items-center justify-between mt-2.5 sm:mt-3">
+        <div className="flex items-center justify-between mt-3">
           <div className="flex items-center gap-2 text-sm text-foreground">
             <span className="font-medium text-xs sm:text-sm">{service.duration_minutes} min</span>
             <span className="text-muted-foreground text-xs">•</span>
@@ -73,7 +73,7 @@ export function ServiceCard({ service, onEdit, onToggleStatus }: ServiceCardProp
             variant="outline"
             size="sm"
             onClick={onEdit}
-            className="h-7 sm:h-8 px-2 text-xs"
+            className="h-8 px-2.5 text-xs"
             title="Edit service"
           >
             <Pencil className="w-3.5 h-3.5 sm:mr-1.5" />

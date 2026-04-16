@@ -23,7 +23,7 @@ export function ServiceSheet({ isOpen, onClose, service, onSubmit }: ServiceShee
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent side="responsive" className="overflow-y-auto">
         <SheetHeader className="pb-4">
           <SheetTitle className="text-xl">
             {isEditMode ? 'Edit Service' : 'Add Service'}

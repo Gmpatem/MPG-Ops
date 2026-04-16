@@ -56,7 +56,7 @@ export async function createBooking(formData: FormData) {
   const endDateTime = new Date(startDateTime.getTime() + service.duration_minutes * 60000);
   const endTime = `${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}`;
 
-  const { error } = await supabase
+  const { data: booking, error } = await supabase
     .from('bookings')
     .insert({
       business_id: businessId,
@@ -67,10 +67,27 @@ export async function createBooking(formData: FormData) {
       end_time: endTime,
       status: 'scheduled',
       notes: data.notes || null,
+    })
+    .select('id')
+    .single();
+
+  if (error || !booking) {
+    console.error('createBooking error:', error?.message);
+    return { error: error?.message ?? 'Failed to create booking' };
+  }
+
+  // Insert join row for multi-service consistency
+  const { error: joinError } = await supabase
+    .from('booking_services')
+    .insert({
+      booking_id: booking.id,
+      service_id: data.serviceId,
     });
 
-  if (error) {
-    return { error: error.message };
+  if (joinError) {
+    console.error('booking_services insert error:', joinError.message);
+    await supabase.from('bookings').delete().eq('id', booking.id);
+    return { error: joinError.message };
   }
 
   revalidatePath('/bookings');
@@ -215,7 +232,22 @@ export async function updateBooking(bookingId: string, formData: FormData) {
     .eq('business_id', businessId);
 
   if (error) {
+    console.error('updateBooking error:', error.message);
     return { error: error.message };
+  }
+
+  // Sync booking_services join table
+  await supabase.from('booking_services').delete().eq('booking_id', bookingId);
+  const { error: joinError } = await supabase
+    .from('booking_services')
+    .insert({
+      booking_id: bookingId,
+      service_id: data.serviceId,
+    });
+
+  if (joinError) {
+    console.error('booking_services sync error:', joinError.message);
+    return { error: joinError.message };
   }
 
   revalidatePath('/bookings');

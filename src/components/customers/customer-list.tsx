@@ -31,8 +31,8 @@ export function CustomerList({
   return (
     <div className="bg-card rounded-xl border overflow-hidden">
       {/* Column headers — desktop only */}
-      <div className="hidden sm:flex items-center gap-3 px-4 py-2.5 border-b bg-muted/40">
-        <div className="w-8 shrink-0" />
+      <div className="hidden sm:flex items-center gap-3 px-5 py-2.5 border-b bg-muted/40">
+        <div className="w-10 shrink-0" />
         <div className="flex-1 grid grid-cols-2 gap-4">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Name
@@ -41,7 +41,7 @@ export function CustomerList({
             Contact
           </span>
         </div>
-        <div className="w-27 shrink-0" />
+        <div className="w-28 shrink-0" />
       </div>
 
       {/* Rows */}

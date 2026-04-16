@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useI18n } from '@/lib/i18n/i18n-provider';
 
 export function RegisterForm() {
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,7 +34,7 @@ export function RegisterForm() {
       )}
       
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t('auth.register.email')}</Label>
         <Input
           id="email"
           name="email"
@@ -44,7 +46,7 @@ export function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t('auth.register.password')}</Label>
         <Input
           id="password"
           name="password"
@@ -57,7 +59,7 @@ export function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Label htmlFor="confirmPassword">{t('auth.register.confirmPassword')}</Label>
         <Input
           id="confirmPassword"
           name="confirmPassword"
@@ -74,7 +76,7 @@ export function RegisterForm() {
         className="w-full h-12"
         disabled={isLoading}
       >
-        {isLoading ? 'Creating account...' : 'Create Account'}
+        {isLoading ? t('auth.register.startingTrial') : t('auth.register.startTrial')}
       </Button>
     </form>
   );

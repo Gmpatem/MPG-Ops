@@ -8,8 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormStatus } from '@/components/form-status';
 import { forgotPassword } from '@/app/actions/auth';
+import { LanguageSwitcher } from '@/components/language-switcher/language-switcher';
+import { useI18n } from '@/lib/i18n/i18n-provider';
 
 export default function ForgotPasswordPage() {
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -22,13 +25,13 @@ export default function ForgotPasswordPage() {
       if (result.success) {
         setMessage({
           type: 'success',
-          text: 'Check your email for a password reset link.',
+          text: t('auth.forgotPassword.success'),
         });
       } else {
-        setMessage({ type: 'error', text: result.error || 'Something went wrong.' });
+        setMessage({ type: 'error', text: result.error || t('auth.forgotPassword.error') });
       }
     } catch {
-      setMessage({ type: 'error', text: 'An unexpected error occurred.' });
+      setMessage({ type: 'error', text: t('auth.resetPassword.error') });
     } finally {
       setIsLoading(false);
     }
@@ -37,15 +40,15 @@ export default function ForgotPasswordPage() {
   return (
     <Card className="w-full">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Reset password</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center">{t('auth.forgotPassword.title')}</CardTitle>
         <CardDescription className="text-center">
-          Enter your email and we&apos;ll send you a reset link.
+          {t('auth.forgotPassword.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('auth.forgotPassword.email')}</Label>
             <Input
               id="email"
               name="email"
@@ -63,14 +66,17 @@ export default function ForgotPasswordPage() {
             className="w-full h-12"
             disabled={isLoading || message?.type === 'success'}
           >
-            {isLoading ? 'Sending...' : 'Send Reset Link'}
+            {isLoading ? t('auth.forgotPassword.sending') : t('auth.forgotPassword.sendLink')}
           </Button>
         </form>
 
         <div className="mt-4 text-center text-sm text-muted-foreground">
           <Link href="/login" className="text-primary hover:underline">
-            Back to sign in
+            {t('auth.forgotPassword.backToSignIn')}
           </Link>
+        </div>
+        <div className="mt-4 flex justify-center">
+          <LanguageSwitcher variant="minimal" />
         </div>
       </CardContent>
     </Card>

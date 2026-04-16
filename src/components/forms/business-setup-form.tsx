@@ -16,6 +16,7 @@ import {
 import { OperatingHoursEditor } from '@/components/operating-hours-editor';
 import { generateSlug } from '@/lib/slug';
 import { ChevronLeft, Store, Phone, MapPin, CheckCircle } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/i18n-provider';
 
 const businessTypes = [
   { value: 'salon', label: 'Salon', icon: '✂️' },
@@ -26,6 +27,7 @@ const businessTypes = [
 type Step = 1 | 2 | 3 | 4;
 
 export function BusinessSetupForm() {
+  const { t } = useI18n();
   const [step, setStep] = useState<Step>(1);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,13 +50,13 @@ export function BusinessSetupForm() {
   function validateStep(current: Step): boolean {
     const errs: Record<string, string> = {};
     if (current === 1) {
-      if (!name.trim()) errs.name = 'Business name is required';
-      if (!businessType) errs.businessType = 'Please select a business type';
-      if (!slug.trim()) errs.slug = 'Slug is required';
+      if (!name.trim()) errs.name = t('onboarding.errors.nameRequired');
+      if (!businessType) errs.businessType = t('onboarding.errors.typeRequired');
+      if (!slug.trim()) errs.slug = t('onboarding.errors.slugRequired');
     }
     if (current === 2) {
       if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-        errs.email = 'Please enter a valid email';
+        errs.email = t('onboarding.errors.emailInvalid');
       }
     }
     setStepErrors(errs);
@@ -94,12 +96,12 @@ export function BusinessSetupForm() {
   };
 
   const summary = [
-    { label: 'Name', value: name },
-    { label: 'Slug', value: slug },
-    { label: 'Type', value: businessTypes.find((t) => t.value === businessType)?.label || businessType },
-    { label: 'Phone', value: phone || '—' },
-    { label: 'Email', value: email || '—' },
-    { label: 'Address', value: address || '—' },
+    { label: t('common.businessName'), value: name },
+    { label: t('onboarding.slug'), value: slug },
+    { label: t('onboarding.businessType'), value: businessTypes.find((t) => t.value === businessType)?.label || businessType },
+    { label: t('common.phone'), value: phone || '—' },
+    { label: t('common.businessEmail'), value: email || '—' },
+    { label: t('common.address'), value: address || '—' },
   ];
 
   return (
@@ -107,7 +109,7 @@ export function BusinessSetupForm() {
       {/* Progress */}
       <div className="space-y-2">
         <div className="flex justify-between text-xs font-medium text-muted-foreground">
-          <span>Step {step} of 4</span>
+          <span>{t('onboarding.step', { step })}</span>
           <span>{progressPercent}%</span>
         </div>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -148,13 +150,13 @@ export function BusinessSetupForm() {
                 <Store className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">Business Basics</h3>
-                <p className="text-xs text-muted-foreground">What should we call your business?</p>
+                <h3 className="font-semibold">{t('onboarding.businessBasics')}</h3>
+                <p className="text-xs text-muted-foreground">{t('onboarding.businessBasicsDesc')}</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="name">Business Name</Label>
+              <Label htmlFor="name">{t('common.businessName')}</Label>
               <Input
                 id="name"
                 type="text"
@@ -168,7 +170,7 @@ export function BusinessSetupForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
+              <Label htmlFor="slug">{t('onboarding.slug')}</Label>
               <Input
                 id="slug"
                 type="text"
@@ -180,18 +182,18 @@ export function BusinessSetupForm() {
                 }}
                 className={`h-14 text-base ${stepErrors.slug ? 'border-red-500' : ''}`}
               />
-              <p className="text-xs text-muted-foreground">Used for your public booking link.</p>
+              <p className="text-xs text-muted-foreground">{t('onboarding.slugDesc')}</p>
               {stepErrors.slug && <p className="text-sm text-red-600">{stepErrors.slug}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="businessType">Business Type</Label>
+              <Label htmlFor="businessType">{t('onboarding.businessType')}</Label>
               <Select
                 value={businessType}
                 onValueChange={(value) => setBusinessType(value ?? '')}
               >
                 <SelectTrigger className={`h-14 text-base ${stepErrors.businessType ? 'border-red-500' : ''}`}>
-                  <SelectValue placeholder="Select your business type" />
+                  <SelectValue placeholder={t('onboarding.selectBusinessType')} />
                 </SelectTrigger>
                 <SelectContent>
                   {businessTypes.map((type) => (
@@ -214,13 +216,13 @@ export function BusinessSetupForm() {
                 <Phone className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">Contact Details</h3>
-                <p className="text-xs text-muted-foreground">How can customers reach you?</p>
+                <h3 className="font-semibold">{t('onboarding.contactDetails')}</h3>
+                <p className="text-xs text-muted-foreground">{t('onboarding.contactDetailsDesc')}</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Label htmlFor="phone">{t('common.phone')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span></Label>
               <Input
                 id="phone"
                 type="tel"
@@ -232,7 +234,7 @@ export function BusinessSetupForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Business Email <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Label htmlFor="email">{t('common.businessEmail')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span></Label>
               <Input
                 id="email"
                 type="email"
@@ -253,13 +255,13 @@ export function BusinessSetupForm() {
                 <MapPin className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">Location & Hours</h3>
-                <p className="text-xs text-muted-foreground">Where are you located?</p>
+                <h3 className="font-semibold">{t('onboarding.locationAndHours')}</h3>
+                <p className="text-xs text-muted-foreground">{t('onboarding.locationAndHoursDesc')}</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Address <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Label htmlFor="address">{t('common.address')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span></Label>
               <Input
                 id="address"
                 type="text"
@@ -272,9 +274,9 @@ export function BusinessSetupForm() {
 
             <div className="space-y-3">
               <div>
-                <Label className="text-sm font-medium">Operating Hours <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Label className="text-sm font-medium">{t('common.operatingHours')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span></Label>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Set your weekly schedule. You can update this later in Settings.
+                  {t('common.operatingHoursDesc')}
                 </p>
               </div>
               <OperatingHoursEditor />
@@ -289,8 +291,8 @@ export function BusinessSetupForm() {
                 <CheckCircle className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">Review & Create</h3>
-                <p className="text-xs text-muted-foreground">Double-check before finishing.</p>
+                <h3 className="font-semibold">{t('onboarding.reviewAndCreate')}</h3>
+                <p className="text-xs text-muted-foreground">{t('onboarding.reviewAndCreateDesc')}</p>
               </div>
             </div>
 
@@ -316,7 +318,7 @@ export function BusinessSetupForm() {
               disabled={isLoading}
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
-              Back
+              {t('common.back')}
             </Button>
           )}
           {step < 4 ? (
@@ -325,7 +327,7 @@ export function BusinessSetupForm() {
               onClick={next}
               className="flex-1 h-14 text-base font-semibold"
             >
-              Next
+              {t('common.next')}
             </Button>
           ) : (
             <Button
@@ -333,7 +335,7 @@ export function BusinessSetupForm() {
               className="flex-1 h-14 text-base font-semibold"
               disabled={isLoading}
             >
-              {isLoading ? 'Creating...' : 'Create Business'}
+              {isLoading ? t('onboarding.creating') : t('onboarding.createBusiness')}
             </Button>
           )}
         </div>

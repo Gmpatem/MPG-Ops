@@ -1,23 +1,43 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, Check, Clock, Calendar, User, Scissors, CheckCircle, Star } from 'lucide-react';
-import { submitPublicBooking } from '@/app/actions/public-booking';
+import {
+  ChevronLeft,
+  Check,
+  Clock,
+  Calendar,
+  User,
+  Scissors,
+  CheckCircle,
+  Star,
+} from 'lucide-react';
+import {
+  submitPublicBooking,
+  getPublicBookingsForDate,
+} from '@/app/actions/public-booking';
 import type { PublicBusiness, PublicService, PublicSiteSettings } from '@/app/actions/public-booking';
+import {
+  formatTime12h,
+  formatBookingDate,
+  getUpcomingBookingDates,
+  getTimeSlots,
+  computeNextAvailableSlot,
+  formatDurationMinutes,
+} from '@/lib/booking-dates';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface WizardState {
   step: 1 | 2 | 3 | 4 | 5 | 6;
-  service: PublicService | null;
-  date: string;    // YYYY-MM-DD
-  time: string;    // HH:MM
+  services: PublicService[];
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM
   name: string;
   phone: string;
   email: string;
@@ -29,113 +49,6 @@ interface BookingWizardProps {
   services: PublicService[];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatTime(time: string): string {
-  const [h, m] = time.split(':').map(Number);
-  const period = h < 12 ? 'AM' : 'PM';
-  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
-}
-
-function formatDate(dateStr: string): string {
-  const [y, mo, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, mo - 1, d);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-function todayString(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-}
-
-function getTimeSlots(
-  dateStr: string,
-  operatingHours: PublicBusiness['operating_hours']
-): string[] {
-  const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const [y, mo, d] = dateStr.split('-').map(Number);
-  const dayName = DAYS[new Date(y, mo - 1, d).getDay()];
-
-  let openH = 9,  openM = 0;
-  let closeH = 18, closeM = 0;
-
-  if (operatingHours && Object.keys(operatingHours).length > 0) {
-    const day = operatingHours[dayName];
-    if (!day || !day.isOpen) return [];    // closed
-    const [oh, om] = day.open.split(':').map(Number);
-    const [ch, cm] = day.close.split(':').map(Number);
-    openH = oh; openM = om;
-    closeH = ch; closeM = cm;
-  }
-
-  const slots: string[] = [];
-  let cur = openH * 60 + openM;
-  const end = closeH * 60 + closeM;
-  while (cur < end) {
-    slots.push(
-      `${String(Math.floor(cur / 60)).padStart(2, '0')}:${String(cur % 60).padStart(2, '0')}`
-    );
-    cur += 30;
-  }
-  return slots;
-}
-
-/**
- * Compute the next available booking slot from operating hours.
- * Checks today first, then up to 6 days ahead.
- * Returns a human-readable string or null if no slot found.
- * Must be called client-side only (depends on current wall time).
- */
-function computeNextAvailableSlot(
-  operatingHours: PublicBusiness['operating_hours']
-): string | null {
-  if (!operatingHours || Object.keys(operatingHours).length === 0) return null;
-
-  const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const now = new Date();
-
-  for (let offset = 0; offset < 7; offset++) {
-    const date = new Date(now);
-    date.setDate(now.getDate() + offset);
-    const hours = operatingHours[DAYS[date.getDay()]];
-
-    if (!hours?.isOpen) continue;
-
-    const [openH, openM] = hours.open.split(':').map(Number);
-    const [closeH, closeM] = hours.close.split(':').map(Number);
-    const closeMin = closeH * 60 + closeM;
-
-    let slotMin: number;
-    if (offset === 0) {
-      // Today — find next 30-min boundary strictly after current time
-      const nowMin = now.getHours() * 60 + now.getMinutes();
-      slotMin = Math.max(Math.ceil((nowMin + 1) / 30) * 30, openH * 60 + openM);
-    } else {
-      slotMin = openH * 60 + openM;
-    }
-
-    if (slotMin >= closeMin) continue;
-
-    const h = Math.floor(slotMin / 60);
-    const mins = slotMin % 60;
-    const period = h < 12 ? 'AM' : 'PM';
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    const timeStr = `${h12}:${String(mins).padStart(2, '0')} ${period}`;
-
-    if (offset === 0) return `Today · ${timeStr}`;
-    if (offset === 1) return `Tomorrow · ${timeStr}`;
-    return `${date.toLocaleDateString('en-US', { weekday: 'long' })} · ${timeStr}`;
-  }
-
-  return null;
-}
-
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
 
 function ProgressBar({ step }: { step: number }) {
@@ -144,7 +57,9 @@ function ProgressBar({ step }: { step: number }) {
   return (
     <div className="w-full">
       <div className="flex justify-between mb-1">
-        <span className="text-xs text-muted-foreground">Step {step} of {total}</span>
+        <span className="text-xs text-muted-foreground">
+          Step {step} of {total}
+        </span>
         <span className="text-xs text-muted-foreground">{pct}%</span>
       </div>
       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -222,63 +137,70 @@ function FeaturedServiceCard({
 
   return (
     <div
-      className={`rounded-xl border-2 overflow-hidden ${
-        service.is_featured
-          ? 'border-amber-300 bg-amber-50/40'
-          : 'border-primary/25 bg-primary/5'
-      }`}
+      onClick={onBook}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onBook();
+      }}
+      className="relative w-full aspect-[4/5] sm:aspect-[16/10] rounded-2xl overflow-hidden shadow-lg cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      aria-label={`Select ${name}`}
     >
-      {service.image_url && (
-        <div className="w-full h-36 sm:h-44 bg-muted">
-          <img
-            src={service.image_url}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
+      {/* Full-bleed image or fallback */}
+      {service.image_url ? (
+        <img
+          src={service.image_url}
+          alt={name}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-2 text-muted-foreground/60">
+            <Scissors className="w-10 h-10" />
+            <span className="text-xs font-medium">Featured service</span>
+          </div>
         </div>
       )}
-      <div className="px-4 py-4">
-        {/* Featured label row */}
-        <div className="flex items-center gap-1.5 mb-3">
-          <Star className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-          <span className="text-xs font-semibold uppercase tracking-wide text-amber-600">
-            Featured
-          </span>
-          {service.promo_badge && (
-            <Badge className="ml-auto text-xs bg-primary/10 text-primary border-0 px-1.5">
-              {service.promo_badge}
-            </Badge>
-          )}
-        </div>
 
-        {/* Name + price */}
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="font-bold text-base leading-snug">{name}</h3>
-          <span className="text-lg font-bold text-primary shrink-0">
-            ₱{service.price.toFixed(0)}
+      {/* Subtle bottom gradient for overlay blending */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+
+      {/* Top badges */}
+      <div className="absolute top-3 left-3 flex items-center gap-1.5 pointer-events-none">
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-700 bg-amber-100/90 border border-amber-200/60 rounded-full px-2 py-0.5 backdrop-blur-sm">
+          <Star className="w-3 h-3" />
+          Featured
+        </span>
+      </div>
+      {service.promo_badge && (
+        <div className="absolute top-3 right-3 pointer-events-none">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-background/90 border border-white/10 rounded-full px-2 py-0.5 backdrop-blur-sm">
+            {service.promo_badge}
           </span>
         </div>
+      )}
 
-        {/* Duration + promo */}
-        <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2.5">
-          <Clock className="w-3.5 h-3.5 shrink-0" />
-          <span>{service.duration_minutes} min</span>
-          {service.promo_text && (
-            <span className="text-primary font-medium ml-1">{service.promo_text}</span>
-          )}
+      {/* Compact floating bottom overlay */}
+      <div className="absolute bottom-3 left-3 right-3 bg-background/90 backdrop-blur-md rounded-xl border border-white/10 shadow-sm p-3 pointer-events-none">
+        {/* Line 1: Service name */}
+        <h3 className="font-semibold text-sm sm:text-base text-foreground leading-tight line-clamp-1 mb-0.5">
+          {name}
+        </h3>
+
+        {/* Line 2: Price + duration */}
+        <p className="text-xs text-muted-foreground mb-1.5">
+          ₱{service.price.toFixed(0)} • {service.duration_minutes} min
+        </p>
+
+        {/* Line 3: Short descriptor + inline Book CTA */}
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground line-clamp-1 min-w-0">
+            {desc || service.promo_text || '\u00A0'}
+          </p>
+          <span className="text-xs font-semibold text-primary whitespace-nowrap">
+            Select →
+          </span>
         </div>
-
-        {/* Optional description */}
-        {desc && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{desc}</p>
-        )}
-
-        <Button
-          onClick={onBook}
-          className="w-full h-11 text-sm font-semibold rounded-lg"
-        >
-          Book Now
-        </Button>
       </div>
     </div>
   );
@@ -296,9 +218,9 @@ function GridServiceCard({
   const name = service.public_title ?? service.name;
 
   return (
-    <div className="rounded-xl border bg-card flex flex-col overflow-hidden">
+    <div className="rounded-xl border bg-card overflow-hidden flex flex-col">
       {service.image_url ? (
-        <div className="w-full h-24 bg-muted">
+        <div className="w-full h-28 bg-muted">
           <img
             src={service.image_url}
             alt={name}
@@ -306,32 +228,31 @@ function GridServiceCard({
           />
         </div>
       ) : (
-        <div className="w-full h-12 bg-muted/60" />
+        <div className="w-full h-20 bg-muted/60 flex items-center justify-center">
+          <Scissors className="w-6 h-6 text-muted-foreground/40" />
+        </div>
       )}
-      <div className="px-3 pt-3 pb-2 flex-1">
-        <p className="font-semibold text-sm leading-tight mb-2 line-clamp-2">{name}</p>
-        <p className="text-primary font-bold text-sm">₱{service.price.toFixed(0)}</p>
-        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-0.5">
-          <Clock className="w-3 h-3 shrink-0" />
-          {service.duration_minutes} min
+      <div className="p-2.5 flex flex-col flex-1">
+        <p className="font-medium text-sm leading-tight line-clamp-1 mb-0.5">{name}</p>
+        <p className="text-xs text-muted-foreground mb-2">
+          ₱{service.price.toFixed(0)} • {service.duration_minutes} min
         </p>
-      </div>
-      <div className="px-3 pb-3">
-        <Button
-          onClick={onBook}
-          variant="outline"
-          className="w-full h-9 text-xs font-semibold rounded-lg"
-        >
-          Book
-        </Button>
+        <div className="mt-auto">
+          <Button
+            onClick={onBook}
+            variant="outline"
+            size="sm"
+            className="w-full h-8 text-xs font-medium rounded-lg"
+          >
+            Select
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
 
 // ─── Step 1: Storefront Landing ───────────────────────────────────────────────
-
-const TRUST_CHIPS = ['No account required', 'Instant booking', 'Free to book'];
 
 function ServiceFirstLanding({
   business,
@@ -376,54 +297,55 @@ function ServiceFirstLanding({
   }, [business.operating_hours]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* ── Business header ─────────────────────────────────────────────── */}
-      <div className="px-4 pt-8 pb-5 max-w-lg mx-auto">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
-          {typeLabels[business.business_type] ?? 'Service Business'}
-        </p>
-        <h1 className="text-2xl font-bold tracking-tight mb-1">{business.name}</h1>
-        <p className="text-sm text-muted-foreground mb-3">
-          Book your service in seconds.
-        </p>
-
-        {/* Trust chips */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {TRUST_CHIPS.map((chip) => (
-            <span
-              key={chip}
-              className="text-xs text-muted-foreground bg-muted/60 rounded-full px-2.5 py-1"
-            >
-              {chip}
-            </span>
-          ))}
-        </div>
-
-        {/* Next available slot */}
-        {nextSlot && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span>
-              Next available:{' '}
-              <span className="font-semibold text-foreground">{nextSlot}</span>
-            </span>
-          </div>
-        )}
-
-        {/* Instructions notice */}
-        {instructions && (
-          <div className="mt-4 rounded-lg border bg-muted/40 px-3 py-2.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
-              Please note
+    <div className="min-h-screen bg-background pb-20">
+      {/* ── Compact Premium Header ──────────────────────────────────────── */}
+      <div className="px-4 pt-5 pb-3 max-w-lg mx-auto">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-primary mb-0.5">
+              {typeLabels[business.business_type] ?? 'Service Business'}
             </p>
-            <p className="text-sm">{instructions}</p>
+            <h1 className="text-xl font-bold tracking-tight truncate">
+              {business.name}
+            </h1>
           </div>
-        )}
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <span className="text-sm font-bold text-primary">
+              {business.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        </div>
       </div>
+
+      {/* ── Trust Row ───────────────────────────────────────────────────── */}
+      <div className="px-4 pb-4 max-w-lg mx-auto">
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
+            No account required
+          </span>
+          <span className="text-muted-foreground/40">•</span>
+          <span className="inline-flex items-center gap-1">
+            <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
+            Instant confirmation
+          </span>
+        </div>
+      </div>
+
+      {/* ── Instructions notice (compact) ───────────────────────────────── */}
+      {instructions && (
+        <div className="px-4 pb-4 max-w-lg mx-auto">
+          <div className="rounded-lg border bg-muted/40 px-3 py-2">
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              {instructions}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Featured service ────────────────────────────────────────────── */}
       {currentFeatured && (
-        <div className="px-4 pb-4 max-w-lg mx-auto">
+        <div className="px-4 pb-5 max-w-lg mx-auto">
           <FeaturedServiceCard
             service={currentFeatured}
             onBook={() => onSelectService(currentFeatured)}
@@ -448,11 +370,11 @@ function ServiceFirstLanding({
 
       {/* ── Services grid ───────────────────────────────────────────────── */}
       {gridServices.length > 0 && (
-        <div className="px-4 pb-6 max-w-lg mx-auto">
+        <div className="px-4 pb-8 max-w-lg mx-auto">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
             {gridServices.length === 1 ? 'More Services' : 'All Services'}
           </p>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {gridServices.map((service) => (
               <GridServiceCard
                 key={service.id}
@@ -464,57 +386,89 @@ function ServiceFirstLanding({
         </div>
       )}
 
-      {/* ── Footer trust cue ────────────────────────────────────────────── */}
-      <div className="px-4 pb-12 max-w-lg mx-auto">
-        <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">
-          <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
-          Free to book · Instant confirmation · No signup needed
-        </p>
+      {/* ── Sticky Bottom Booking Bar ───────────────────────────────────── */}
+      <div className="fixed inset-x-0 bottom-0 border-t bg-background/95 backdrop-blur px-4 py-3 z-50">
+        <div className="max-w-lg mx-auto flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            {nextSlot ? (
+              <>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                  Next available
+                </p>
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {nextSlot}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm font-medium text-foreground">
+                Ready to book?
+              </p>
+            )}
+          </div>
+          <Button
+            onClick={() => onSelectService(currentFeatured || services[0])}
+            className="h-10 px-5 text-sm font-semibold rounded-lg shrink-0"
+          >
+            Book now
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── Step 2: Choose Service ───────────────────────────────────────────────────
+// ─── Step 2: Choose Services (multi-select) ───────────────────────────────────
 
 function StepService({
   services,
   selected,
-  onSelect,
+  onToggle,
   onNext,
   onBack,
 }: {
   services: PublicService[];
-  selected: PublicService | null;
-  onSelect: (s: PublicService) => void;
+  selected: PublicService[];
+  onToggle: (service: PublicService) => void;
   onNext: () => void;
   onBack: () => void;
 }) {
+  const totalPrice = useMemo(
+    () => selected.reduce((sum, s) => sum + s.price, 0),
+    [selected]
+  );
+  const totalDuration = useMemo(
+    () => selected.reduce((sum, s) => sum + s.duration_minutes, 0),
+    [selected]
+  );
+
+  const selectedIds = useMemo(
+    () => new Set(selected.map((s) => s.id)),
+    [selected]
+  );
+
   return (
     <StepShell
       step={2}
-      title="Choose a service"
-      subtitle="Select the service you'd like to book."
+      title="Choose services"
+      subtitle="Select one or more services for your appointment."
       onBack={onBack}
     >
-      <div className="space-y-3 mb-8">
+      <div className="space-y-3 mb-4">
         {services.map((service) => {
-          const isSelected = selected?.id === service.id;
+          const isSelected = selectedIds.has(service.id);
           return (
             <button
               key={service.id}
-              onClick={() => onSelect(service)}
-              className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
+              onClick={() => onToggle(service)}
+              className={`w-full text-left rounded-xl border-2 p-3 transition-all ${
                 isSelected
                   ? 'border-primary bg-primary/5'
-                  : service.is_featured
-                  ? 'border-amber-200 bg-amber-50/30 hover:border-amber-300'
                   : 'border-border bg-card hover:border-primary/50'
               }`}
             >
               <div className="flex items-start gap-3">
                 {service.image_url && (
-                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0">
+                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
                     <img
                       src={service.image_url}
                       alt={service.public_title ?? service.name}
@@ -527,11 +481,11 @@ function StepService({
                     {service.is_featured && (
                       <Star className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     )}
-                    <span className="font-semibold text-base">
+                    <span className="font-semibold text-sm">
                       {service.public_title ?? service.name}
                     </span>
                     {service.promo_badge && (
-                      <Badge className="text-xs shrink-0 bg-primary/10 text-primary border-0 px-1.5">
+                      <Badge className="text-[10px] shrink-0 bg-primary/10 text-primary border-0 px-1.5">
                         {service.promo_badge}
                       </Badge>
                     )}
@@ -540,35 +494,37 @@ function StepService({
                     )}
                   </div>
                   {(service.public_description ?? service.description) && (
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                       {service.public_description ?? service.description}
                     </p>
                   )}
-                  {service.promo_text && (
-                    <p className="text-xs text-primary mt-1 font-medium">
-                      {service.promo_text}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="w-3.5 h-3.5" />
-                      {service.duration_minutes} min
-                    </span>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ₱{service.price.toFixed(0)} • {service.duration_minutes} min
+                  </p>
                 </div>
-                <span className="text-lg font-bold text-primary shrink-0">
-                  ₱{service.price.toFixed(0)}
-                </span>
               </div>
             </button>
           );
         })}
       </div>
 
+      {/* Compact summary */}
+      {selected.length > 0 && (
+        <div className="rounded-xl border bg-muted/40 px-4 py-3 mb-4">
+          <p className="text-xs text-muted-foreground mb-0.5">Selected</p>
+          <p className="text-sm font-medium line-clamp-1">
+            {selected.map((s) => s.public_title ?? s.name).join(' + ')}
+          </p>
+          <p className="text-xs text-foreground mt-1">
+            ₱{totalPrice.toFixed(0)} • {formatDurationMinutes(totalDuration)}
+          </p>
+        </div>
+      )}
+
       <Button
         onClick={onNext}
-        disabled={!selected}
-        className="w-full h-14 text-base font-semibold rounded-xl"
+        disabled={selected.length === 0}
+        className="w-full h-12 text-base font-semibold rounded-xl"
       >
         Continue
       </Button>
@@ -576,7 +532,7 @@ function StepService({
   );
 }
 
-// ─── Step 3: Choose Date ──────────────────────────────────────────────────────
+// ─── Step 3: Choose Date (tapable chips) ──────────────────────────────────────
 
 function StepDate({
   date,
@@ -589,8 +545,46 @@ function StepDate({
   onNext: () => void;
   onBack: () => void;
 }) {
-  const today = todayString();
-  const isValid = date >= today;
+  const [monthOffset, setMonthOffset] = useState(0);
+  const today = useMemo(() => new Date(), []);
+  const currentMonth = useMemo(() => {
+    const d = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+    return d;
+  }, [today, monthOffset]);
+
+  const days = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const startDay = firstDayOfMonth.getDay(); // 0 = Sunday
+    const totalDays = lastDayOfMonth.getDate();
+
+    const result: { value: string; dayNum: number; isCurrentMonth: boolean; isPast: boolean }[] = [];
+
+    // leading padding
+    for (let i = 0; i < startDay; i++) {
+      result.push({ value: '', dayNum: 0, isCurrentMonth: false, isPast: false });
+    }
+
+    for (let d = 1; d <= totalDays; d++) {
+      const dateObj = new Date(year, month, d);
+      const value = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      result.push({ value, dayNum: d, isCurrentMonth: true, isPast });
+    }
+
+    // trailing padding to fill 6 rows (42 cells)
+    const remaining = 42 - result.length;
+    for (let i = 0; i < remaining; i++) {
+      result.push({ value: '', dayNum: 0, isCurrentMonth: false, isPast: false });
+    }
+
+    return result;
+  }, [currentMonth, today]);
+
+  const monthLabel = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
     <StepShell
@@ -599,37 +593,79 @@ function StepDate({
       subtitle="Choose when you'd like your appointment."
       onBack={onBack}
     >
-      <div className="mb-8 space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="bookingDate" className="text-sm font-medium">
-            Appointment date
-          </Label>
-          <input
-            id="bookingDate"
-            type="date"
-            min={today}
-            value={date}
-            onChange={(e) => onDateChange(e.target.value)}
-            className="w-full h-14 rounded-xl border border-input bg-background px-4 text-base focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+      <div className="mb-6">
+        {/* Month nav */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => setMonthOffset((m) => m - 1)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <p className="text-sm font-semibold">{monthLabel}</p>
+          <button
+            onClick={() => setMonthOffset((m) => m + 1)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Next month"
+          >
+            <ChevronLeft className="w-5 h-5 rotate-180" />
+          </button>
         </div>
 
-        {date && !isValid && (
-          <p className="text-sm text-red-600">Please select today or a future date.</p>
-        )}
+        {/* Weekday headers */}
+        <div className="grid grid-cols-7 mb-2">
+          {weekDays.map((wd) => (
+            <div key={wd} className="text-center text-[10px] font-medium text-muted-foreground uppercase">
+              {wd}
+            </div>
+          ))}
+        </div>
 
-        {date && isValid && (
-          <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2.5">
-            <Calendar className="w-4 h-4 text-primary shrink-0" />
-            <span className="text-sm font-medium">{formatDate(date)}</span>
-          </div>
-        )}
+        {/* Day grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((d, idx) => {
+            if (!d.isCurrentMonth) {
+              return <div key={idx} className="aspect-square" />;
+            }
+            const isSelected = date === d.value;
+            const isToday = d.value === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            return (
+              <button
+                key={d.value}
+                disabled={d.isPast}
+                onClick={() => onDateChange(d.value)}
+                className={`
+                  aspect-square rounded-lg border-2 text-sm font-medium transition-all
+                  flex items-center justify-center
+                  ${isSelected
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : d.isPast
+                    ? 'border-transparent text-muted-foreground/40 cursor-not-allowed'
+                    : isToday
+                    ? 'border-primary/40 bg-primary/10 text-primary hover:border-primary/70'
+                    : 'border-border bg-card hover:border-primary/50'
+                  }
+                `}
+              >
+                {d.dayNum}
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {date && (
+        <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2.5 mb-6">
+          <Calendar className="w-4 h-4 text-primary shrink-0" />
+          <span className="text-sm font-medium">{formatBookingDate(date)}</span>
+        </div>
+      )}
 
       <Button
         onClick={onNext}
-        disabled={!date || !isValid}
-        className="w-full h-14 text-base font-semibold rounded-xl"
+        disabled={!date}
+        className="w-full h-12 text-base font-semibold rounded-xl"
       >
         Continue
       </Button>
@@ -643,6 +679,7 @@ function StepTime({
   date,
   time,
   business,
+  totalDurationMinutes,
   onTimeSelect,
   onNext,
   onBack,
@@ -650,25 +687,41 @@ function StepTime({
   date: string;
   time: string;
   business: PublicBusiness;
+  totalDurationMinutes: number;
   onTimeSelect: (t: string) => void;
   onNext: () => void;
   onBack: () => void;
 }) {
-  const slots = getTimeSlots(date, business.operating_hours);
+  const [existingBookings, setExistingBookings] = useState<{ start_time: string; end_time: string }[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPublicBookingsForDate(business.id, date).then((bookings) => {
+      if (!cancelled) setExistingBookings(bookings);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [business.id, date]);
+
+  const slots = useMemo(
+    () => getTimeSlots(date, business.operating_hours, totalDurationMinutes, existingBookings),
+    [date, business.operating_hours, totalDurationMinutes, existingBookings]
+  );
 
   return (
     <StepShell
       step={4}
       title="Choose a time"
-      subtitle={`Available slots for ${formatDate(date)}`}
+      subtitle={`Available slots for ${formatBookingDate(date)}`}
       onBack={onBack}
     >
       {slots.length === 0 ? (
         <div className="text-center py-12">
           <Calendar className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="font-semibold mb-1">Closed on this day</p>
+          <p className="font-semibold mb-1">No available slots</p>
           <p className="text-sm text-muted-foreground mb-6">
-            The business is not available on this date. Please choose another day.
+            The business is closed or fully booked for this date. Please choose another day.
           </p>
           <Button variant="outline" onClick={onBack}>
             Choose Another Date
@@ -689,7 +742,7 @@ function StepTime({
                       : 'border-border bg-card hover:border-primary/50'
                   }`}
                 >
-                  {formatTime(slot)}
+                  {formatTime12h(slot)}
                 </button>
               );
             })}
@@ -698,7 +751,7 @@ function StepTime({
           <Button
             onClick={onNext}
             disabled={!time}
-            className="w-full h-14 text-base font-semibold rounded-xl"
+            className="w-full h-12 text-base font-semibold rounded-xl"
           >
             Continue
           </Button>
@@ -813,10 +866,7 @@ function StepDetails({
         </div>
       </div>
 
-      <Button
-        onClick={handleNext}
-        className="w-full h-14 text-base font-semibold rounded-xl"
-      >
+      <Button onClick={handleNext} className="w-full h-12 text-base font-semibold rounded-xl">
         Review Booking
       </Button>
     </StepShell>
@@ -840,10 +890,26 @@ function StepReview({
   isSubmitting: boolean;
   error: string | null;
 }) {
+  const totalPrice = useMemo(
+    () => state.services.reduce((sum, s) => sum + s.price, 0),
+    [state.services]
+  );
+  const totalDuration = useMemo(
+    () => state.services.reduce((sum, s) => sum + s.duration_minutes, 0),
+    [state.services]
+  );
+
   const rows = [
-    { icon: <Scissors className="w-4 h-4" />, label: 'Service', value: state.service ? (state.service.public_title ?? state.service.name) : '—' },
-    { icon: <Calendar className="w-4 h-4" />, label: 'Date', value: state.date ? formatDate(state.date) : '—' },
-    { icon: <Clock className="w-4 h-4" />, label: 'Time', value: state.time ? formatTime(state.time) : '—' },
+    {
+      icon: <Calendar className="w-4 h-4" />,
+      label: 'Date',
+      value: state.date ? formatBookingDate(state.date) : '—',
+    },
+    {
+      icon: <Clock className="w-4 h-4" />,
+      label: 'Time',
+      value: state.time ? formatTime12h(state.time) : '—',
+    },
     { icon: <User className="w-4 h-4" />, label: 'Name', value: state.name },
     { icon: <User className="w-4 h-4" />, label: 'Phone', value: state.phone },
   ];
@@ -868,15 +934,27 @@ function StepReview({
         <p className="text-xl font-bold mt-0.5">{business.name}</p>
       </div>
 
-      {/* Price */}
-      {state.service && (
-        <div className="flex items-center justify-between rounded-xl bg-primary/5 border border-primary/20 px-4 py-3 mb-4">
+      {/* Services summary */}
+      <div className="rounded-xl border bg-card px-4 py-3 mb-4">
+        <div className="flex items-start gap-3 mb-2">
+          <Scissors className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-muted-foreground mb-0.5">Services</p>
+            <p className="text-sm font-medium">
+              {state.services.map((s) => s.public_title ?? s.name).join(' + ')}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between rounded-lg bg-primary/5 border border-primary/20 px-3 py-2">
           <span className="font-medium text-sm">Total</span>
-          <span className="text-xl font-bold text-primary">
-            ₱{state.service.price.toFixed(2)}
+          <span className="text-lg font-bold text-primary">
+            ₱{totalPrice.toFixed(2)}
           </span>
         </div>
-      )}
+        <p className="text-xs text-muted-foreground mt-2">
+          {formatDurationMinutes(totalDuration)} total
+        </p>
+      </div>
 
       {/* Summary rows */}
       <div className="rounded-xl border bg-card mb-6 overflow-hidden">
@@ -920,7 +998,7 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
   const router = useRouter();
   const [state, setState] = useState<WizardState>({
     step: 1,
-    service: null,
+    services: [],
     date: '',
     time: '',
     name: '',
@@ -960,19 +1038,35 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
     setState((s) => ({ ...s, [key]: value }));
   }
 
-  // Called from landing — preselects service and jumps straight to date step
+  // Called from landing — preselects service and jumps to service selection step
   function handleSelectService(service: PublicService) {
-    setState((s) => ({ ...s, service, step: 3 }));
+    setState((s) => ({
+      ...s,
+      services: s.services.some((x) => x.id === service.id)
+        ? s.services
+        : [...s.services, service],
+      step: 2,
+    }));
+  }
+
+  function handleToggleService(service: PublicService) {
+    setState((s) => {
+      const exists = s.services.some((x) => x.id === service.id);
+      if (exists) {
+        return { ...s, services: s.services.filter((x) => x.id !== service.id) };
+      }
+      return { ...s, services: [...s.services, service] };
+    });
   }
 
   async function handleConfirm() {
-    if (!state.service || !state.date || !state.time) return;
+    if (state.services.length === 0 || !state.date || !state.time) return;
     setIsSubmitting(true);
     setSubmitError(null);
 
     const result = await submitPublicBooking({
       businessId: business.id,
-      serviceId: state.service.id,
+      serviceIds: state.services.map((s) => s.id),
       bookingDate: state.date,
       startTime: state.time,
       customerName: state.name,
@@ -999,11 +1093,13 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
 
     // Navigate to success page with query params
     const params = new URLSearchParams({
-      service: result.confirmation.serviceName,
+      services: result.confirmation.allServiceNames.join(', '),
       date: result.confirmation.bookingDate,
       time: result.confirmation.startTime,
       name: result.confirmation.customerName,
       business: result.confirmation.businessName,
+      duration: String(result.confirmation.totalDurationMinutes),
+      price: String(result.confirmation.totalPrice),
     });
     router.push(`/book/${business.id}/success?${params.toString()}`);
   }
@@ -1034,8 +1130,8 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
     return (
       <StepService
         services={services}
-        selected={state.service}
-        onSelect={(s) => set('service', s)}
+        selected={state.services}
+        onToggle={handleToggleService}
         onNext={next}
         onBack={back}
       />
@@ -1062,6 +1158,7 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
         date={state.date}
         time={state.time}
         business={business}
+        totalDurationMinutes={state.services.reduce((sum, s) => sum + s.duration_minutes, 0)}
         onTimeSelect={(t) => set('time', t)}
         onNext={next}
         onBack={back}

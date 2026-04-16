@@ -11,11 +11,14 @@ import { FormStatus } from '@/components/form-status';
 import { OperatingHoursEditor } from '@/components/operating-hours-editor';
 import { getCurrentBusiness, updateBusiness } from '@/app/actions/business';
 import { useToast } from '@/components/ui/toast';
-import { Copy, Check, ExternalLink, Paintbrush } from 'lucide-react';
+import { Copy, Check, ExternalLink, Paintbrush, CreditCard } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/language-switcher/language-switcher';
+import { useI18n } from '@/lib/i18n/i18n-provider';
 import Link from 'next/link';
 import type { Tables } from '@/lib/supabase/database.types';
 
 function PublicSiteCard({ businessId }: { businessId: string }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const bookingUrl = `${origin}/book/${businessId}`;
@@ -30,17 +33,17 @@ function PublicSiteCard({ businessId }: { businessId: string }) {
   return (
     <Card className="p-6">
       <div className="flex items-start justify-between mb-1">
-        <h3 className="font-semibold text-sm">Public Booking Site</h3>
+        <h3 className="font-semibold text-sm">{t('common.publicBookingSite')}</h3>
         <Link
           href="/settings/public-site"
           className="flex items-center gap-1 text-xs text-primary hover:underline"
         >
           <Paintbrush className="w-3 h-3" />
-          Customize
+          {t('common.customize')}
         </Link>
       </div>
       <p className="text-xs text-muted-foreground mb-3">
-        Share this link with customers so they can book online. Customize the look and content in the Public Site settings.
+        {t('common.publicBookingSiteDesc')}
       </p>
       <div className="flex items-center gap-2">
         <Input
@@ -55,7 +58,7 @@ function PublicSiteCard({ businessId }: { businessId: string }) {
           size="sm"
           onClick={handleCopy}
           className="h-10 shrink-0"
-          title="Copy booking link"
+          title={t('common.copyLink')}
         >
           {copied ? (
             <Check className="w-4 h-4 text-green-600" />
@@ -68,7 +71,7 @@ function PublicSiteCard({ businessId }: { businessId: string }) {
           target="_blank"
           rel="noopener noreferrer"
           className="h-10 shrink-0 inline-flex items-center px-3 rounded-md border text-sm hover:bg-muted transition-colors"
-          title="Preview public site"
+          title={t('common.preview')}
         >
           <ExternalLink className="w-4 h-4" />
         </a>
@@ -78,6 +81,7 @@ function PublicSiteCard({ businessId }: { businessId: string }) {
 }
 
 export default function SettingsPage() {
+  const { t } = useI18n();
   const { toast } = useToast();
   const [business, setBusiness] = useState<Tables<'businesses'> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,13 +97,13 @@ export default function SettingsPage() {
         const data = await getCurrentBusiness();
         setBusiness(data);
       } catch {
-        setError('Failed to load business settings');
+        setError(t('settings.subtitle'));
       } finally {
         setIsLoading(false);
       }
     }
     loadBusiness();
-  }, []);
+  }, [t]);
 
   async function handleSubmit(formData: FormData) {
     setIsSaving(true);
@@ -109,15 +113,15 @@ export default function SettingsPage() {
       const result = await updateBusiness(formData);
 
       if (result.success) {
-        setMessage({ type: 'success', text: 'Settings saved successfully.' });
-        toast({ title: 'Settings saved successfully' });
+        setMessage({ type: 'success', text: t('common.saveChanges') });
+        toast({ title: t('common.saveChanges') });
         const data = await getCurrentBusiness();
         setBusiness(data);
       } else {
-        setMessage({ type: 'error', text: result.error || 'Failed to save settings.' });
+        setMessage({ type: 'error', text: result.error || t('settings.subtitle') });
       }
     } catch {
-      setMessage({ type: 'error', text: 'An unexpected error occurred.' });
+      setMessage({ type: 'error', text: t('auth.resetPassword.error') });
     }
 
     setIsSaving(false);
@@ -131,7 +135,7 @@ export default function SettingsPage() {
         const data = await getCurrentBusiness();
         setBusiness(data);
       } catch {
-        setError('Failed to load business settings');
+        setError(t('settings.subtitle'));
       } finally {
         setIsLoading(false);
       }
@@ -169,14 +173,14 @@ export default function SettingsPage() {
     return (
       <div className="space-y-6 max-w-2xl">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Business Settings</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Update your business information.
+            {t('settings.subtitle')}
           </p>
         </div>
         <Card className="p-8">
           <ErrorState
-            title="Failed to load settings"
+            title={t('settings.title')}
             message={error}
             onRetry={handleRetry}
           />
@@ -189,15 +193,15 @@ export default function SettingsPage() {
     return (
       <div className="space-y-6 max-w-2xl">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Business Settings</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Update your business information.
+            {t('settings.subtitle')}
           </p>
         </div>
         <Card className="p-8 text-center">
-          <p className="text-muted-foreground">No business found.</p>
+          <p className="text-muted-foreground">{t('settings.noBusiness')}</p>
           <p className="text-sm text-muted-foreground mt-2">
-            We couldn&apos;t find a business associated with your account.
+            {t('settings.noBusinessDesc')}
           </p>
         </Card>
       </div>
@@ -208,14 +212,46 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-2xl">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Business Settings</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Update your business information.
+          {t('settings.subtitle')}
         </p>
       </div>
 
       {/* Public Booking Site */}
       <PublicSiteCard businessId={business.id} />
+
+      {/* Billing */}
+      <Card className="p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="font-semibold text-sm">{t('common.billing')}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {t('settings.billingDesc')}
+            </p>
+          </div>
+          <Link
+            href="/settings/billing"
+            className="flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            <CreditCard className="w-3 h-3" />
+            {t('common.manage')}
+          </Link>
+        </div>
+      </Card>
+
+      {/* Language */}
+      <Card className="p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 className="font-semibold text-sm">{t('common.language')}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Choose your preferred language for the app.
+            </p>
+          </div>
+          <LanguageSwitcher />
+        </div>
+      </Card>
 
       {/* Settings Form */}
       <Card className="p-6">
@@ -223,7 +259,7 @@ export default function SettingsPage() {
           {/* Business Name */}
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium">
-              Business name
+              {t('common.businessName')}
             </Label>
             <Input
               id="name"
@@ -238,7 +274,7 @@ export default function SettingsPage() {
           {/* Business Email */}
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
-              Business email
+              {t('common.businessEmail')}
             </Label>
             <Input
               id="email"
@@ -253,7 +289,7 @@ export default function SettingsPage() {
           {/* Phone */}
           <div className="space-y-2">
             <Label htmlFor="phone" className="text-sm font-medium">
-              Phone
+              {t('common.phone')}
             </Label>
             <Input
               id="phone"
@@ -268,7 +304,7 @@ export default function SettingsPage() {
           {/* Address */}
           <div className="space-y-2">
             <Label htmlFor="address" className="text-sm font-medium">
-              Address
+              {t('common.address')}
             </Label>
             <Input
               id="address"
@@ -283,9 +319,9 @@ export default function SettingsPage() {
           {/* Operating Hours */}
           <div className="space-y-3 pt-2">
             <div className="border-t pt-4">
-              <Label className="text-sm font-medium">Operating Hours</Label>
+              <Label className="text-sm font-medium">{t('common.operatingHours')}</Label>
               <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-                Set your weekly schedule for each day.
+                {t('common.operatingHoursDesc')}
               </p>
               <OperatingHoursEditor initialHours={business.operating_hours as Record<string, { isOpen: boolean; open: string; close: string }> | null} />
             </div>
@@ -303,7 +339,7 @@ export default function SettingsPage() {
               className="h-11 px-6"
               disabled={isSaving}
             >
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? t('common.saving') : t('common.saveChanges')}
             </Button>
           </div>
         </form>

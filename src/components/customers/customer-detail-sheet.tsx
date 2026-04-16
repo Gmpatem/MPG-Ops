@@ -63,7 +63,7 @@ export function CustomerDetailSheet({ isOpen, onClose, customer }: CustomerDetai
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent side="responsive" className="overflow-y-auto">
         {customer && (
           <>
             <SheetHeader className="pb-4">

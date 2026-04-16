@@ -1,0 +1,253 @@
+{
+  "language": {
+    "en": "English",
+    "tl": "Taglish",
+    "fr": "French",
+    "es": "Spanish"
+  },
+  "nav": {
+    "home": "Home",
+    "bookings": "Bookings",
+    "customers": "Customers",
+    "services": "Services",
+    "settings": "Settings",
+    "dashboard": "Dashboard"
+  },
+  "common": {
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "logOut": "Log out",
+    "plan": "Plan",
+    "status": "Status",
+    "account": "Account",
+    "billing": "Billing & Plan",
+    "manage": "Manage",
+    "customize": "Customize",
+    "publicBookingSite": "Public Booking Site",
+    "publicBookingSiteDesc": "Share this link with customers so they can book online. Customize the look and content in the Public Site settings.",
+    "businessName": "Business name",
+    "businessEmail": "Business email",
+    "phone": "Phone",
+    "address": "Address",
+    "operatingHours": "Operating Hours",
+    "operatingHoursDesc": "Set your weekly schedule for each day.",
+    "optional": "optional",
+    "next": "Next",
+    "back": "Back",
+    "copyLink": "Copy booking link",
+    "preview": "Preview public site",
+    "language": "Language"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your MPG Ops account",
+      "email": "Email",
+      "password": "Password",
+      "signIn": "Sign In",
+      "signingIn": "Signing in...",
+      "forgotPassword": "Forgot your password?",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "createAccount": "Create an account"
+    },
+    "register": {
+      "title": "Start your free trial",
+      "subtitle": "14 days of Pro. No credit card required.",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "startTrial": "Start Free Trial",
+      "startingTrial": "Starting trial...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in"
+    },
+    "forgotPassword": {
+      "title": "Reset password",
+      "subtitle": "Enter your email and we'll send you a reset link.",
+      "email": "Email",
+      "sendLink": "Send Reset Link",
+      "sending": "Sending...",
+      "success": "Check your email for a password reset link.",
+      "backToSignIn": "Back to sign in",
+      "error": "Something went wrong."
+    },
+    "resetPassword": {
+      "title": "Set new password",
+      "subtitle": "Enter your new password below.",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "updatePassword": "Update Password",
+      "updating": "Updating...",
+      "error": "An unexpected error occurred."
+    }
+  },
+  "onboarding": {
+    "title": "Set up your business",
+    "subtitle": "Tell us about your business to get started with MPG Ops",
+    "step": "Step {{step}} of 4",
+    "businessBasics": "Business Basics",
+    "businessBasicsDesc": "What should we call your business?",
+    "slug": "Slug",
+    "slugDesc": "Used for your public booking link.",
+    "businessType": "Business Type",
+    "selectBusinessType": "Select your business type",
+    "contactDetails": "Contact Details",
+    "contactDetailsDesc": "How can customers reach you?",
+    "locationAndHours": "Location & Hours",
+    "locationAndHoursDesc": "Where are you located?",
+    "reviewAndCreate": "Review & Create",
+    "reviewAndCreateDesc": "Double-check before finishing.",
+    "creating": "Creating...",
+    "createBusiness": "Create Business",
+    "errors": {
+      "nameRequired": "Business name is required",
+      "typeRequired": "Please select a business type",
+      "slugRequired": "Slug is required",
+      "emailInvalid": "Please enter a valid email"
+    }
+  },
+  "landing": {
+    "header": {
+      "signIn": "Sign In",
+      "startTrial": "Start Free Trial"
+    },
+    "hero": {
+      "title": "Run your service business like a pro",
+      "highlight": "like a pro",
+      "description": "Smart booking, scheduling, and customer management for salons, barbershops, spas, and service businesses — all from your phone.",
+      "ctaTrial": "Start Free Trial",
+      "ctaDemo": "View Demo",
+      "tagline": "No setup stress • Mobile-friendly • 14-day Pro trial"
+    },
+    "problem": {
+      "title": "Still managing bookings manually?",
+      "items": [
+        "Missed messages and lost leads",
+        "Double bookings and schedule chaos",
+        "No clear view of your day",
+        "Customer details scattered everywhere"
+      ]
+    },
+    "solution": {
+      "title": "With MPG Ops:",
+      "items": [
+        "Professional online booking page",
+        "Smart availability and conflict prevention",
+        "Clear daily schedule and notifications",
+        "Organized customer records"
+      ]
+    },
+    "preview": {
+      "title": "Built for real businesses",
+      "subtitle": "A clean workspace for you, and a beautiful booking experience for your customers.",
+      "dashboardLabel": "Your Dashboard",
+      "dashboardBadge": "Admin View",
+      "publicLabel": "Public Booking Page",
+      "publicBadge": "Customer View"
+    },
+    "features": {
+      "title": "Everything you need",
+      "subtitle": "Tools designed to save time, reduce no-shows, and grow your business.",
+      "onlineBooking": {
+        "title": "Online Booking Page",
+        "desc": "A branded page where customers book 24/7."
+      },
+      "smartAvailability": {
+        "title": "Smart Availability",
+        "desc": "Prevents double bookings automatically."
+      },
+      "multiService": {
+        "title": "Multi-Service Booking",
+        "desc": "Customers can book multiple services in one go."
+      },
+      "customerManagement": {
+        "title": "Customer Management",
+        "desc": "Keep records, history, and contact details organized."
+      },
+      "mobileFriendly": {
+        "title": "Mobile-Friendly Workspace",
+        "desc": "Run your business from any device, anywhere."
+      },
+      "fastSetup": {
+        "title": "Fast Scheduling Flow",
+        "desc": "Set up services and hours in minutes."
+      }
+    },
+    "trust": {
+      "title": "Why service businesses choose MPG Ops",
+      "items": [
+        { "title": "Built for service businesses", "desc": "Designed around salons, barbers, and spas." },
+        { "title": "Mobile-first", "desc": "Your desk is your phone. So is ours." },
+        { "title": "Fast setup", "desc": "Get your booking page live in minutes." },
+        { "title": "No coding required", "desc": "Everything is ready to use out of the box." }
+      ]
+    },
+    "pricing": {
+      "title": "Simple, transparent pricing",
+      "subtitle": "Start free. Upgrade when you're ready. No hidden fees."
+    },
+    "cta": {
+      "title": "Ready to simplify your bookings?",
+      "subtitle": "Join service businesses using MPG Ops to stay organized and book more appointments.",
+      "tagline": "14-day Pro trial • No credit card required"
+    },
+    "footer": {
+      "tagline": "Booking & operations for service businesses",
+      "copyright": "© {{year}} MPG Ops. All rights reserved."
+    }
+  },
+  "pricing": {
+    "free": {
+      "name": "Free",
+      "price": "₱0",
+      "period": "/month",
+      "description": "Perfect for trying MPG Ops.",
+      "features": [
+        "1 business",
+        "Basic booking page",
+        "Up to 10 services",
+        "Basic scheduling",
+        "MPG branding"
+      ],
+      "cta": "Get Started"
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "₱499",
+      "period": "/month",
+      "description": "For growing service businesses.",
+      "features": [
+        "Unlimited services",
+        "Custom branding",
+        "Multi-service booking",
+        "Smart scheduling",
+        "Customer management",
+        "Advanced booking tools"
+      ],
+      "cta": "Start Free Trial",
+      "badge": "Most Popular"
+    },
+    "business": {
+      "name": "Business",
+      "price": "₱999",
+      "period": "/month",
+      "description": "Everything you need to scale.",
+      "features": [
+        "Everything in Pro",
+        "Payments integration",
+        "Advanced analytics",
+        "Priority support",
+        "Team/staff features (soon)"
+      ],
+      "cta": "Start Free Trial"
+    }
+  },
+  "settings": {
+    "title": "Business Settings",
+    "subtitle": "Update your business information.",
+    "noBusiness": "No business found.",
+    "noBusinessDesc": "We couldn't find a business associated with your account.",
+    "billingDesc": "Manage your subscription, plan, and upgrade options."
+  }
+}

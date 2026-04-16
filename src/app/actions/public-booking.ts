@@ -39,7 +39,7 @@ export interface PublicService {
 
 const submitBookingSchema = z.object({
   businessId: z.string().uuid('Invalid business'),
-  serviceId: z.string().uuid('Invalid service'),
+  serviceIds: z.array(z.string().uuid('Invalid service')).min(1, 'Select at least one service'),
   bookingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date'),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time'),
   customerName: z.string().min(1, 'Name is required'),
@@ -58,6 +58,9 @@ export interface BookingConfirmation {
   startTime: string;
   endTime: string;
   customerName: string;
+  totalDurationMinutes: number;
+  totalPrice: number;
+  allServiceNames: string[];
 }
 
 /**
@@ -182,10 +185,33 @@ export async function getPublicServices(
 }
 
 /**
+ * Fetch existing bookings for a business on a specific date.
+ * Used for public slot conflict detection.
+ */
+export async function getPublicBookingsForDate(
+  businessId: string,
+  date: string
+): Promise<{ start_time: string; end_time: string }[]> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('start_time, end_time')
+      .eq('business_id', businessId)
+      .eq('booking_date', date)
+      .in('status', ['scheduled', 'completed']);
+
+    if (error || !data) return [];
+    return data.map((b) => ({ start_time: b.start_time, end_time: b.end_time }));
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Submit a public booking. No auth required.
- * - Looks up or creates customer by phone
- * - Creates booking with status 'scheduled'
- * - Returns a booking confirmation summary
+ * Supports multi-service bookings by storing the primary service in service_id
+ * and additional services in source_meta. The end_time reflects total duration.
  */
 export async function submitPublicBooking(
   input: SubmitBookingInput
@@ -213,18 +239,22 @@ export async function submitPublicBooking(
       return { success: false, error: 'Business not found' };
     }
 
-    // 2. Verify service is active and belongs to this business
-    const { data: service, error: svcError } = await supabase
+    // 2. Verify all services are active and belong to this business
+    const { data: services, error: svcError } = await supabase
       .from('services')
-      .select('id, name, duration_minutes')
-      .eq('id', data.serviceId)
+      .select('id, name, duration_minutes, price')
+      .in('id', data.serviceIds)
       .eq('business_id', data.businessId)
-      .eq('is_active', true)
-      .single();
+      .eq('is_active', true);
 
-    if (svcError || !service) {
-      return { success: false, error: 'Service not found or unavailable' };
+    if (svcError || !services || services.length !== data.serviceIds.length) {
+      return { success: false, error: 'One or more services are unavailable' };
     }
+
+    const primaryService = services[0];
+    const totalDurationMinutes = services.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
+    const totalPrice = services.reduce((sum, s) => sum + (s.price || 0), 0);
+    const allServiceNames = services.map((s) => s.name);
 
     // 3. Find existing customer by phone in this business
     let customerId: string;
@@ -237,7 +267,6 @@ export async function submitPublicBooking(
       .single();
 
     if (existingCustomer) {
-      // Reuse existing customer; optionally update name/email
       customerId = existingCustomer.id;
       await supabase
         .from('customers')
@@ -248,7 +277,6 @@ export async function submitPublicBooking(
         })
         .eq('id', customerId);
     } else {
-      // Create new customer
       const { data: newCustomer, error: custError } = await supabase
         .from('customers')
         .insert({
@@ -267,30 +295,84 @@ export async function submitPublicBooking(
       customerId = newCustomer.id;
     }
 
-    // 4. Calculate end time from service duration
+    // 4. Calculate end time from total duration
     const [h, m] = data.startTime.split(':').map(Number);
     const startMin = h * 60 + m;
-    const endMin = startMin + service.duration_minutes;
+    const endMin = startMin + totalDurationMinutes;
     const endTime = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
 
-    // 5. Create booking
+    // 5. Double-booking protection: re-check conflicts server-side before insert
+    const { data: existingBookings, error: conflictError } = await supabase
+      .from('bookings')
+      .select('start_time, end_time')
+      .eq('business_id', data.businessId)
+      .eq('booking_date', data.bookingDate)
+      .in('status', ['scheduled', 'completed']);
+
+    if (conflictError) {
+      console.error('Conflict check error:', conflictError.message);
+      return { success: false, error: 'Unable to verify availability. Please try again.' };
+    }
+
+    const hasConflict = (existingBookings || []).some((b) => {
+      const bStart = parseInt(b.start_time.split(':')[0], 10) * 60 + parseInt(b.start_time.split(':')[1], 10);
+      const bEnd = parseInt(b.end_time.split(':')[0], 10) * 60 + parseInt(b.end_time.split(':')[1], 10);
+      return startMin < bEnd && endMin > bStart;
+    });
+
+    if (hasConflict) {
+      return { success: false, error: 'This time slot is no longer available. Please choose another time.' };
+    }
+
+    // 6. Create booking (primary service in service_id, extras in source_meta)
+    const sourceMeta = {
+      additional_services: services.slice(1).map((s) => ({
+        id: s.id,
+        name: s.name,
+        duration_minutes: s.duration_minutes,
+        price: s.price,
+      })),
+      total_duration_minutes: totalDurationMinutes,
+      total_price: totalPrice,
+    };
+
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .insert({
         business_id: data.businessId,
         customer_id: customerId,
-        service_id: data.serviceId,
+        service_id: primaryService.id,
         booking_date: data.bookingDate,
         start_time: data.startTime,
         end_time: endTime,
         status: 'scheduled',
         notes: data.notes?.trim() || null,
+        source: 'public_booking',
+        source_meta: sourceMeta as import('@/lib/supabase/database.types').Json,
       })
       .select('id')
       .single();
 
     if (bookingError || !booking) {
-      return { success: false, error: 'Failed to create booking. Please try again.' };
+      console.error('Booking insert error:', bookingError?.message);
+      return { success: false, error: bookingError?.message ?? 'Failed to create booking. Please try again.' };
+    }
+
+    // 7. Insert booking_services join rows for all selected services
+    const bookingServicesPayload = data.serviceIds.map((serviceId) => ({
+      booking_id: booking.id,
+      service_id: serviceId,
+    }));
+
+    const { error: joinError } = await supabase
+      .from('booking_services')
+      .insert(bookingServicesPayload);
+
+    if (joinError) {
+      console.error('booking_services insert error:', joinError.message);
+      // Best-effort rollback: delete the orphaned booking
+      await supabase.from('bookings').delete().eq('id', booking.id);
+      return { success: false, error: joinError.message };
     }
 
     // Revalidate internal pages so the booking appears immediately
@@ -302,11 +384,14 @@ export async function submitPublicBooking(
       confirmation: {
         bookingId: booking.id,
         businessName: business.name,
-        serviceName: service.name,
+        serviceName: primaryService.name,
         bookingDate: data.bookingDate,
         startTime: data.startTime,
         endTime,
         customerName: data.customerName.trim(),
+        totalDurationMinutes,
+        totalPrice,
+        allServiceNames,
       },
     };
   } catch (err) {

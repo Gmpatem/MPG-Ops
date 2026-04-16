@@ -1,0 +1,253 @@
+{
+  "language": {
+    "en": "Anglais",
+    "tl": "Taglish",
+    "fr": "Français",
+    "es": "Espagnol"
+  },
+  "nav": {
+    "home": "Accueil",
+    "bookings": "Réservations",
+    "customers": "Clients",
+    "services": "Services",
+    "settings": "Paramètres",
+    "dashboard": "Tableau de bord"
+  },
+  "common": {
+    "saveChanges": "Enregistrer",
+    "saving": "Enregistrement...",
+    "logOut": "Se déconnecter",
+    "plan": "Plan",
+    "status": "Statut",
+    "account": "Compte",
+    "billing": "Facturation & Plan",
+    "manage": "Gérer",
+    "customize": "Personnaliser",
+    "publicBookingSite": "Site de réservation public",
+    "publicBookingSiteDesc": "Partagez ce lien avec vos clients pour qu'ils puissent réserver en ligne. Personnalisez l'apparence et le contenu dans les paramètres du site public.",
+    "businessName": "Nom de l'entreprise",
+    "businessEmail": "Email de l'entreprise",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "operatingHours": "Heures d'ouverture",
+    "operatingHoursDesc": "Définissez votre planning hebdomadaire pour chaque jour.",
+    "optional": "facultatif",
+    "next": "Suivant",
+    "back": "Retour",
+    "copyLink": "Copier le lien",
+    "preview": "Aperçu du site",
+    "language": "Langue"
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous à votre compte MPG Ops",
+      "email": "Email",
+      "password": "Mot de passe",
+      "signIn": "Se connecter",
+      "signingIn": "Connexion...",
+      "forgotPassword": "Mot de passe oublié ?",
+      "noAccount": "Vous n'avez pas de compte ?",
+      "signUp": "S'inscrire",
+      "createAccount": "Créer un compte"
+    },
+    "register": {
+      "title": "Commencez votre essai gratuit",
+      "subtitle": "14 jours de Pro. Aucune carte de crédit requise.",
+      "email": "Email",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "startTrial": "Commencer l'essai gratuit",
+      "startingTrial": "Démarrage...",
+      "hasAccount": "Vous avez déjà un compte ?",
+      "signIn": "Se connecter"
+    },
+    "forgotPassword": {
+      "title": "Réinitialiser le mot de passe",
+      "subtitle": "Entrez votre email et nous vous enverrons un lien de réinitialisation.",
+      "email": "Email",
+      "sendLink": "Envoyer le lien",
+      "sending": "Envoi...",
+      "success": "Vérifiez votre email pour le lien de réinitialisation.",
+      "backToSignIn": "Retour à la connexion",
+      "error": "Une erreur s'est produite."
+    },
+    "resetPassword": {
+      "title": "Nouveau mot de passe",
+      "subtitle": "Entrez votre nouveau mot de passe ci-dessous.",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "updatePassword": "Mettre à jour",
+      "updating": "Mise à jour...",
+      "error": "Une erreur inattendue s'est produite."
+    }
+  },
+  "onboarding": {
+    "title": "Configurez votre entreprise",
+    "subtitle": "Parlez-nous de votre entreprise pour commencer avec MPG Ops",
+    "step": "Étape {{step}} sur 4",
+    "businessBasics": "Informations de base",
+    "businessBasicsDesc": "Comment devons-nous appeler votre entreprise ?",
+    "slug": "Slug",
+    "slugDesc": "Utilisé pour votre lien de réservation public.",
+    "businessType": "Type d'entreprise",
+    "selectBusinessType": "Sélectionnez votre type d'entreprise",
+    "contactDetails": "Coordonnées",
+    "contactDetailsDesc": "Comment les clients peuvent-ils vous joindre ?",
+    "locationAndHours": "Adresse & Horaires",
+    "locationAndHoursDesc": "Où vous situez-vous ?",
+    "reviewAndCreate": "Vérifier & Créer",
+    "reviewAndCreateDesc": "Vérifiez avant de finaliser.",
+    "creating": "Création...",
+    "createBusiness": "Créer l'entreprise",
+    "errors": {
+      "nameRequired": "Le nom de l'entreprise est requis",
+      "typeRequired": "Veuillez sélectionner un type d'entreprise",
+      "slugRequired": "Le slug est requis",
+      "emailInvalid": "Veuillez entrer un email valide"
+    }
+  },
+  "landing": {
+    "header": {
+      "signIn": "Se connecter",
+      "startTrial": "Essai gratuit"
+    },
+    "hero": {
+      "title": "Gérez votre entreprise de services comme un pro",
+      "highlight": "comme un pro",
+      "description": "Réservations, planification et gestion client intelligentes pour salons, barbershops, spas et entreprises de services — directement depuis votre téléphone.",
+      "ctaTrial": "Commencer l'essai gratuit",
+      "ctaDemo": "Voir la démo",
+      "tagline": "Aucun stress de configuration • Mobile-friendly • Essai Pro de 14 jours"
+    },
+    "problem": {
+      "title": "Vous gérez encore les réservations manuellement ?",
+      "items": [
+        "Messages manqués et opportunités perdues",
+        "Double réservations et chaos dans le planning",
+        "Aucune vue claire de votre journée",
+        "Détails clients éparpillés partout"
+      ]
+    },
+    "solution": {
+      "title": "Avec MPG Ops :",
+      "items": [
+        "Page de réservation en ligne professionnelle",
+        "Disponibilité intelligente et prévention des conflits",
+        "Planning quotidien clair et notifications",
+        "Fiches clients organisées"
+      ]
+    },
+    "preview": {
+      "title": "Conçu pour les vraies entreprises",
+      "subtitle": "Un espace de travail épuré pour vous, et une belle expérience de réservation pour vos clients.",
+      "dashboardLabel": "Votre tableau de bord",
+      "dashboardBadge": "Vue Admin",
+      "publicLabel": "Page de réservation publique",
+      "publicBadge": "Vue Client"
+    },
+    "features": {
+      "title": "Tout ce dont vous avez besoin",
+      "subtitle": "Des outils conçus pour gagner du temps, réduire les absences et faire croître votre entreprise.",
+      "onlineBooking": {
+        "title": "Page de réservation en ligne",
+        "desc": "Une page personnalisée où les clients réservent 24h/24."
+      },
+      "smartAvailability": {
+        "title": "Disponibilité intelligente",
+        "desc": "Empêche les doubles réservations automatiquement."
+      },
+      "multiService": {
+        "title": "Réservation multi-services",
+        "desc": "Les clients peuvent réserver plusieurs services en une seule fois."
+      },
+      "customerManagement": {
+        "title": "Gestion des clients",
+        "desc": "Gardez les dossiers, l'historique et les coordonnées organisés."
+      },
+      "mobileFriendly": {
+        "title": "Espace de travail mobile",
+        "desc": "Gérez votre entreprise depuis n'importe quel appareil, n'importe où."
+      },
+      "fastSetup": {
+        "title": "Configuration rapide",
+        "desc": "Configurez vos services et horaires en quelques minutes."
+      }
+    },
+    "trust": {
+      "title": "Pourquoi les entreprises de services choisissent MPG Ops",
+      "items": [
+        { "title": "Conçu pour les services", "desc": "Pensé pour les salons, barbiers et spas." },
+        { "title": "Mobile-first", "desc": "Votre bureau est votre téléphone. Le nôtre aussi." },
+        { "title": "Configuration rapide", "desc": "Mettez votre page de réservation en ligne en minutes." },
+        { "title": "Aucun code requis", "desc": "Tout est prêt à l'emploi dès la sortie de la boîte." }
+      ]
+    },
+    "pricing": {
+      "title": "Tarification simple et transparente",
+      "subtitle": "Commencez gratuitement. Passez à la version supérieure quand vous êtes prêt. Aucun frais caché."
+    },
+    "cta": {
+      "title": "Prêt à simplifier vos réservations ?",
+      "subtitle": "Rejoignez les entreprises de services qui utilisent MPG Ops pour rester organisées et obtenir plus de rendez-vous.",
+      "tagline": "Essai Pro de 14 jours • Aucune carte de crédit requise"
+    },
+    "footer": {
+      "tagline": "Réservations et opérations pour les entreprises de services",
+      "copyright": "© {{year}} MPG Ops. Tous droits réservés."
+    }
+  },
+  "pricing": {
+    "free": {
+      "name": "Gratuit",
+      "price": "₱0",
+      "period": "/mois",
+      "description": "Parfait pour essayer MPG Ops.",
+      "features": [
+        "1 entreprise",
+        "Page de réservation de base",
+        "Jusqu'à 10 services",
+        "Planification de base",
+        "Branding MPG"
+      ],
+      "cta": "Commencer"
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "₱499",
+      "period": "/mois",
+      "description": "Pour les entreprises de services en croissance.",
+      "features": [
+        "Services illimités",
+        "Personnalisation du branding",
+        "Réservation multi-services",
+        "Planification intelligente",
+        "Gestion des clients",
+        "Outils de réservation avancés"
+      ],
+      "cta": "Essai gratuit",
+      "badge": "Le plus populaire"
+    },
+    "business": {
+      "name": "Business",
+      "price": "₱999",
+      "period": "/mois",
+      "description": "Tout ce dont vous avez besoin pour évoluer.",
+      "features": [
+        "Tout dans Pro",
+        "Intégration des paiements",
+        "Analyses avancées",
+        "Support prioritaire",
+        "Fonctionnalités équipe (bientôt)"
+      ],
+      "cta": "Essai gratuit"
+    }
+  },
+  "settings": {
+    "title": "Paramètres de l'entreprise",
+    "subtitle": "Mettez à jour les informations de votre entreprise.",
+    "noBusiness": "Aucune entreprise trouvée.",
+    "noBusinessDesc": "Nous n'avons trouvé aucune entreprise associée à votre compte.",
+    "billingDesc": "Gérez votre abonnement, votre plan et vos options de mise à niveau."
+  }
+}

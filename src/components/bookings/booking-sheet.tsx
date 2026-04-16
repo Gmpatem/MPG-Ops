@@ -43,7 +43,7 @@ export function BookingSheet({ isOpen, onClose, customers, services, initialData
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent side="responsive" className="overflow-y-auto">
         <SheetHeader className="pb-4">
           <SheetTitle className="text-xl">
             {isEditMode ? 'Edit Booking' : 'Add Booking'}

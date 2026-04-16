@@ -134,7 +134,11 @@ export async function setupBusiness(formData: FormData) {
     return { error: profileError.message };
   }
 
-  // Create business
+  // Create business with Pro trial
+  const trialStartedAt = new Date().toISOString();
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
   const { data: business, error: businessError } = await supabase
     .from('businesses')
     .insert({
@@ -146,6 +150,10 @@ export async function setupBusiness(formData: FormData) {
       email: data.email || null,
       address: data.address || null,
       operating_hours: operatingHours as Json,
+      plan_tier: 'pro',
+      trial_started_at: trialStartedAt,
+      trial_ends_at: trialEndsAt.toISOString(),
+      subscription_status: 'trialing',
     })
     .select('id')
     .single();

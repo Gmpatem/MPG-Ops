@@ -318,11 +318,11 @@ export default function BookingsPage() {
   const hasFilteredBookings = filteredBookings.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Bookings</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Bookings</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Manage your daily appointments.
           </p>
@@ -337,7 +337,7 @@ export default function BookingsPage() {
       </div>
 
       {/* Date Selector */}
-      <div className="flex items-center justify-between bg-card rounded-xl border p-4">
+      <div className="flex items-center justify-between bg-card rounded-xl border p-3 sm:p-4">
         <Button
           variant="ghost"
           size="icon"
@@ -347,7 +347,7 @@ export default function BookingsPage() {
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div className="text-center">
-          <p className="font-semibold text-lg">
+          <p className="font-semibold text-base sm:text-lg">
             {isToday ? 'Today' : format(selectedDate, 'EEEE')}
           </p>
           <p className="text-sm text-muted-foreground">
@@ -366,25 +366,27 @@ export default function BookingsPage() {
 
       {/* Status Filter - Only show when there are bookings */}
       {hasBookings && (
-        <div className="flex items-center gap-3">
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => value && setStatusFilter(value as StatusFilter)}
-          >
-            <SelectTrigger className="w-40 h-10" aria-label="Filter bookings by status">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Bookings</SelectItem>
-              <SelectItem value="scheduled">Scheduled</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-              <SelectItem value="no_show">No Show</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-sm text-muted-foreground">
-            {filteredBookings.length} {filteredBookings.length === 1 ? 'booking' : 'bookings'}
-          </span>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => value && setStatusFilter(value as StatusFilter)}
+            >
+              <SelectTrigger className="w-40 h-10" aria-label="Filter bookings by status">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Bookings</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="no_show">No Show</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground hidden sm:inline">
+              {filteredBookings.length} {filteredBookings.length === 1 ? 'booking' : 'bookings'}
+            </span>
+          </div>
         </div>
       )}
 

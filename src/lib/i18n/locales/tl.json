@@ -1,0 +1,253 @@
+{
+  "language": {
+    "en": "English",
+    "tl": "Taglish",
+    "fr": "French",
+    "es": "Spanish"
+  },
+  "nav": {
+    "home": "Home",
+    "bookings": "Bookings",
+    "customers": "Customers",
+    "services": "Services",
+    "settings": "Settings",
+    "dashboard": "Dashboard"
+  },
+  "common": {
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "logOut": "Log out",
+    "plan": "Plan",
+    "status": "Status",
+    "account": "Account",
+    "billing": "Billing & Plan",
+    "manage": "Manage",
+    "customize": "Customize",
+    "publicBookingSite": "Public Booking Site",
+    "publicBookingSiteDesc": "I-share ang link na ito sa customers para makapag-book online. I-customize ang itsura at content sa Public Site settings.",
+    "businessName": "Pangalan ng business",
+    "businessEmail": "Business email",
+    "phone": "Phone",
+    "address": "Address",
+    "operatingHours": "Operating Hours",
+    "operatingHoursDesc": "I-set ang weekly schedule mo para sa bawat araw.",
+    "optional": "optional",
+    "next": "Next",
+    "back": "Back",
+    "copyLink": "Copy booking link",
+    "preview": "Preview public site",
+    "language": "Wika"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in sa iyong MPG Ops account",
+      "email": "Email",
+      "password": "Password",
+      "signIn": "Sign In",
+      "signingIn": "Signing in...",
+      "forgotPassword": "Nakalimutan ang password?",
+      "noAccount": "Wala pang account?",
+      "signUp": "Sign up",
+      "createAccount": "Gumawa ng account"
+    },
+    "register": {
+      "title": "Simulan ang free trial",
+      "subtitle": "14 days of Pro. Walang credit card required.",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "startTrial": "Simulan ang Free Trial",
+      "startingTrial": "Starting trial...",
+      "hasAccount": "May account na?",
+      "signIn": "Sign in"
+    },
+    "forgotPassword": {
+      "title": "I-reset ang password",
+      "subtitle": "Ilagay ang email mo at padadalan ka namin ng reset link.",
+      "email": "Email",
+      "sendLink": "I-send ang Reset Link",
+      "sending": "Sending...",
+      "success": "Tingnan ang email mo para sa password reset link.",
+      "backToSignIn": "Bumalik sa sign in",
+      "error": "May nangyaring mali."
+    },
+    "resetPassword": {
+      "title": "Bagong password",
+      "subtitle": "Ilagay ang bagong password mo sa baba.",
+      "newPassword": "Bagong Password",
+      "confirmPassword": "Confirm Password",
+      "updatePassword": "I-update ang Password",
+      "updating": "Updating...",
+      "error": "May nangyaring unexpected error."
+    }
+  },
+  "onboarding": {
+    "title": "I-set up ang business mo",
+    "subtitle": "Kuwentuhan mo kami tungkol sa business mo para makapag-start sa MPG Ops",
+    "step": "Step {{step}} of 4",
+    "businessBasics": "Business Basics",
+    "businessBasicsDesc": "Ano ang pangalan ng business mo?",
+    "slug": "Slug",
+    "slugDesc": "Ginagamit para sa public booking link mo.",
+    "businessType": "Business Type",
+    "selectBusinessType": "Piliin ang business type mo",
+    "contactDetails": "Contact Details",
+    "contactDetailsDesc": "Paano ka makokontak ng customers?",
+    "locationAndHours": "Location & Hours",
+    "locationAndHoursDesc": "Nasaan ang shop mo?",
+    "reviewAndCreate": "Review & Create",
+    "reviewAndCreateDesc": "I-double-check bago i-finish.",
+    "creating": "Creating...",
+    "createBusiness": "I-create ang Business",
+    "errors": {
+      "nameRequired": "Kailangan ang business name",
+      "typeRequired": "Pumili ng business type",
+      "slugRequired": "Kailangan ang slug",
+      "emailInvalid": "Maglagay ng valid email"
+    }
+  },
+  "landing": {
+    "header": {
+      "signIn": "Sign In",
+      "startTrial": "Simulan ang Free Trial"
+    },
+    "hero": {
+      "title": "Iwas-hassle sa booking at scheduling",
+      "highlight": "Iwas-hassle",
+      "description": "Ang booking system na built para sa salon, barbershop, spa, at service business mo. Gumagana kahit sa phone — organize ang araw, happy ang customers.",
+      "ctaTrial": "Simulan ang Free Trial",
+      "ctaDemo": "Tingnan ang Demo",
+      "tagline": "Walang setup fee • Mobile-friendly • 14-day Pro trial"
+    },
+    "problem": {
+      "title": "Sumasabog pa rin sa manual booking?",
+      "items": [
+        "Nawawalang leads at unread messages",
+        "Double booking at gulo sa schedule",
+        "Hindi malinaw kung sino ang customers ngayong araw",
+        "Kalat-kalat ang customer details"
+      ]
+    },
+    "solution": {
+      "title": "Sa MPG Ops, solved na yan:",
+      "items": [
+        "Professional online booking page para sa shop mo",
+        "Smart schedule na iiwas sa double booking",
+        "Clear daily schedule at customer records",
+        "Organized na customer history at contact details"
+      ]
+    },
+    "preview": {
+      "title": "Built para sa totoong negosyo",
+      "subtitle": "Malinis na workspace para sa iyo, at magandang booking experience para sa customers mo.",
+      "dashboardLabel": "Your Dashboard",
+      "dashboardBadge": "Admin View",
+      "publicLabel": "Public Booking Page",
+      "publicBadge": "Customer View"
+    },
+    "features": {
+      "title": "Lahat ng kailangan mo",
+      "subtitle": "Tools na designed para makatipid ng oras, maiwasan ang no-shows, at palakihin ang negosyo mo.",
+      "onlineBooking": {
+        "title": "Online Booking Page",
+        "desc": "May sariling booking page na open 24/7 para sa customers mo."
+      },
+      "smartAvailability": {
+        "title": "Smart Availability",
+        "desc": "Automatic na naiiwasan ang double bookings."
+      },
+      "multiService": {
+        "title": "Multi-Service Booking",
+        "desc": "Pwedeng mag-book ng multiple services in one go."
+      },
+      "customerManagement": {
+        "title": "Customer Management",
+        "desc": "Organized na records, history, at contact details."
+      },
+      "mobileFriendly": {
+        "title": "Mobile-Friendly Workspace",
+        "desc": "Pwedeng i-manage ang negosyo kahit saan, kahit anong device."
+      },
+      "fastSetup": {
+        "title": "Fast Setup",
+        "desc": "I-set up ang services at hours in minutes lang."
+      }
+    },
+    "trust": {
+      "title": "Bakit service businesses ang pipili sa MPG Ops",
+      "items": [
+        { "title": "Built for service businesses", "desc": "Designed around salons, barbers, at spas." },
+        { "title": "Mobile-first", "desc": "Ang desk mo ay ang phone mo. Same here." },
+        { "title": "Fast setup", "desc": "Gawing live ang booking page mo in minutes." },
+        { "title": "No coding required", "desc": "Ready to use kaagad — no tech skills needed." }
+      ]
+    },
+    "pricing": {
+      "title": "Simple, transparent pricing",
+      "subtitle": "Start free. Upgrade when you're ready. Walang hidden fees."
+    },
+    "cta": {
+      "title": "Gusto mo bang mas organize ang bookings mo?",
+      "subtitle": "Sumali sa mga service business na gumagamit ng MPG Ops para mas maging organized at mas maraming appointments.",
+      "tagline": "14-day Pro trial • Walang credit card required"
+    },
+    "footer": {
+      "tagline": "Booking & operations para sa service businesses",
+      "copyright": "© {{year}} MPG Ops. All rights reserved."
+    }
+  },
+  "pricing": {
+    "free": {
+      "name": "Free",
+      "price": "₱0",
+      "period": "/month",
+      "description": "Perfect para subukan ang MPG Ops.",
+      "features": [
+        "1 business",
+        "Basic booking page",
+        "Up to 10 services",
+        "Basic scheduling",
+        "MPG branding"
+      ],
+      "cta": "Get Started"
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "₱499",
+      "period": "/month",
+      "description": "Para sa growing service businesses.",
+      "features": [
+        "Unlimited services",
+        "Custom branding",
+        "Multi-service booking",
+        "Smart scheduling",
+        "Customer management",
+        "Advanced booking tools"
+      ],
+      "cta": "Simulan ang Free Trial",
+      "badge": "Most Popular"
+    },
+    "business": {
+      "name": "Business",
+      "price": "₱999",
+      "period": "/month",
+      "description": "Everything you need to scale.",
+      "features": [
+        "Everything in Pro",
+        "Payments integration",
+        "Advanced analytics",
+        "Priority support",
+        "Team/staff features (soon)"
+      ],
+      "cta": "Simulan ang Free Trial"
+    }
+  },
+  "settings": {
+    "title": "Business Settings",
+    "subtitle": "I-update ang impormasyon ng business mo.",
+    "noBusiness": "Walang business.",
+    "noBusinessDesc": "Hindi namin makita ang business na konektado sa account mo.",
+    "billingDesc": "I-manage ang subscription, plan, at upgrade options mo."
+  }
+}

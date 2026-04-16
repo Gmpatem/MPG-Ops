@@ -1,14 +1,22 @@
+'use client';
+
 import Link from 'next/link';
 import { LoginForm } from '@/components/forms/login-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { LanguageSwitcher } from '@/components/language-switcher/language-switcher';
+import { useI18n } from '@/lib/i18n/i18n-provider';
 
 export default function LoginPage() {
+  const { t } = useI18n();
+
   return (
     <Card className="w-full">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-2xl font-bold text-center w-full">{t('auth.login.title')}</CardTitle>
+        </div>
         <CardDescription className="text-center">
-          Sign in to your MPG Ops account
+          {t('auth.login.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -16,15 +24,18 @@ export default function LoginPage() {
         <div className="mt-4 space-y-2 text-center text-sm text-muted-foreground">
           <div>
             <Link href="/forgot-password" className="text-primary hover:underline">
-              Forgot your password?
+              {t('auth.login.forgotPassword')}
             </Link>
           </div>
           <div>
-            Don&apos;t have an account?{' '}
+            {t('auth.login.noAccount')}{' '}
             <Link href="/register" className="text-primary hover:underline">
-              Sign up
+              {t('auth.login.signUp')}
             </Link>
           </div>
+        </div>
+        <div className="mt-4 flex justify-center">
+          <LanguageSwitcher variant="minimal" />
         </div>
       </CardContent>
     </Card>

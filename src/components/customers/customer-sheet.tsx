@@ -29,7 +29,7 @@ export function CustomerSheet({ isOpen, onClose, customer, onSubmit }: CustomerS
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent side="responsive" className="overflow-y-auto">
         <SheetHeader className="pb-4">
           <SheetTitle className="text-xl">
             {isEditMode ? 'Edit Customer' : 'Add Customer'}

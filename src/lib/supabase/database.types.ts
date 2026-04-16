@@ -22,7 +22,7 @@ export interface Database {
           notes: string | null
           created_at: string
           updated_at: string
-          source: string | null
+          source: Database['public']['Enums']['booking_source'] | null
           source_meta: Json | null
         }
         Insert: {
@@ -37,7 +37,7 @@ export interface Database {
           notes?: string | null
           created_at?: string
           updated_at?: string
-          source?: string | null
+          source?: Database['public']['Enums']['booking_source'] | null
           source_meta?: Json | null
         }
         Update: {
@@ -52,7 +52,7 @@ export interface Database {
           notes?: string | null
           created_at?: string
           updated_at?: string
-          source?: string | null
+          source?: Database['public']['Enums']['booking_source'] | null
           source_meta?: Json | null
         }
         Relationships: [
@@ -74,6 +74,42 @@ export interface Database {
             foreignKeyName: 'bookings_service_id_fkey'
             columns: ['service_id']
             isOneToOne: true
+            referencedRelation: 'services'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      booking_services: {
+        Row: {
+          id: string
+          booking_id: string
+          service_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          service_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          service_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'booking_services_booking_id_fkey'
+            columns: ['booking_id']
+            isOneToOne: false
+            referencedRelation: 'bookings'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'booking_services_service_id_fkey'
+            columns: ['service_id']
+            isOneToOne: false
             referencedRelation: 'services'
             referencedColumns: ['id']
           },
@@ -135,6 +171,10 @@ export interface Database {
           updated_at: string
           public_site_settings: Json | null
           slug: string | null
+          plan_tier: string
+          trial_started_at: string | null
+          trial_ends_at: string | null
+          subscription_status: string
         }
         Insert: {
           id?: string
@@ -149,6 +189,10 @@ export interface Database {
           updated_at?: string
           public_site_settings?: Json | null
           slug?: string | null
+          plan_tier?: string
+          trial_started_at?: string | null
+          trial_ends_at?: string | null
+          subscription_status?: string
         }
         Update: {
           id?: string
@@ -163,6 +207,10 @@ export interface Database {
           updated_at?: string
           public_site_settings?: Json | null
           slug?: string | null
+          plan_tier?: string
+          trial_started_at?: string | null
+          trial_ends_at?: string | null
+          subscription_status?: string
         }
         Relationships: [
           {
@@ -273,6 +321,7 @@ export interface Database {
           full_name: string | null
           created_at: string
           updated_at: string
+          is_platform_admin: boolean
         }
         Insert: {
           id: string
@@ -280,6 +329,7 @@ export interface Database {
           full_name?: string | null
           created_at?: string
           updated_at?: string
+          is_platform_admin?: boolean
         }
         Update: {
           id?: string
@@ -287,6 +337,7 @@ export interface Database {
           full_name?: string | null
           created_at?: string
           updated_at?: string
+          is_platform_admin?: boolean
         }
         Relationships: []
       }
@@ -369,6 +420,7 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
+      booking_source: 'public_booking' | 'dashboard' | 'walk_in'
       booking_status: 'scheduled' | 'completed' | 'cancelled' | 'no_show'
       payment_method: 'cash' | 'card' | 'mobile_money'
       payment_status: 'pending' | 'paid' | 'partial' | 'refunded'

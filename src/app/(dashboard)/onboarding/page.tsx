@@ -1,13 +1,18 @@
+'use client';
+
 import { BusinessSetupForm } from '@/components/forms/business-setup-form';
+import { useI18n } from '@/lib/i18n/i18n-provider';
 
 export default function OnboardingPage() {
+  const { t } = useI18n();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto px-4 py-6 sm:py-10">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold tracking-tight">Set up your business</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('onboarding.title')}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Tell us about your business to get started with MPG Ops
+            {t('onboarding.subtitle')}
           </p>
         </div>
         <BusinessSetupForm />

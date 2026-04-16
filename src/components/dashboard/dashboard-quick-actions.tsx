@@ -12,6 +12,7 @@ import { getCustomers } from '@/app/actions/customers';
 import { getServices } from '@/app/actions/services';
 import { useToast } from '@/components/ui/toast';
 import { useRouter } from 'next/navigation';
+import { Users, CalendarDays, Scissors } from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -91,19 +92,22 @@ export function DashboardQuickActions() {
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
-        <Button onClick={() => setIsCustomerSheetOpen(true)} className="h-10 text-sm">
+      <div className="flex flex-wrap gap-2 sm:gap-3">
+        <Button onClick={() => setIsCustomerSheetOpen(true)} className="h-10 text-sm gap-2">
+          <Users className="w-4 h-4" />
           Add Customer
         </Button>
         <Button
           variant="outline"
           onClick={handleOpenBookingSheet}
           disabled={isLoadingBookingData}
-          className="h-10 text-sm"
+          className="h-10 text-sm gap-2"
         >
-          {isLoadingBookingData ? 'Loading...' : 'New Booking'}
+          <CalendarDays className="w-4 h-4" />
+          {isLoadingBookingData ? 'Loading…' : 'New Booking'}
         </Button>
-        <Button variant="outline" onClick={() => setIsServiceSheetOpen(true)} className="h-10 text-sm col-span-2 sm:col-span-1">
+        <Button variant="outline" onClick={() => setIsServiceSheetOpen(true)} className="h-10 text-sm gap-2">
+          <Scissors className="w-4 h-4" />
           Add Service
         </Button>
       </div>
