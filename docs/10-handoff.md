@@ -582,5 +582,45 @@ Onboarding at `/onboarding` crashed with:
 
 ---
 
+---
+
+## Public Booking: Service-First Landing & Mini Storefront (2026-04-16)
+
+### Phase 15 — Service-First Landing
+The public booking page (`/book/[businessId]`) previously showed a gated welcome screen before services were visible. The new flow presents services immediately on load:
+
+- **`ServiceFirstLanding`** (inside `booking-wizard.tsx`) replaces the old `StepWelcome`.
+- Each service renders as a `LandingServiceCard` with its own "Book Now" CTA.
+- Clicking "Book Now" on any service calls `handleSelectService(service)` which sets `state.service` and jumps directly to step 3 (date selection), skipping the service-selection step (step 2).
+- Step 2 remains accessible via "Back" from step 3.
+
+### Phase 16 — Mini Storefront
+Further redesign of the landing into a storefront pattern:
+
+**Featured service cycling**
+- Services with `is_featured=true` cycle through a `FeaturedServiceCard` at the top (4-second interval via `setInterval`).
+- Fallback: if no featured services, cycles `services.slice(0, 1)`.
+- Featured services are excluded from the grid below to avoid duplication.
+
+**2-column service grid**
+- `GridServiceCard` — compact card with name, price, duration, and an outline "Book" button.
+- Rendered in `grid grid-cols-2 gap-2.5`.
+
+**Trust chips**
+- Static row: "No account required", "Instant booking", "Free to book".
+- All verifiably true for every business; no fake social proof.
+
+**Next available slot**
+- `computeNextAvailableSlot(operating_hours)` — pure client-side helper.
+- Called in `useEffect` only (SSR-safe; avoids hydration mismatch with local time).
+- Loops 7 days from today, finds next 30-min boundary after current time.
+- Shows `"Today · 3:30 PM"` / `"Tomorrow · 9:00 AM"` / `"Monday · 9:00 AM"` or nothing if hours not configured.
+
+**Guest autofill** (carried from Phase 14)
+- Reads `{ name, phone, email }` from localStorage key `mpg_guest` on mount.
+- Writes back on successful booking submission.
+
+---
+
 *Last Updated: 2026-04-16*
-*Next Task: Add `SUPABASE_SERVICE_ROLE_KEY` to `.env.local`, deploy to Vercel, test end-to-end*
+*Next Task: Deploy to Vercel, test public booking end-to-end with a real business*

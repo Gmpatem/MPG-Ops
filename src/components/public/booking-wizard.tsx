@@ -86,6 +86,56 @@ function getTimeSlots(
   return slots;
 }
 
+/**
+ * Compute the next available booking slot from operating hours.
+ * Checks today first, then up to 6 days ahead.
+ * Returns a human-readable string or null if no slot found.
+ * Must be called client-side only (depends on current wall time).
+ */
+function computeNextAvailableSlot(
+  operatingHours: PublicBusiness['operating_hours']
+): string | null {
+  if (!operatingHours || Object.keys(operatingHours).length === 0) return null;
+
+  const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const now = new Date();
+
+  for (let offset = 0; offset < 7; offset++) {
+    const date = new Date(now);
+    date.setDate(now.getDate() + offset);
+    const hours = operatingHours[DAYS[date.getDay()]];
+
+    if (!hours?.isOpen) continue;
+
+    const [openH, openM] = hours.open.split(':').map(Number);
+    const [closeH, closeM] = hours.close.split(':').map(Number);
+    const closeMin = closeH * 60 + closeM;
+
+    let slotMin: number;
+    if (offset === 0) {
+      // Today — find next 30-min boundary strictly after current time
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      slotMin = Math.max(Math.ceil((nowMin + 1) / 30) * 30, openH * 60 + openM);
+    } else {
+      slotMin = openH * 60 + openM;
+    }
+
+    if (slotMin >= closeMin) continue;
+
+    const h = Math.floor(slotMin / 60);
+    const mins = slotMin % 60;
+    const period = h < 12 ? 'AM' : 'PM';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const timeStr = `${h12}:${String(mins).padStart(2, '0')} ${period}`;
+
+    if (offset === 0) return `Today · ${timeStr}`;
+    if (offset === 1) return `Tomorrow · ${timeStr}`;
+    return `${date.toLocaleDateString('en-US', { weekday: 'long' })} · ${timeStr}`;
+  }
+
+  return null;
+}
+
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
 
 function ProgressBar({ step }: { step: number }) {
@@ -158,9 +208,9 @@ function StepShell({
   );
 }
 
-// ─── Landing Service Card ─────────────────────────────────────────────────────
+// ─── Featured Service Card ────────────────────────────────────────────────────
 
-function LandingServiceCard({
+function FeaturedServiceCard({
   service,
   onBook,
 }: {
@@ -172,50 +222,51 @@ function LandingServiceCard({
 
   return (
     <div
-      className={`rounded-xl border bg-card overflow-hidden ${
-        service.is_featured ? 'border-amber-200 bg-amber-50/30' : ''
+      className={`rounded-xl border-2 overflow-hidden ${
+        service.is_featured
+          ? 'border-amber-300 bg-amber-50/40'
+          : 'border-primary/25 bg-primary/5'
       }`}
     >
-      <div className="px-4 py-3.5">
-        {/* Row 1: name + price */}
+      <div className="px-4 py-4">
+        {/* Featured label row */}
+        <div className="flex items-center gap-1.5 mb-3">
+          <Star className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+          <span className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+            Featured
+          </span>
+          {service.promo_badge && (
+            <Badge className="ml-auto text-xs bg-primary/10 text-primary border-0 px-1.5">
+              {service.promo_badge}
+            </Badge>
+          )}
+        </div>
+
+        {/* Name + price */}
         <div className="flex items-start justify-between gap-2 mb-1">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {service.is_featured && (
-              <Star className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            )}
-            <span className="font-semibold text-sm leading-snug">{name}</span>
-            {service.promo_badge && (
-              <Badge className="text-xs shrink-0 bg-primary/10 text-primary border-0 px-1.5 ml-0.5">
-                {service.promo_badge}
-              </Badge>
-            )}
-          </div>
-          <span className="text-sm font-bold text-primary shrink-0 leading-snug">
+          <h3 className="font-bold text-base leading-snug">{name}</h3>
+          <span className="text-lg font-bold text-primary shrink-0">
             ₱{service.price.toFixed(0)}
           </span>
         </div>
 
-        {/* Row 2: duration + promo text */}
-        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
-          <Clock className="w-3 h-3 shrink-0" />
+        {/* Duration + promo */}
+        <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2.5">
+          <Clock className="w-3.5 h-3.5 shrink-0" />
           <span>{service.duration_minutes} min</span>
           {service.promo_text && (
-            <>
-              <span aria-hidden>·</span>
-              <span className="text-primary font-medium">{service.promo_text}</span>
-            </>
+            <span className="text-primary font-medium ml-1">{service.promo_text}</span>
           )}
         </div>
 
         {/* Optional description */}
         {desc && (
-          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{desc}</p>
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{desc}</p>
         )}
 
-        {/* Book button */}
         <Button
           onClick={onBook}
-          className="w-full h-10 text-sm font-semibold rounded-lg"
+          className="w-full h-11 text-sm font-semibold rounded-lg"
         >
           Book Now
         </Button>
@@ -224,7 +275,43 @@ function LandingServiceCard({
   );
 }
 
-// ─── Step 1: Service-First Landing ────────────────────────────────────────────
+// ─── Grid Service Card ────────────────────────────────────────────────────────
+
+function GridServiceCard({
+  service,
+  onBook,
+}: {
+  service: PublicService;
+  onBook: () => void;
+}) {
+  const name = service.public_title ?? service.name;
+
+  return (
+    <div className="rounded-xl border bg-card flex flex-col overflow-hidden">
+      <div className="px-3 pt-3 pb-2 flex-1">
+        <p className="font-semibold text-sm leading-tight mb-2 line-clamp-2">{name}</p>
+        <p className="text-primary font-bold text-sm">₱{service.price.toFixed(0)}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-0.5">
+          <Clock className="w-3 h-3 shrink-0" />
+          {service.duration_minutes} min
+        </p>
+      </div>
+      <div className="px-3 pb-3">
+        <Button
+          onClick={onBook}
+          variant="outline"
+          className="w-full h-9 text-xs font-semibold rounded-lg"
+        >
+          Book
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 1: Storefront Landing ───────────────────────────────────────────────
+
+const TRUST_CHIPS = ['No account required', 'Instant booking', 'Free to book'];
 
 function ServiceFirstLanding({
   business,
@@ -244,19 +331,66 @@ function ServiceFirstLanding({
   const settings: PublicSiteSettings = business.public_site_settings ?? {};
   const instructions = settings.instructions ?? null;
 
+  // ── Featured cycle logic ──────────────────────────────────────────────────
+  const explicitlyFeatured = services.filter((s) => s.is_featured);
+  const featuredCycle =
+    explicitlyFeatured.length > 0 ? explicitlyFeatured : services.slice(0, 1);
+  const featuredIdSet = new Set(featuredCycle.map((s) => s.id));
+  const gridServices = services.filter((s) => !featuredIdSet.has(s.id));
+
+  const [featuredIdx, setFeaturedIdx] = useState(0);
+  useEffect(() => {
+    if (featuredCycle.length <= 1) return;
+    const id = setInterval(
+      () => setFeaturedIdx((i) => (i + 1) % featuredCycle.length),
+      4000
+    );
+    return () => clearInterval(id);
+  }, [featuredCycle.length]);
+  const currentFeatured = featuredCycle[featuredIdx] ?? null;
+
+  // ── Next available slot (client-side only to avoid hydration mismatch) ────
+  const [nextSlot, setNextSlot] = useState<string | null>(null);
+  useEffect(() => {
+    setNextSlot(computeNextAvailableSlot(business.operating_hours));
+  }, [business.operating_hours]);
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Business identity */}
+      {/* ── Business header ─────────────────────────────────────────────── */}
       <div className="px-4 pt-8 pb-5 max-w-lg mx-auto">
         <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">
           {typeLabels[business.business_type] ?? 'Service Business'}
         </p>
         <h1 className="text-2xl font-bold tracking-tight mb-1">{business.name}</h1>
-        <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-          <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />
-          No account required · Book in seconds
+        <p className="text-sm text-muted-foreground mb-3">
+          Book your service in seconds.
         </p>
 
+        {/* Trust chips */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {TRUST_CHIPS.map((chip) => (
+            <span
+              key={chip}
+              className="text-xs text-muted-foreground bg-muted/60 rounded-full px-2.5 py-1"
+            >
+              {chip}
+            </span>
+          ))}
+        </div>
+
+        {/* Next available slot */}
+        {nextSlot && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span>
+              Next available:{' '}
+              <span className="font-semibold text-foreground">{nextSlot}</span>
+            </span>
+          </div>
+        )}
+
+        {/* Instructions notice */}
         {instructions && (
           <div className="mt-4 rounded-lg border bg-muted/40 px-3 py-2.5">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
@@ -267,23 +401,54 @@ function ServiceFirstLanding({
         )}
       </div>
 
-      {/* Services list */}
-      <div className="px-4 pb-12 max-w-lg mx-auto">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-          {services.length === 1 ? '1 Service' : `${services.length} Services`}
-        </p>
-        <div className="space-y-2.5">
-          {services.map((service) => (
-            <LandingServiceCard
-              key={service.id}
-              service={service}
-              onBook={() => onSelectService(service)}
-            />
-          ))}
+      {/* ── Featured service ────────────────────────────────────────────── */}
+      {currentFeatured && (
+        <div className="px-4 pb-4 max-w-lg mx-auto">
+          <FeaturedServiceCard
+            service={currentFeatured}
+            onBook={() => onSelectService(currentFeatured)}
+          />
+          {/* Cycle indicator dots */}
+          {featuredCycle.length > 1 && (
+            <div className="flex justify-center gap-1.5 mt-2.5">
+              {featuredCycle.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setFeaturedIdx(i)}
+                  aria-label={`View featured service ${i + 1}`}
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                    i === featuredIdx ? 'bg-primary' : 'bg-muted-foreground/30'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
-        <p className="text-xs text-muted-foreground text-center mt-6 flex items-center justify-center gap-1.5">
+      )}
+
+      {/* ── Services grid ───────────────────────────────────────────────── */}
+      {gridServices.length > 0 && (
+        <div className="px-4 pb-6 max-w-lg mx-auto">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+            {gridServices.length === 1 ? 'More Services' : 'All Services'}
+          </p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {gridServices.map((service) => (
+              <GridServiceCard
+                key={service.id}
+                service={service}
+                onBook={() => onSelectService(service)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Footer trust cue ────────────────────────────────────────────── */}
+      <div className="px-4 pb-12 max-w-lg mx-auto">
+        <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">
           <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
-          Free to book · Instant confirmation
+          Free to book · Instant confirmation · No signup needed
         </p>
       </div>
     </div>

@@ -767,4 +767,40 @@ None at this time.
 - **Rationale:** Incremental targeted change; avoids regression risk on controls users already understand.
 - **Impact:** None — preserved exactly.
 
+### 2026-04-16: Service-First Booking Landing (Phase 15)
+
+#### DEC-020: Remove gated welcome screen; show services immediately
+- **Date:** 2026-04-16
+- **Context:** The old StepWelcome forced users to read an intro screen and tap "Book an Appointment" before seeing any services. This added an unnecessary friction step and buried the core value proposition.
+- **Decision:** Replace StepWelcome with a ServiceFirstLanding that renders all public services immediately, each with its own "Book Now" CTA. Clicking any service sets `state.service` and jumps to step 3 (date selection), bypassing the service selection step.
+- **Alternatives:** Keep welcome screen but add service previews; use tabbed layout
+- **Rationale:** Eliminating the gate reduces time-to-booking by one tap. Step 2 (choose service) is still reachable via "Back" from step 3, so no flow is broken.
+- **Impact:** More direct path to booking; service visibility from first screen.
+
+### 2026-04-16: Public Booking Mini Storefront (Phase 16)
+
+#### DEC-021: Featured service cycling carousel
+- **Date:** 2026-04-16
+- **Context:** A flat list of equally-styled service cards gives no visual hierarchy and doesn't help the business owner highlight their most popular or profitable services.
+- **Decision:** Pull services with `is_featured=true` into a cycling "featured" slot at the top (4-second interval). If no services are explicitly featured, use `services.slice(0, 1)` as fallback. Grid below shows all non-featured services in a 2-column layout.
+- **Alternatives:** Always show first service as featured; random rotation; no featured concept
+- **Rationale:** Respects the admin's curation intent via `is_featured`. Fallback ensures the featured slot is never empty. Deduplication prevents a service appearing in both featured and grid.
+- **Impact:** Dynamic, app-like feel on the public page; highlighted services get more visual attention.
+
+#### DEC-022: Truthful trust chips only
+- **Date:** 2026-04-16
+- **Context:** Could have displayed fake social proof ("500+ happy customers", "4.9 stars") but no real booking count or review data exists in the public schema.
+- **Decision:** Only display verifiably true trust chips: "No account required", "Instant booking", "Free to book".
+- **Alternatives:** Show booking counts from a separate analytics table; show placeholder text; omit trust section
+- **Rationale:** Fake social proof is a liability. These three facts are always true for every business using the system, make real implicit promises, and are concise enough to scan instantly.
+- **Impact:** Trust section is honest, maintainable, and applicable to all tenants with no per-business data needed.
+
+#### DEC-023: computeNextAvailableSlot — client-only, 7-day lookahead
+- **Date:** 2026-04-16
+- **Context:** Showing a "next available" time on the landing page gives visitors confidence that they can book now, without entering the wizard.
+- **Decision:** Implement as a pure client-side helper called in useEffect only. Loops up to 7 days from today, using operating_hours JSONB. For today, finds the next 30-min boundary strictly after current local time. Returns human-readable strings ("Today · 3:30 PM", "Tomorrow · 9:00 AM"). Returns null if no slot found.
+- **Alternatives:** Server-computed (SSR); real slot availability check against DB
+- **Rationale:** Client-only avoids SSR hydration mismatch (client has real local time; server does not). Operating hours are already in the page payload — no extra fetch needed. Real DB slot check would require a dedicated endpoint and adds latency.
+- **Impact:** Next available slot shows after hydration (~0ms for most devices); gracefully absent if operating hours not configured.
+
 *Last Updated: 2026-04-16*

@@ -509,6 +509,65 @@ The MVP is complete:
 
 ---
 
+## Phase 15: Service-First Booking Landing ✅
+
+**Date:** 2026-04-16
+
+### 15.1 Booking Landing Redesign
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Remove gated "Book Appointment" CTA from StepWelcome | ✅ Complete | Services shown immediately on landing |
+| `LandingServiceCard` component | ✅ Complete | Each service has its own "Book Now" CTA |
+| `ServiceFirstLanding` component | ✅ Complete | Replaces old welcome hero; lists all services with Book CTAs |
+| `handleSelectService(service)` | ✅ Complete | Sets `state.service` and jumps to step 3 (date), skipping step 2 |
+| Step 2 still reachable | ✅ Complete | "Back" from step 3 returns to step 2 (choose service) |
+
+**Phase 15 Progress: 100%**
+
+---
+
+## Phase 16: Public Booking Mini Storefront ✅
+
+**Date:** 2026-04-16
+
+### 16.1 Featured Service Section
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| `FeaturedServiceCard` component | ✅ Complete | Full-width, border-2, amber/primary tint, Star icon, h-11 Book Now |
+| Featured cycling via `setInterval` | ✅ Complete | 4000ms interval, rotates through `is_featured` services |
+| Fallback to first service | ✅ Complete | If no `is_featured` services, cycles `services.slice(0, 1)` |
+| Featured deduplication from grid | ✅ Complete | `gridServices` excludes whatever is in `featuredIdSet` |
+
+### 16.2 Service Grid
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| `GridServiceCard` component | ✅ Complete | Compact, 2-col layout, name+price+duration, h-9 outline Book button |
+| 2-column CSS grid | ✅ Complete | `grid grid-cols-2 gap-2.5` |
+
+### 16.3 Trust & Availability
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Trust chips | ✅ Complete | "No account required", "Instant booking", "Free to book" — truthful only |
+| `computeNextAvailableSlot` helper | ✅ Complete | Client-only; loops 7 days from today using operating hours |
+| Next slot display | ✅ Complete | Shows `"Today · 3:30 PM"` / `"Tomorrow · 9:00 AM"` / `"Monday · 9:00 AM"` format |
+| SSR-safe | ✅ Complete | Called inside `useEffect` only — no hydration mismatch |
+
+### 16.4 Build Verification
+
+| Check | Status |
+|-------|--------|
+| `npm run build` | ✅ Passes |
+| TypeScript strict mode | ✅ No errors |
+| All routes resolved | ✅ 18 pages |
+
+**Phase 16 Progress: 100%**
+
+---
+
 ## Summary
 
 | Phase | Status | Progress |
@@ -526,6 +585,8 @@ The MVP is complete:
 | 10. Public Booking Flow | ✅ Complete | 100% |
 | 11. Public Site Admin Management | ✅ Complete | 100% |
 | 12. Public Service Presentation | ✅ Complete | 100% |
+| 15. Service-First Booking Landing | ✅ Complete | 100% |
+| 16. Public Booking Mini Storefront | ✅ Complete | 100% |
 
 **Overall Progress: 100%**
 
