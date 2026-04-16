@@ -44,22 +44,22 @@ export function BookingList({
     return <BookingEmptyState onAddBooking={onAddBooking} />;
   }
 
-  // Create a map of booking_id -> payment for quick lookup
-  const paymentMap = new Map(payments.map(p => [p.booking_id, p]));
+  const paymentMap = new Map(payments.map((p) => [p.booking_id, p]));
 
   return (
-    <div className="space-y-3">
-      {bookings.map((booking) => (
-        <BookingCard
-          key={booking.id}
-          booking={booking}
-          payment={paymentMap.get(booking.id)}
-          onMarkCompleted={() => onMarkCompleted(booking.id)}
-          onCancel={() => onCancel(booking.id)}
-          onRecordPayment={() => onRecordPayment(booking.id, booking.service.price)}
-          onMarkNoShow={() => onMarkNoShow(booking.id)}
-          onEdit={() => onEdit(booking.id)}
-        />
+    <div className="bg-card rounded-xl border overflow-hidden">
+      {bookings.map((booking, i) => (
+        <div key={booking.id} className={i > 0 ? 'border-t' : ''}>
+          <BookingCard
+            booking={booking}
+            payment={paymentMap.get(booking.id)}
+            onMarkCompleted={() => onMarkCompleted(booking.id)}
+            onCancel={() => onCancel(booking.id)}
+            onRecordPayment={() => onRecordPayment(booking.id, booking.service.price)}
+            onMarkNoShow={() => onMarkNoShow(booking.id)}
+            onEdit={() => onEdit(booking.id)}
+          />
+        </div>
       ))}
     </div>
   );

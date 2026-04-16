@@ -285,11 +285,37 @@ The MVP is complete:
 
 ---
 
+## Phase 13: Bookings & Customers Workspace Refinement ✅
+
+**Date:** 2026-04-16
+
+### 13.1 Bookings Display
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Date navigation card | ✅ Unchanged | Preserved exactly |
+| Status filter + count row | ✅ Unchanged | Preserved exactly |
+| booking-card.tsx → compact row | ✅ Complete | Removed Card wrapper, combined customer+service into one line, tighter spacing |
+| booking-list.tsx → parent card | ✅ Complete | All rows inside one `bg-card rounded-xl border` with `border-t` dividers |
+
+### 13.2 Customers Workspace
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Search/filter area | ✅ Unchanged | Preserved exactly |
+| customer-card.tsx → row layout | ✅ Complete | Initial avatar, name+contact in responsive grid, inline View/Edit |
+| customer-list.tsx → workspace | ✅ Complete | Single parent card with column headers (desktop), divider rows |
+| View/Edit actions | ✅ Intact | Open existing CustomerDetailSheet / CustomerSheet as before |
+
+**Phase 13 Progress: 100%**
+
+---
+
 ## Repository Information
 
 **GitHub:** https://github.com/Gmpatem/MPG-Ops.git  
 **Branch:** main  
-**Commit:** Latest (Phase 9: Internal Flow Completion)
+**Commit:** Latest (Phase 13: Workspace Refinement)
 
 ---
 

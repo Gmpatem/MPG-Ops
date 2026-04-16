@@ -3,18 +3,35 @@
 ## Session Information
 
 **Session Date:** 2026-04-16
-**Session Type:** Phase 12 — Public Service Presentation Management
+**Session Type:** Phase 13 — Bookings & Customers Workspace Refinement
 **Status:** ✅ Complete
 
 ---
 
-## What Was Completed (Phase 12)
+## What Was Completed (Phase 13)
 
-### Public Service Presentation Management
+### Bookings & Customers Workspace Refinement
 
-Admins can now control how each individual service appears on the public booking page — including visibility, featured treatment, custom titles/descriptions, promo badges, and display order. The public booking wizard (Steps 1 and 2) reflects these settings.
+Targeted UI refinement pass to reduce visual weight, improve scanning speed, and make both pages more practical as data grows. No redesign — existing design language preserved throughout.
 
 ---
+
+### Changes (Phase 13)
+
+**Bookings — display area only (date nav + filter row untouched):**
+- `booking-card.tsx` — Removed Card wrapper. Combined customer + service into a single text line. Compact `px-4 py-3` rows with `mb-1` / `mb-2.5` spacing. Action buttons reduced to `h-8 text-xs`. Time formatted to HH:MM. Status badge + edit icon stay inline in row 1.
+- `booking-list.tsx` — Wrapped all rows in one `bg-card rounded-xl border overflow-hidden` container. Rows separated by `border-t` dividers instead of individual card gaps (`space-y-3`).
+
+**Customers — workspace table layout:**
+- `customer-card.tsx` — Removed Card wrapper. Initial-letter avatar (8×8 rounded). Name + contact in a responsive grid (stacked mobile / side-by-side sm+). Phone and email rendered as icon+text inline. View/Edit buttons reduced to `h-8 text-xs`.
+- `customer-list.tsx` — Single parent card container with `overflow-hidden`. Desktop-only column header row (Name / Contact). Rows separated by `border-t` dividers.
+
+**Preserved unchanged:**
+- Bookings date navigation card
+- Bookings status filter + count row
+- Customer search bar
+- All sheets: BookingSheet, PaymentSheet, CustomerSheet, CustomerDetailSheet
+- All server actions and business logic
 
 ### New Features (Phase 12)
 

@@ -711,4 +711,29 @@ None at this time.
 
 ---
 
+### 2026-04-16: Bookings & Customers Workspace Refinement
+
+#### DEC-013: Booking rows instead of individual cards
+- **Date:** 2026-04-16
+- **Context:** Each booking was rendered as a standalone Card with excessive padding and multi-icon rows, making the list feel heavy and showing fewer bookings per screen.
+- **Decision:** Remove the Card wrapper from BookingCard; render each booking as a compact `div` row. Wrap all rows in a single parent `bg-card rounded-xl border` container in BookingList with `border-t` dividers between rows.
+- **Alternatives:** Keep cards, reduce padding only
+- **Rationale:** Divider-row pattern is the standard workspace pattern for dense, scannable lists. Saves ~40% vertical height per booking without losing any information.
+- **Impact:** More bookings visible without scrolling; cleaner visual hierarchy.
+
+#### DEC-014: Customer workspace table layout
+- **Date:** 2026-04-16
+- **Context:** Customers were displayed in a 3-column card grid. As the list grows this becomes slow to scan and wastes space with repeated visual chrome per card.
+- **Decision:** Replace grid-of-cards with a single parent card containing divider rows. Add a column header row (Name / Contact) visible on desktop. Each row uses a responsive grid: stacked on mobile, side-by-side on sm+.
+- **Alternatives:** Full HTML `<table>` element; keep card grid
+- **Rationale:** Div-based workspace pattern is more flexible for responsive behavior than a semantic table and avoids the "ugly spreadsheet" feel. Column headers on desktop give structure without rigidity.
+- **Impact:** Faster scanning at scale; user stays in workspace; View/Edit open existing sheets.
+
+#### DEC-015: Preserve locked booking controls
+- **Date:** 2026-04-16
+- **Context:** Date navigation card and status filter/count row were already working well.
+- **Decision:** Zero changes to those elements. All refinements confined to BookingCard and BookingList components only.
+- **Rationale:** Incremental targeted change; avoids regression risk on controls users already understand.
+- **Impact:** None — preserved exactly.
+
 *Last Updated: 2026-04-16*

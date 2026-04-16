@@ -1,8 +1,7 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Phone, Mail, User } from 'lucide-react';
+import { Phone, Mail } from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -18,48 +17,46 @@ interface CustomerCardProps {
 }
 
 export function CustomerCard({ customer, onEdit, onView }: CustomerCardProps) {
+  const initial = customer.name.charAt(0).toUpperCase();
+
   return (
-    <Card className="p-4 rounded-xl border bg-card">
-      {/* Top row: Name */}
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-          <User className="w-5 h-5 text-primary" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-base text-foreground leading-tight truncate">
-            {customer.name}
-          </h3>
+    <div className="flex items-center gap-3 px-4 py-3">
+      {/* Avatar */}
+      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-semibold text-primary select-none">
+        {initial}
+      </div>
+
+      {/* Name + contact — stacks on mobile, grid on sm+ */}
+      <div className="flex-1 min-w-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:items-center">
+        <p className="text-sm font-medium text-foreground truncate">
+          {customer.name}
+        </p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 sm:mt-0">
+          {customer.phone && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Phone className="w-3 h-3 shrink-0" />
+              {customer.phone}
+            </span>
+          )}
+          {customer.email && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+              <Mail className="w-3 h-3 shrink-0" />
+              <span className="truncate max-w-40">{customer.email}</span>
+            </span>
+          )}
+          {!customer.phone && !customer.email && (
+            <span className="text-xs text-muted-foreground italic">No contact info</span>
+          )}
         </div>
       </div>
 
-      {/* Contact info */}
-      <div className="space-y-2 mb-4">
-        {customer.phone && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Phone className="w-4 h-4 shrink-0" />
-            <span className="truncate">{customer.phone}</span>
-          </div>
-        )}
-        {customer.email && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Mail className="w-4 h-4 shrink-0" />
-            <span className="truncate">{customer.email}</span>
-          </div>
-        )}
-        {!customer.phone && !customer.email && (
-          <p className="text-sm text-muted-foreground italic">
-            No contact information
-          </p>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-2">
+      {/* Inline actions */}
+      <div className="flex items-center gap-1.5 shrink-0">
         <Button
           variant="outline"
           size="sm"
           onClick={onView}
-          className="flex-1 h-10 text-sm"
+          className="h-8 text-xs px-3"
         >
           View
         </Button>
@@ -67,11 +64,11 @@ export function CustomerCard({ customer, onEdit, onView }: CustomerCardProps) {
           variant="ghost"
           size="sm"
           onClick={onEdit}
-          className="flex-1 h-10 text-sm"
+          className="h-8 text-xs px-3"
         >
           Edit
         </Button>
       </div>
-    </Card>
+    </div>
   );
 }
