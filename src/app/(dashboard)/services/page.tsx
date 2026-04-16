@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import type { Tables } from '@/lib/supabase/database.types';
 
 type ServiceFilter = 'all' | 'active' | 'inactive';
-type Tab = 'services' | 'public';
+type Tab = 'services' | 'promotions' | 'public';
 
 export default function ServicesPage() {
   const router = useRouter();
@@ -210,6 +210,17 @@ export default function ServicesPage() {
           Services
         </button>
         <button
+          onClick={() => setActiveTab('promotions')}
+          className={cn(
+            'px-3 sm:px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+            activeTab === 'promotions'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          )}
+        >
+          Promotions & Deals
+        </button>
+        <button
           onClick={() => setActiveTab('public')}
           className={cn(
             'px-3 sm:px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
@@ -277,6 +288,17 @@ export default function ServicesPage() {
       )}
 
       {/* Tab: Public Booking presentation */}
+      {activeTab === 'promotions' && (
+        <div className="bg-card rounded-xl border p-6 sm:p-8 text-center">
+          <p className="text-muted-foreground text-sm">
+            Promotions & Deals coming soon.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Create discounts, package deals, and seasonal offers for your services.
+          </p>
+        </div>
+      )}
+
       {activeTab === 'public' && (
         <ServicePublicSection />
       )}

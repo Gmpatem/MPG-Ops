@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { FormStatus } from '@/components/form-status';
+import { ImagePlus, X } from 'lucide-react';
 
 interface ServiceFormProps {
   action: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
@@ -15,6 +16,7 @@ interface ServiceFormProps {
     durationMinutes: number;
     price: number;
     isActive: boolean;
+    imageUrl?: string | null;
   };
 }
 
@@ -22,6 +24,9 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.imageUrl ?? null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
@@ -61,9 +66,81 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
     }
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be smaller than 2MB');
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setError(null);
+  }
+
+  function handleRemoveImage() {
+    setPreviewUrl(null);
+    setRemoveImage(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }
+
   return (
     <form action={handleSubmit} className="space-y-5 pt-2">
       {error && <FormStatus type="error" message={error} />}
+
+      {/* Image Upload */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Service image</Label>
+        <div className="flex items-center gap-3">
+          {previewUrl ? (
+            <div className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted shrink-0">
+              <img
+                src={previewUrl}
+                alt="Service preview"
+                className="w-full h-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="absolute top-0.5 right-0.5 p-1 rounded-full bg-black/60 text-white hover:bg-black/80"
+                aria-label="Remove image"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <div className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/50 shrink-0">
+              <ImagePlus className="w-6 h-6 text-muted-foreground" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <input
+              ref={fileInputRef}
+              type="file"
+              name="image"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) => {
+                handleFileChange(e);
+                setRemoveImage(false);
+              }}
+              className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              JPG, PNG or WebP up to 2MB
+            </p>
+          </div>
+        </div>
+        {removeImage && <input type="hidden" name="removeImage" value="true" />}
+      </div>
 
       {/* Service Name */}
       <div className="space-y-2">

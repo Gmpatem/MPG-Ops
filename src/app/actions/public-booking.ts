@@ -34,6 +34,7 @@ export interface PublicService {
   promo_badge: string | null;
   promo_text: string | null;
   display_order: number;
+  image_url: string | null;
 }
 
 const submitBookingSchema = z.object({
@@ -127,7 +128,7 @@ export async function getPublicServices(
     // Full query with all public presentation fields
     const { data, error } = await supabase
       .from('services')
-      .select('id, name, public_title, description, public_description, price, duration_minutes, is_featured, promo_badge, promo_text, display_order')
+      .select('id, name, public_title, description, public_description, price, duration_minutes, is_featured, promo_badge, promo_text, display_order, image_url')
       .eq('business_id', businessId)
       .eq('is_active', true)
       .eq('show_on_public_booking', true)
@@ -147,6 +148,7 @@ export async function getPublicServices(
         promo_badge: row.promo_badge ?? null,
         promo_text: row.promo_text ?? null,
         display_order: row.display_order ?? 0,
+        image_url: row.image_url ?? null,
       }));
     }
 
@@ -172,6 +174,7 @@ export async function getPublicServices(
       promo_badge: null,
       promo_text: null,
       display_order: 0,
+      image_url: null,
     }));
   } catch {
     return [];

@@ -228,6 +228,15 @@ function FeaturedServiceCard({
           : 'border-primary/25 bg-primary/5'
       }`}
     >
+      {service.image_url && (
+        <div className="w-full h-36 sm:h-44 bg-muted">
+          <img
+            src={service.image_url}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
       <div className="px-4 py-4">
         {/* Featured label row */}
         <div className="flex items-center gap-1.5 mb-3">
@@ -288,6 +297,17 @@ function GridServiceCard({
 
   return (
     <div className="rounded-xl border bg-card flex flex-col overflow-hidden">
+      {service.image_url ? (
+        <div className="w-full h-24 bg-muted">
+          <img
+            src={service.image_url}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="w-full h-12 bg-muted/60" />
+      )}
       <div className="px-3 pt-3 pb-2 flex-1">
         <p className="font-semibold text-sm leading-tight mb-2 line-clamp-2">{name}</p>
         <p className="text-primary font-bold text-sm">₱{service.price.toFixed(0)}</p>
@@ -492,7 +512,16 @@ function StepService({
                   : 'border-border bg-card hover:border-primary/50'
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                {service.image_url && (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0">
+                    <img
+                      src={service.image_url}
+                      alt={service.public_title ?? service.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     {service.is_featured && (

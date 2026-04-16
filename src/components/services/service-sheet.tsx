@@ -51,6 +51,7 @@ export function ServiceSheet({ isOpen, onClose, service, onSubmit }: ServiceShee
                   durationMinutes: service.duration_minutes,
                   price: service.price,
                   isActive: service.is_active,
+                  imageUrl: service.image_url,
                 }
               : undefined
           }

@@ -309,6 +309,7 @@ export interface Database {
           public_description: string | null
           display_order: number
           public_title: string | null
+          image_url: string | null
         }
         Insert: {
           id?: string
@@ -328,6 +329,7 @@ export interface Database {
           public_description?: string | null
           display_order?: number
           public_title?: string | null
+          image_url?: string | null
         }
         Update: {
           id?: string
@@ -347,6 +349,7 @@ export interface Database {
           public_description?: string | null
           display_order?: number
           public_title?: string | null
+          image_url?: string | null
         }
         Relationships: [
           {
