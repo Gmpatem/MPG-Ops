@@ -91,18 +91,19 @@ export function DashboardQuickActions() {
 
   return (
     <>
-      <div className="flex flex-wrap gap-3">
-        <Button onClick={() => setIsCustomerSheetOpen(true)}>
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+        <Button onClick={() => setIsCustomerSheetOpen(true)} className="h-10 text-sm">
           Add Customer
         </Button>
         <Button
           variant="outline"
           onClick={handleOpenBookingSheet}
           disabled={isLoadingBookingData}
+          className="h-10 text-sm"
         >
           {isLoadingBookingData ? 'Loading...' : 'New Booking'}
         </Button>
-        <Button variant="outline" onClick={() => setIsServiceSheetOpen(true)}>
+        <Button variant="outline" onClick={() => setIsServiceSheetOpen(true)} className="h-10 text-sm col-span-2 sm:col-span-1">
           Add Service
         </Button>
       </div>

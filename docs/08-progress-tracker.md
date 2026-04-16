@@ -631,6 +631,44 @@ Additionally, Supabase's generic "Invalid login credentials" error was shown for
 
 ---
 
+## Phase 18: Mobile UI Polish Pass ✅
+
+### 18.1 Root Cause
+A targeted review of the mobile experience revealed several small but impactful rough edges:
+1. **Home page indentation**: `container` classes lacked `mx-auto`, causing content to feel left-aligned on larger viewports.
+2. **Wasted vertical space**: Dashboard sections used large gaps (`space-y-6`) and cards had generous padding, causing excessive scrolling on phones.
+3. **Rigid stats grid**: Stats cards collapsed to a single column on mobile, wasting horizontal space and requiring more scrolling.
+4. **Service card UX**: The Enable/Disable action was a text button at the bottom of each card, requiring extra vertical space and a second tap to understand state.
+
+### 18.2 Fixes Applied
+| File | Change |
+|------|--------|
+| `app/page.tsx` | Added `mx-auto` + `px-4` to all `container` elements; tightened hero and feature section vertical spacing |
+| `app/(dashboard)/layout.tsx` | Added `mx-auto px-4 sm:px-6` to main container for proper centering and safe horizontal padding |
+| `app/(dashboard)/dashboard/page.tsx` | Reduced section gaps (`space-y-4`), made stats grid 2-column on mobile (`grid-cols-2`), reduced card padding on mobile, tightened schedule list spacing |
+| `components/dashboard/public-site-card.tsx` | Reduced padding and internal spacing for tighter mobile layout |
+| `components/dashboard/dashboard-quick-actions.tsx` | Switched from flex wrap to 2-column grid on mobile for better space usage |
+| `components/services/service-card.tsx` | Replaced Enable/Disable button with a `Switch` in the card header; moved Edit to a compact outline button; simplified card layout |
+| `components/services/service-list.tsx` | Reduced grid gap from `gap-4` to `gap-3` |
+| `app/(dashboard)/services/page.tsx` | Tightened header spacing and shortened subtitle |
+
+### 18.3 Verification
+| Check | Status |
+|-------|--------|
+| `npx tsc --noEmit` | ✅ Passes |
+| `npm run build` | ✅ Succeeds |
+| Home page alignment | ✅ Centered, no left-indent feel |
+| Stats cards (mobile) | ✅ 2-column grid, compact but readable |
+| Dashboard scrolling | ✅ Reduced without feeling cramped |
+| Sticky navbar | ✅ Unchanged |
+| Service toggle | ✅ Switch updates status immediately |
+| Service edit | ✅ Sheet still opens correctly |
+| Narrow screen layouts | ✅ No overflow or breakage |
+
+**Phase 18 Progress: 100%**
+
+---
+
 ## Next Steps (Pre-Production)
 
 1. Apply DB migrations in order:

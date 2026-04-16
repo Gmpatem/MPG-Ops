@@ -685,6 +685,18 @@ Each entry includes:
 - **Rationale:** Enforcing the product boundary between login (existing users) and registration/onboarding (new users) eliminates confusion and redirect loops. Pre-login profile lookup lets us provide actionable, friendly error messages without breaking Supabase's secure auth flow.
 - **Impact:** Existing users always land on the dashboard after login. New users are guided to register when their email isn't found. No more onboarding redirect loops.
 
+#### DEC-068: Mobile-First UI Polish — Stats Grid, Space Tightening, and Service Toggle
+- **Date:** 2026-04-16
+- **Context:** A mobile UX review found small but noticeable rough edges: home page containers felt left-indented, dashboard stats wasted vertical space with a single-column mobile layout, and service cards used text buttons for enable/disable instead of a direct toggle.
+- **Decision:** 
+  1. Add `mx-auto` to `container` classes across the landing page and dashboard layout to fix centering.
+  2. Tighten mobile padding and gaps on the dashboard; switch stats grid to 2 columns on mobile (`grid-cols-2`) expanding to 4 on desktop.
+  3. Replace the service card's Enable/Disable text button with a `Switch` in the card header for immediate, intuitive status changes.
+  4. Keep the Edit button as a compact outline action for detail edits.
+- **Alternatives:** Full redesign of dashboard/services; keep current layouts and accept scrolling; use a dropdown menu for service actions.
+- **Rationale:** These are targeted, low-risk improvements that maximize screen real estate and reduce friction without changing the established design language. The Switch pattern is faster than a text button and communicates state instantly.
+- **Impact:** Better mobile space usage, cleaner alignment, and faster service management.
+
 ---
 
 ## Pending Decisions

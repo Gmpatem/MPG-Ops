@@ -24,22 +24,22 @@ export function PublicSiteCard({ businessId }: PublicSiteCardProps) {
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-5">
       {/* Header */}
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <Globe className="w-5 h-5 text-primary" />
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold">Your Public Booking Site</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h3 className="font-semibold text-sm sm:text-base">Your Public Booking Site</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Customers can book appointments directly from this link — no account needed.
           </p>
         </div>
       </div>
 
       {/* URL row */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-3">
         <Input
           readOnly
           value={bookingUrl}
@@ -72,9 +72,9 @@ export function PublicSiteCard({ businessId }: PublicSiteCardProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3">
-        <Link href="/settings/public-site">
-          <Button variant="outline" size="sm" className="gap-1.5">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+        <Link href="/settings/public-site" className="inline-flex">
+          <Button variant="outline" size="sm" className="gap-1.5 h-9">
             <Paintbrush className="w-4 h-4" />
             Customize Site
           </Button>

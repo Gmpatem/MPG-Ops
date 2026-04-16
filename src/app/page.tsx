@@ -6,7 +6,7 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between">
+        <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
           <span className="font-bold text-xl">MPG Ops</span>
           <div className="flex items-center gap-4">
             <Link href="/login">
@@ -21,7 +21,7 @@ export default function HomePage() {
 
       {/* Hero */}
       <main className="flex-1">
-        <section className="container flex flex-col items-center justify-center gap-6 py-24 md:py-32">
+        <section className="container mx-auto flex flex-col items-center justify-center gap-4 py-16 md:py-24 px-4">
           <h1 className="text-4xl font-bold tracking-tight text-center md:text-6xl">
             Run your service business<br />
             <span className="text-primary">without the chaos</span>
@@ -45,25 +45,25 @@ export default function HomePage() {
         </section>
 
         {/* Features */}
-        <section className="container py-16 md:py-24">
-          <div className="grid gap-8 md:grid-cols-3">
-            <div className="rounded-lg border bg-card p-6">
-              <div className="mb-4 text-3xl">📅</div>
-              <h3 className="font-semibold mb-2">Smart Bookings</h3>
+        <section className="container mx-auto py-10 md:py-16 px-4">
+          <div className="grid gap-4 md:gap-6 md:grid-cols-3">
+            <div className="rounded-lg border bg-card p-5 md:p-6">
+              <div className="mb-3 text-2xl md:text-3xl">📅</div>
+              <h3 className="font-semibold mb-1 md:mb-2">Smart Bookings</h3>
               <p className="text-sm text-muted-foreground">
                 Never miss an appointment. Manage your schedule with ease.
               </p>
             </div>
-            <div className="rounded-lg border bg-card p-6">
-              <div className="mb-4 text-3xl">👥</div>
-              <h3 className="font-semibold mb-2">Customer Tracking</h3>
+            <div className="rounded-lg border bg-card p-5 md:p-6">
+              <div className="mb-3 text-2xl md:text-3xl">👥</div>
+              <h3 className="font-semibold mb-1 md:mb-2">Customer Tracking</h3>
               <p className="text-sm text-muted-foreground">
                 Know your customers. Access service history and preferences.
               </p>
             </div>
-            <div className="rounded-lg border bg-card p-6">
-              <div className="mb-4 text-3xl">💰</div>
-              <h3 className="font-semibold mb-2">Revenue Insights</h3>
+            <div className="rounded-lg border bg-card p-5 md:p-6">
+              <div className="mb-3 text-2xl md:text-3xl">💰</div>
+              <h3 className="font-semibold mb-1 md:mb-2">Revenue Insights</h3>
               <p className="text-sm text-muted-foreground">
                 Track daily revenue and payments. Know your numbers.
               </p>
@@ -74,7 +74,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t py-6">
-        <div className="container flex flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto flex flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground px-4">
           <p>© 2026 MPG Ops. All rights reserved.</p>
         </div>
       </footer>

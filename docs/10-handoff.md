@@ -511,5 +511,30 @@ Onboarding at `/onboarding` crashed with:
 
 ---
 
+---
+
+## Mobile UI Polish Pass (2026-04-16)
+
+### Changes
+- **Landing page (`/`)**: Fixed `container` centering with `mx-auto`, tightened hero/feature spacing for less scrolling.
+- **Dashboard layout**: Added `mx-auto` and responsive horizontal padding to the main container.
+- **Dashboard (`/dashboard`)**:
+  - Stats cards now use a 2-column grid on mobile (`grid-cols-2`) expanding to 4 columns on desktop, saving vertical space.
+  - Reduced card padding and section gaps on mobile while keeping desktop comfort.
+  - Tightened Today's Schedule list spacing.
+  - Quick Actions use a 2-column grid on mobile instead of wrapped flex.
+- **Services (`/services`)**:
+  - Service cards now show a `Switch` toggle directly in the header for instant active/inactive control.
+  - Edit button moved to a compact outline button in the card footer.
+  - Reduced grid gap and card padding for better density.
+
+### Behavior
+- Toggle switch updates service status immediately (same server action, better UX).
+- Edit sheet still opens correctly for detail changes.
+- No horizontal overflow on narrow screens.
+- Sticky navbar untouched.
+
+---
+
 *Last Updated: 2026-04-16*
 *Next Task: Add `SUPABASE_SERVICE_ROLE_KEY` to `.env.local`, deploy to Vercel, test end-to-end*
