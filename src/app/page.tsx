@@ -57,8 +57,8 @@ function LandingHeader() {
       className={cn(
         'sticky top-0 z-50 w-full border-b transition-all duration-300 ease-out',
         scrolled
-          ? 'border-white/10 bg-[#0a0a0b]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0a0a0b]/80'
-          : 'border-transparent bg-transparent'
+          ? 'border-white/10 bg-[#0a0a0b] backdrop-blur supports-[backdrop-filter]:bg-[#0a0a0b]/95'
+          : 'border-white/10 bg-[#0a0a0b]'
       )}
     >
       <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:px-6 max-w-5xl">
