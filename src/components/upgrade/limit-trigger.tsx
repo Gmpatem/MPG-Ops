@@ -23,7 +23,7 @@ export function LimitTrigger({ open, onOpenChange, title, description }: LimitTr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <div className="flex flex-col items-center text-center py-2">
-          <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-3">
+          <div className="w-12 h-12 rounded-full bg-warning/15 text-warning flex items-center justify-center mb-3">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <DialogHeader>

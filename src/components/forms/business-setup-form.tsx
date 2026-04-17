@@ -114,7 +114,7 @@ export function BusinessSetupForm() {
         </div>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full bg-primary rounded-full transition-all duration-300"
+            className="h-full bg-primary rounded-full transition-all duration-[var(--duration-slow)]"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -163,10 +163,10 @@ export function BusinessSetupForm() {
                 placeholder="e.g., Glamour Salon"
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                className={`h-14 text-base ${stepErrors.name ? 'border-red-500' : ''}`}
+                className={`h-14 text-base ${stepErrors.name ? 'border-destructive' : ''}`}
                 autoFocus
               />
-              {stepErrors.name && <p className="text-sm text-red-600">{stepErrors.name}</p>}
+              {stepErrors.name && <p className="text-sm text-destructive">{stepErrors.name}</p>}
             </div>
 
             <div className="space-y-2">
@@ -180,10 +180,10 @@ export function BusinessSetupForm() {
                   setSlug(generateSlug(e.target.value));
                   setHasEditedSlug(true);
                 }}
-                className={`h-14 text-base ${stepErrors.slug ? 'border-red-500' : ''}`}
+                className={`h-14 text-base ${stepErrors.slug ? 'border-destructive' : ''}`}
               />
               <p className="text-xs text-muted-foreground">{t('onboarding.slugDesc')}</p>
-              {stepErrors.slug && <p className="text-sm text-red-600">{stepErrors.slug}</p>}
+              {stepErrors.slug && <p className="text-sm text-destructive">{stepErrors.slug}</p>}
             </div>
 
             <div className="space-y-2">
@@ -192,7 +192,7 @@ export function BusinessSetupForm() {
                 value={businessType}
                 onValueChange={(value) => setBusinessType(value ?? '')}
               >
-                <SelectTrigger className={`h-14 text-base ${stepErrors.businessType ? 'border-red-500' : ''}`}>
+                <SelectTrigger className={`h-14 text-base ${stepErrors.businessType ? 'border-destructive' : ''}`}>
                   <SelectValue placeholder={t('onboarding.selectBusinessType')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,7 +204,7 @@ export function BusinessSetupForm() {
                   ))}
                 </SelectContent>
               </Select>
-              {stepErrors.businessType && <p className="text-sm text-red-600">{stepErrors.businessType}</p>}
+              {stepErrors.businessType && <p className="text-sm text-destructive">{stepErrors.businessType}</p>}
             </div>
           </div>
         )}
@@ -241,9 +241,9 @@ export function BusinessSetupForm() {
                 placeholder="business@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`h-14 text-base ${stepErrors.email ? 'border-red-500' : ''}`}
+                className={`h-14 text-base ${stepErrors.email ? 'border-destructive' : ''}`}
               />
-              {stepErrors.email && <p className="text-sm text-red-600">{stepErrors.email}</p>}
+              {stepErrors.email && <p className="text-sm text-destructive">{stepErrors.email}</p>}
             </div>
           </div>
         )}

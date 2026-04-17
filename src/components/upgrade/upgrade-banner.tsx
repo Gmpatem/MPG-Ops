@@ -26,23 +26,23 @@ export function UpgradeBanner({ business }: UpgradeBannerProps) {
   // Trial ending soon (< 3 days)
   if (trialActive && trialDaysLeft <= 3) {
     return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/50 dark:bg-amber-950/20">
+      <div className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 dark:border-warning/30 dark:bg-warning/10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+              <p className="text-sm font-medium text-warning-foreground dark:text-warning-foreground">
                 {trialDaysLeft === 0
                   ? 'Your free trial ends today'
                   : `Your free trial ends in ${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'}`}
               </p>
-              <p className="text-xs text-amber-700 dark:text-amber-200/80 mt-0.5">
+              <p className="text-xs text-warning/80 dark:text-warning/80 mt-0.5">
                 Upgrade to Pro to keep your premium features running smoothly.
               </p>
             </div>
           </div>
           <Link href="/settings/billing" className="shrink-0">
-            <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+            <Button size="sm" className="bg-warning text-warning-foreground hover:bg-warning/90">
               Upgrade Now
             </Button>
           </Link>
@@ -78,21 +78,21 @@ export function UpgradeBanner({ business }: UpgradeBannerProps) {
   // Pro plan but not Business — upsell to Business
   if (effectivePlan === 'pro' && !trialActive) {
     return (
-      <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 dark:border-violet-900/50 dark:bg-violet-950/20">
+      <div className="rounded-xl border border-info/30 bg-info/10 px-4 py-3 dark:border-info/30 dark:bg-info/10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-start gap-3">
-            <Crown className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
+            <Crown className="w-5 h-5 text-info shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-violet-900 dark:text-violet-100">
+              <p className="text-sm font-medium text-info-foreground dark:text-info-foreground">
                 Ready to scale?
               </p>
-              <p className="text-xs text-violet-700 dark:text-violet-200/80 mt-0.5">
+              <p className="text-xs text-info/80 dark:text-info/80 mt-0.5">
                 Upgrade to Business for payments, analytics, and team features.
               </p>
             </div>
           </div>
           <Link href="/settings/billing" className="shrink-0">
-            <Button size="sm" variant="outline" className="border-violet-600 text-violet-700 hover:bg-violet-100 dark:hover:bg-violet-900/30">
+            <Button size="sm" variant="outline" className="border-info text-info hover:bg-info/10 dark:hover:bg-info/20">
               View Business Plan
             </Button>
           </Link>

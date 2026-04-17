@@ -59,11 +59,11 @@ export function CustomerForm({ action, initialData }: CustomerFormProps) {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-5 pt-2">
+    <form action={handleSubmit} className="space-y-6 px-5 pt-2 pb-6">
       {error && <FormStatus type="error" message={error} />}
 
       {/* Customer Name */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="name" className="text-sm font-medium">
           Name *
         </Label>
@@ -73,15 +73,15 @@ export function CustomerForm({ action, initialData }: CustomerFormProps) {
           type="text"
           placeholder="e.g. John Doe"
           defaultValue={initialData?.name ?? ''}
-          className={`h-12 ${errors.name ? 'border-red-500' : ''}`}
+          className={`h-12 ${errors.name ? 'border-destructive' : ''}`}
         />
         {errors.name && (
-          <p className="text-sm text-red-600">{errors.name}</p>
+          <p className="text-sm text-destructive">{errors.name}</p>
         )}
       </div>
 
       {/* Phone */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="phone" className="text-sm font-medium">
           Phone
         </Label>
@@ -96,7 +96,7 @@ export function CustomerForm({ action, initialData }: CustomerFormProps) {
       </div>
 
       {/* Email */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="email" className="text-sm font-medium">
           Email
         </Label>
@@ -106,15 +106,15 @@ export function CustomerForm({ action, initialData }: CustomerFormProps) {
           type="email"
           placeholder="e.g. john@example.com"
           defaultValue={initialData?.email || ''}
-          className={`h-12 ${errors.email ? 'border-red-500' : ''}`}
+          className={`h-12 ${errors.email ? 'border-destructive' : ''}`}
         />
         {errors.email && (
-          <p className="text-sm text-red-600">{errors.email}</p>
+          <p className="text-sm text-destructive">{errors.email}</p>
         )}
       </div>
 
       {/* Notes */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="notes" className="text-sm font-medium">
           Notes
         </Label>
@@ -128,7 +128,7 @@ export function CustomerForm({ action, initialData }: CustomerFormProps) {
       </div>
 
       {/* Submit Button */}
-      <div className="pt-4">
+      <div className="pt-2">
         <Button
           type="submit"
           className="w-full h-12 text-base font-medium"

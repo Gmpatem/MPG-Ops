@@ -100,8 +100,8 @@ export default async function DashboardPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground truncate">
               Revenue
             </CardTitle>
-            <div className="h-7 w-7 rounded-md bg-emerald-100 flex items-center justify-center">
-              <CreditCard className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+            <div className="h-7 w-7 rounded-md bg-success/15 flex items-center justify-center">
+              <CreditCard className="w-3.5 h-3.5 text-success shrink-0" />
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -120,8 +120,8 @@ export default async function DashboardPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground truncate">
               Customers
             </CardTitle>
-            <div className="h-7 w-7 rounded-md bg-blue-100 flex items-center justify-center">
-              <Users className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+            <div className="h-7 w-7 rounded-md bg-secondary flex items-center justify-center">
+              <Users className="w-3.5 h-3.5 text-secondary-foreground shrink-0" />
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -138,8 +138,8 @@ export default async function DashboardPage() {
             <CardTitle className="text-xs font-medium text-muted-foreground truncate">
               Services
             </CardTitle>
-            <div className="h-7 w-7 rounded-md bg-amber-100 flex items-center justify-center">
-              <Scissors className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+            <div className="h-7 w-7 rounded-md bg-warning/15 flex items-center justify-center">
+              <Scissors className="w-3.5 h-3.5 text-warning shrink-0" />
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">

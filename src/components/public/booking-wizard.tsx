@@ -64,7 +64,7 @@ function ProgressBar({ step }: { step: number }) {
       </div>
       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
         <div
-          className="h-full bg-primary rounded-full transition-all duration-300"
+          className="h-full bg-primary rounded-full transition-all duration-[var(--duration-slow)]"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -167,7 +167,7 @@ function FeaturedServiceCard({
 
       {/* Top badges */}
       <div className="absolute top-3 left-3 flex items-center gap-1.5 pointer-events-none">
-        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-700 bg-amber-100/90 border border-amber-200/60 rounded-full px-2 py-0.5 backdrop-blur-sm">
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-warning bg-warning/15 border border-warning/30 rounded-full px-2 py-0.5 backdrop-blur-sm">
           <Star className="w-3 h-3" />
           Featured
         </span>
@@ -479,7 +479,7 @@ function StepService({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     {service.is_featured && (
-                      <Star className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <Star className="w-3.5 h-3.5 text-warning shrink-0" />
                     )}
                     <span className="font-semibold text-sm">
                       {service.public_title ?? service.name}
@@ -813,9 +813,9 @@ function StepDetails({
             placeholder="e.g. Maria Santos"
             value={name}
             onChange={(e) => onChange('name', e.target.value)}
-            className={`h-12 text-base ${errors.name ? 'border-red-500' : ''}`}
+            className={`h-12 text-base ${errors.name ? 'border-destructive' : ''}`}
           />
-          {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
+          {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
         </div>
 
         {/* Phone */}
@@ -829,9 +829,9 @@ function StepDetails({
             placeholder="e.g. 09171234567"
             value={phone}
             onChange={(e) => onChange('phone', e.target.value)}
-            className={`h-12 text-base ${errors.phone ? 'border-red-500' : ''}`}
+            className={`h-12 text-base ${errors.phone ? 'border-destructive' : ''}`}
           />
-          {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+          {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
         </div>
 
         {/* Email */}
@@ -973,7 +973,7 @@ function StepReview({
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 mb-4">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 mb-4">
           {error}
         </div>
       )}

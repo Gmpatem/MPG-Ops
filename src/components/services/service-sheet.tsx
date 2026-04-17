@@ -23,12 +23,12 @@ export function ServiceSheet({ isOpen, onClose, service, onSubmit }: ServiceShee
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="responsive" className="overflow-y-auto">
-        <SheetHeader className="pb-4">
+      <SheetContent side="responsive" className="overflow-y-auto md:max-w-lg">
+        <SheetHeader>
           <SheetTitle className="text-xl">
             {isEditMode ? 'Edit Service' : 'Add Service'}
           </SheetTitle>
-          <SheetDescription className="text-sm text-muted-foreground">
+          <SheetDescription>
             {isEditMode
               ? 'Update your service details below.'
               : 'Fill in the details to add a new service.'}

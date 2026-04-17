@@ -17,8 +17,8 @@ export function FormStatus({ type, message, className }: FormStatusProps) {
       className={cn(
         'flex items-start gap-3 p-3 rounded-md text-sm',
         isSuccess
-          ? 'bg-green-50 text-green-700 border border-green-200'
-          : 'bg-red-50 text-red-700 border border-red-200',
+          ? 'bg-success/10 text-success border border-success/20'
+          : 'bg-destructive/10 text-destructive border border-destructive/20',
         className
       )}
     >

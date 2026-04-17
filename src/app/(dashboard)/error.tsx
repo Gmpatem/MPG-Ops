@@ -18,8 +18,8 @@ export default function DashboardError({
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
-      <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-6">
-        <AlertCircle className="w-10 h-10 text-red-500" />
+      <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mb-6">
+        <AlertCircle className="w-10 h-10 text-destructive" />
       </div>
       
       <h2 className="text-xl font-semibold text-foreground mb-2">

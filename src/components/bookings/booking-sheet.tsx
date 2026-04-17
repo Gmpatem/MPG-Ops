@@ -43,12 +43,12 @@ export function BookingSheet({ isOpen, onClose, customers, services, initialData
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="responsive" className="overflow-y-auto">
-        <SheetHeader className="pb-4">
+      <SheetContent side="responsive" className="overflow-y-auto md:max-w-lg">
+        <SheetHeader>
           <SheetTitle className="text-xl">
             {isEditMode ? 'Edit Booking' : 'Add Booking'}
           </SheetTitle>
-          <SheetDescription className="text-sm text-muted-foreground">
+          <SheetDescription>
             {isEditMode
               ? 'Update the booking details below.'
               : 'Schedule a new appointment for a customer.'}

@@ -52,6 +52,13 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Semantic status tokens */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   /* Elevation tokens */
   --shadow-xs: var(--shadow-xs);
   --shadow-sm: var(--shadow-sm);
@@ -86,6 +93,14 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-sheet: 0 -4px 20px rgb(0 0 0 / 0.12);
+
+  /* Semantic status (light) */
+  --success: oklch(0.55 0.14 145);
+  --success-foreground: oklch(0.98 0 0);
+  --warning: oklch(0.65 0.14 85);
+  --warning-foreground: oklch(0.2 0 0);
+  --info: oklch(0.55 0.15 265);
+  --info-foreground: oklch(0.98 0 0);
 
   /* Existing color tokens */
   --background: oklch(1 0 0);
@@ -122,6 +137,16 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Tenant theming: minimal accent-driven variation */
+[data-tenant="church"] {
+  --primary: oklch(0.45 0.16 25);
+  --primary-foreground: oklch(0.98 0 0);
+}
+[data-tenant="hospital"] {
+  --primary: oklch(0.5 0.14 195);
+  --primary-foreground: oklch(0.98 0 0);
+}
+
 .dark {
   /* Elevation (dark) */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
@@ -129,6 +154,14 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.3);
   --shadow-sheet: 0 -4px 24px rgb(0 0 0 / 0.35);
+
+  /* Semantic status (dark) */
+  --success: oklch(0.65 0.12 145);
+  --success-foreground: oklch(0.15 0 0);
+  --warning: oklch(0.7 0.12 85);
+  --warning-foreground: oklch(0.15 0 0);
+  --info: oklch(0.65 0.14 265);
+  --info-foreground: oklch(0.15 0 0);
 
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -163,6 +196,15 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.dark[data-tenant="church"] {
+  --primary: oklch(0.65 0.14 25);
+  --primary-foreground: oklch(0.15 0 0);
+}
+.dark[data-tenant="hospital"] {
+  --primary: oklch(0.7 0.12 195);
+  --primary-foreground: oklch(0.15 0 0);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -177,6 +219,18 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

@@ -12,19 +12,19 @@ export function BookingStatusBadge({ status }: BookingStatusBadgeProps) {
   const variants: Record<BookingStatus, { label: string; className: string }> = {
     scheduled: {
       label: 'Scheduled',
-      className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+      className: 'bg-warning/15 text-warning hover:bg-warning/15',
     },
     completed: {
       label: 'Completed',
-      className: 'bg-green-100 text-green-800 hover:bg-green-100',
+      className: 'bg-success/15 text-success hover:bg-success/15',
     },
     cancelled: {
       label: 'Cancelled',
-      className: 'bg-red-100 text-red-800 hover:bg-red-100',
+      className: 'bg-destructive/15 text-destructive hover:bg-destructive/15',
     },
     no_show: {
       label: 'No Show',
-      className: 'bg-gray-100 text-gray-700 hover:bg-gray-100',
+      className: 'bg-muted text-muted-foreground hover:bg-muted',
     },
   };
 

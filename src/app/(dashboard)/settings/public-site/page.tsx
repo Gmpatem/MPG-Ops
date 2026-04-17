@@ -48,7 +48,7 @@ function CopyLinkRow({ businessId }: { businessId: string }) {
         onFocus={(e) => e.target.select()}
       />
       <Button type="button" variant="outline" size="sm" onClick={handleCopy} className="h-10 shrink-0">
-        {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+        {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
       </Button>
       <a
         href={`/book/${businessId}`}
@@ -260,10 +260,10 @@ export default function PublicSitePage() {
                 key={opt.value}
                 type="button"
                 onClick={() => setAccent(opt.value)}
-                className={`flex flex-col items-center gap-1.5 group`}
+                className="flex flex-col items-center gap-1.5 group min-w-11 min-h-11 justify-center"
               >
                 <span
-                  className={`w-9 h-9 rounded-full ${opt.bg} ring-2 ring-offset-2 transition-all ${
+                  className={`w-10 h-10 rounded-full ${opt.bg} ring-2 ring-offset-2 transition-all ${
                     accent === opt.value ? opt.ring : 'ring-transparent'
                   }`}
                 />

@@ -110,7 +110,7 @@ export function BookingCard({
       {isCompleted && (
         <div>
           {hasPayment ? (
-            <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+            <span className="flex items-center gap-1.5 text-xs text-success font-medium">
               <CheckCircle className="w-3.5 h-3.5" />
               Paid · ₱{payment.amount.toFixed(2)}
             </span>
@@ -119,7 +119,7 @@ export function BookingCard({
               variant="outline"
               size="sm"
               onClick={onRecordPayment}
-              className="h-9 text-xs px-3 border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+              className="h-9 text-xs px-3 border-success text-success hover:bg-success/10"
             >
               Record Payment
             </Button>

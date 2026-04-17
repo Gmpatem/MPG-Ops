@@ -35,7 +35,7 @@ export function FeatureGate({
         <div className="flex flex-col items-center text-center py-2">
           <div
             className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-              isBusiness ? 'bg-violet-100 text-violet-600' : 'bg-primary/10 text-primary'
+              isBusiness ? 'bg-info/15 text-info' : 'bg-primary/10 text-primary'
             }`}
           >
             {isBusiness ? <Crown className="w-6 h-6" /> : <Lock className="w-6 h-6" />}

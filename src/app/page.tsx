@@ -66,8 +66,8 @@ export default function HomePage() {
         <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
           <span className="font-bold text-xl">MPG Ops</span>
           <div className="flex items-center gap-3 sm:gap-4">
-            <LanguageSwitcher variant="minimal" />
-            <Link href="/login">
+            <LanguageSwitcher variant="dropdown" />
+            <Link href="/login" className="hidden sm:inline-flex">
               <Button variant="ghost" size="sm">{t('landing.header.signIn')}</Button>
             </Link>
             <Link href="/register">

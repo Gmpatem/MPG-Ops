@@ -249,18 +249,18 @@ export default function ServicesPage() {
         <div className="rounded-xl border bg-card px-4 py-3 text-xs text-muted-foreground">
           <div className="flex items-center justify-between mb-1.5">
             <span className="font-medium">Service limit</span>
-            <span className={atServiceLimit ? 'text-amber-600 font-semibold' : 'font-medium text-foreground'}>
+            <span className={atServiceLimit ? 'text-warning font-semibold' : 'font-medium text-foreground'}>
               {services.length} / {serviceLimit}
             </span>
           </div>
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${atServiceLimit ? 'bg-amber-500' : 'bg-primary'}`}
+              className={`h-full rounded-full transition-all ${atServiceLimit ? 'bg-warning' : 'bg-primary'}`}
               style={{ width: `${Math.min(100, (services.length / serviceLimit) * 100)}%` }}
             />
           </div>
           {atServiceLimit && (
-            <p className="mt-1.5 text-amber-600 text-[11px]">
+            <p className="mt-1.5 text-warning text-[11px]">
               You&apos;ve reached the Free plan service limit. Upgrade to Pro for unlimited services.
             </p>
           )}
@@ -274,7 +274,7 @@ export default function ServicesPage() {
             key={tab.id}
             onClick={() => onTabClick(tab.id)}
             className={cn(
-              'px-3 sm:px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
+              'px-3 sm:px-4 py-2.5 min-h-10 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'

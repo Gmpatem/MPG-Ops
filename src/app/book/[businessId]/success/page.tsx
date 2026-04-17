@@ -62,7 +62,7 @@ export default async function BookingSuccessPage({ params, searchParams }: Succe
         <div className="max-w-sm w-full text-center">
           {/* Success icon */}
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-green-600" />
+            <CheckCircle className="w-10 h-10 text-success" />
           </div>
 
           <h1 className="text-2xl font-bold mb-2">You&apos;re booked!</h1>

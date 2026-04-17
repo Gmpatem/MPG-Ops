@@ -20,10 +20,10 @@ interface PaymentSheetProps {
 export function PaymentSheet({ isOpen, onClose, bookingId, defaultAmount, onSubmit }: PaymentSheetProps) {
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="responsive" className="overflow-y-auto">
-        <SheetHeader className="pb-4">
+      <SheetContent side="responsive" className="overflow-y-auto md:max-w-md">
+        <SheetHeader>
           <SheetTitle className="text-xl">Record Payment</SheetTitle>
-          <SheetDescription className="text-sm text-muted-foreground">
+          <SheetDescription>
             Record payment for this completed booking.
           </SheetDescription>
         </SheetHeader>

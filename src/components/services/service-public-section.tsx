@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 import { ErrorState } from '@/components/error-state';
 import { FormStatus } from '@/components/form-status';
 import {
@@ -19,7 +20,7 @@ import { getCurrentBusiness } from '@/app/actions/business';
 import { useToast } from '@/components/ui/toast';
 import { ExternalLink, Star, Eye, EyeOff, Globe } from 'lucide-react';
 
-// ─── Toggle ───────────────────────────────────────────────────────────────────
+// ─── Toggle (uses project Switch primitive) ───────────────────────────────────
 
 function Toggle({
   checked,
@@ -31,22 +32,12 @@ function Toggle({
   label: string;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
+    <Switch
+      checked={checked}
+      onCheckedChange={onChange}
       aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-        checked ? 'bg-primary' : 'bg-muted-foreground/30'
-      }`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-          checked ? 'translate-x-6' : 'translate-x-1'
-        }`}
-      />
-    </button>
+      size="sm"
+    />
   );
 }
 
@@ -126,7 +117,7 @@ function ServicePublicCard({
               <Badge variant="secondary" className="text-xs shrink-0">Inactive</Badge>
             )}
             {state.isFeatured && (
-              <Badge className="bg-amber-100 text-amber-800 text-xs shrink-0 border-0">
+              <Badge className="bg-warning/15 text-warning text-xs shrink-0 border-0">
                 <Star className="w-2.5 h-2.5 mr-0.5" />Featured
               </Badge>
             )}
@@ -316,7 +307,7 @@ function ServicePublicCard({
             {isSaving ? 'Saving…' : 'Save'}
           </Button>
           {message && (
-            <span className={`text-xs ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+            <span className={`text-xs ${message.type === 'success' ? 'text-success' : 'text-destructive'}`}>
               {message.text}
             </span>
           )}

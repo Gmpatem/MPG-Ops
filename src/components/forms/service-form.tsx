@@ -94,56 +94,58 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-5 pt-2">
+    <form action={handleSubmit} className="space-y-6 px-5 pt-2 pb-6">
       {error && <FormStatus type="error" message={error} />}
 
       {/* Image Upload */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label className="text-sm font-medium">Service image</Label>
-        <div className="flex items-center gap-3">
-          {previewUrl ? (
-            <div className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted shrink-0">
-              <img
-                src={previewUrl}
-                alt="Service preview"
-                className="w-full h-full object-cover"
+        <div className="rounded-xl border bg-muted/30 p-4">
+          <div className="flex items-center gap-4">
+            {previewUrl ? (
+              <div className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted shrink-0">
+                <img
+                  src={previewUrl}
+                  alt="Service preview"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-1 right-1 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                  aria-label="Remove image"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/50 shrink-0">
+                <ImagePlus className="w-6 h-6 text-muted-foreground" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="image"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => {
+                  handleFileChange(e);
+                  setRemoveImage(false);
+                }}
+                className="block w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
               />
-              <button
-                type="button"
-                onClick={handleRemoveImage}
-                className="absolute top-0.5 right-0.5 p-1 rounded-full bg-black/60 text-white hover:bg-black/80"
-                aria-label="Remove image"
-              >
-                <X className="w-3 h-3" />
-              </button>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                JPG, PNG or WebP up to 2MB
+              </p>
             </div>
-          ) : (
-            <div className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-muted/50 shrink-0">
-              <ImagePlus className="w-6 h-6 text-muted-foreground" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <input
-              ref={fileInputRef}
-              type="file"
-              name="image"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => {
-                handleFileChange(e);
-                setRemoveImage(false);
-              }}
-              className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              JPG, PNG or WebP up to 2MB
-            </p>
           </div>
         </div>
         {removeImage && <input type="hidden" name="removeImage" value="true" />}
       </div>
 
       {/* Service Name */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="name" className="text-sm font-medium">
           Service name
         </Label>
@@ -153,15 +155,15 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
           type="text"
           placeholder="e.g. Haircut"
           defaultValue={initialData?.name ?? ''}
-          className={`h-12 ${errors.name ? 'border-red-500' : ''}`}
+          className={`h-12 ${errors.name ? 'border-destructive' : ''}`}
         />
         {errors.name && (
-          <p className="text-sm text-red-600">{errors.name}</p>
+          <p className="text-sm text-destructive">{errors.name}</p>
         )}
       </div>
 
       {/* Category */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="category" className="text-sm font-medium">
           Category
         </Label>
@@ -176,8 +178,8 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
       </div>
 
       {/* Duration and Price - Side by side on desktop */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="space-y-3">
           <Label htmlFor="durationMinutes" className="text-sm font-medium">
             Duration (minutes)
           </Label>
@@ -188,14 +190,14 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
             min={1}
             placeholder="30"
             defaultValue={initialData?.durationMinutes ?? 30}
-            className={`h-12 ${errors.durationMinutes ? 'border-red-500' : ''}`}
+            className={`h-12 ${errors.durationMinutes ? 'border-destructive' : ''}`}
           />
           {errors.durationMinutes && (
-            <p className="text-sm text-red-600">{errors.durationMinutes}</p>
+            <p className="text-sm text-destructive">{errors.durationMinutes}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label htmlFor="price" className="text-sm font-medium">
             Price
           </Label>
@@ -207,17 +209,17 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
             step="1"
             placeholder="500"
             defaultValue={initialData?.price ?? 0}
-            className={`h-12 ${errors.price ? 'border-red-500' : ''}`}
+            className={`h-12 ${errors.price ? 'border-destructive' : ''}`}
           />
           {errors.price && (
-            <p className="text-sm text-red-600">{errors.price}</p>
+            <p className="text-sm text-destructive">{errors.price}</p>
           )}
         </div>
       </div>
 
       {/* Active Status - Edit mode only */}
       {initialData && (
-        <div className="flex items-center justify-between py-2">
+        <div className="flex items-center justify-between rounded-xl border bg-muted/20 p-4">
           <div className="space-y-0.5">
             <Label htmlFor="isActive" className="text-sm font-medium">
               Active
@@ -236,7 +238,7 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
       )}
 
       {/* Submit Button */}
-      <div className="pt-4">
+      <div className="pt-2">
         <Button
           type="submit"
           className="w-full h-12 text-base font-medium"

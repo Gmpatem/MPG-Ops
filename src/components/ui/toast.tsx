@@ -37,7 +37,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-auto"
+            className="bg-foreground text-background px-4 py-3 rounded-lg shadow-lg text-sm animate-in fade-in slide-in-from-bottom-2 duration-[var(--duration-base)] pointer-events-auto"
           >
             <div className="font-medium">{t.title}</div>
             {t.description && (

@@ -11,9 +11,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { logout } from '@/app/actions/auth';
-import { Bell, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { formatPlanLabel, formatSubscriptionStatus, isTrialActive } from '@/lib/subscription';
 import { useI18n } from '@/lib/i18n/i18n-provider';
+import { LanguageSwitcher } from '@/components/language-switcher/language-switcher';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 import type { Tables } from '@/lib/supabase/database.types';
 
 interface DashboardHeaderProps {
@@ -29,12 +31,12 @@ export function DashboardHeader({ userEmail, business }: DashboardHeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 pt-safe backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
-        <Link href="/dashboard" className="font-bold text-lg sm:text-xl">
-          MPG Ops
+        <Link href="/dashboard" className="font-bold text-lg sm:text-xl truncate">
+          {business?.name || 'MPG Ops'}
         </Link>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-2">
           {business && (
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2 mr-1">
               <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                 {planLabel}
               </span>
@@ -43,15 +45,9 @@ export function DashboardHeader({ userEmail, business }: DashboardHeaderProps) {
               </span>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground"
-            aria-label="Notifications"
-            title="Notifications"
-          >
-            <Bell className="h-[18px] w-[18px]" />
-          </Button>
+
+          <LanguageSwitcher variant="dropdown" />
+          <NotificationBell />
 
           <Popover>
             <PopoverTrigger asChild>

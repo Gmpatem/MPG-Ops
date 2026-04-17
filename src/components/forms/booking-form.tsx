@@ -122,16 +122,16 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
   const selectedServiceData = services.find(s => s.id === selectedService);
 
   return (
-    <form action={handleSubmit} className="space-y-5 pt-2">
+    <form action={handleSubmit} className="space-y-6 px-5 pt-2 pb-6">
       {error && <FormStatus type="error" message={error} />}
 
       {/* Customer Select */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="customerId" className="text-sm font-medium">
           Customer *
         </Label>
         <Select name="customerId" defaultValue={initialData?.customer_id}>
-          <SelectTrigger className={`h-12 ${errors.customerId ? 'border-red-500' : ''}`}>
+          <SelectTrigger className={`h-12 ${errors.customerId ? 'border-destructive' : ''}`}>
             <SelectValue placeholder="Select a customer" />
           </SelectTrigger>
           <SelectContent>
@@ -143,17 +143,17 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
           </SelectContent>
         </Select>
         {errors.customerId && (
-          <p className="text-sm text-red-600">{errors.customerId}</p>
+          <p className="text-sm text-destructive">{errors.customerId}</p>
         )}
       </div>
 
       {/* Service Select */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="serviceId" className="text-sm font-medium">
           Service *
         </Label>
         <Select name="serviceId" defaultValue={initialData?.service_id} onValueChange={(value: string | null) => setSelectedService(value || '')}>
-          <SelectTrigger className={`h-12 ${errors.serviceId ? 'border-red-500' : ''}`}>
+          <SelectTrigger className={`h-12 ${errors.serviceId ? 'border-destructive' : ''}`}>
             <SelectValue placeholder="Select a service" />
           </SelectTrigger>
           <SelectContent>
@@ -165,12 +165,12 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
           </SelectContent>
         </Select>
         {errors.serviceId && (
-          <p className="text-sm text-red-600">{errors.serviceId}</p>
+          <p className="text-sm text-destructive">{errors.serviceId}</p>
         )}
       </div>
 
       {/* Date Picker */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label className="text-sm font-medium">Date *</Label>
         <Popover>
           <PopoverTrigger asChild>
@@ -197,8 +197,8 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
       </div>
 
       {/* Time Selection */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-5">
+        <div className="space-y-3">
           <Label htmlFor="startTime" className="text-sm font-medium">
             Start Time *
           </Label>
@@ -207,7 +207,7 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
             name="startTime"
             type="time"
             defaultValue={initialData?.start_time ?? ''}
-            className={`h-12 ${errors.startTime ? 'border-red-500' : ''}`}
+            className={`h-12 ${errors.startTime ? 'border-destructive' : ''}`}
             onChange={(e) => {
               if (selectedServiceData && e.target.value) {
                 const [hours, minutes] = e.target.value.split(':').map(Number);
@@ -219,10 +219,10 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
             }}
           />
           {errors.startTime && (
-            <p className="text-sm text-red-600">{errors.startTime}</p>
+            <p className="text-sm text-destructive">{errors.startTime}</p>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label className="text-sm font-medium">End Time</Label>
           <Input
             type="text"
@@ -234,7 +234,7 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
       </div>
 
       {/* Notes */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="notes" className="text-sm font-medium">
           Notes
         </Label>
@@ -243,12 +243,12 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
           name="notes"
           placeholder="Any special requests or notes..."
           defaultValue={initialData?.notes ?? ''}
-          className="min-h-20 resize-none"
+          className="min-h-24 resize-none"
         />
       </div>
 
       {/* Submit Button */}
-      <div className="pt-4">
+      <div className="pt-2">
         <Button
           type="submit"
           className="w-full h-12 text-base font-medium"

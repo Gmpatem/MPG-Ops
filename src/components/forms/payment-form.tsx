@@ -59,13 +59,13 @@ export function PaymentForm({ action, defaultAmount, bookingId }: PaymentFormPro
   }
 
   return (
-    <form action={handleSubmit} className="space-y-5 pt-2">
+    <form action={handleSubmit} className="space-y-6 px-5 pt-2 pb-6">
       <input type="hidden" name="bookingId" value={bookingId} />
 
       {error && <FormStatus type="error" message={error} />}
 
       {/* Amount */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="amount" className="text-sm font-medium">
           Amount *
         </Label>
@@ -77,20 +77,20 @@ export function PaymentForm({ action, defaultAmount, bookingId }: PaymentFormPro
           step="0.01"
           defaultValue={defaultAmount}
           placeholder="0.00"
-          className={`h-12 ${errors.amount ? 'border-red-500' : ''}`}
+          className={`h-12 ${errors.amount ? 'border-destructive' : ''}`}
         />
         {errors.amount && (
-          <p className="text-sm text-red-600">{errors.amount}</p>
+          <p className="text-sm text-destructive">{errors.amount}</p>
         )}
       </div>
 
       {/* Payment Method */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="method" className="text-sm font-medium">
           Payment Method *
         </Label>
         <Select name="method" defaultValue="cash">
-          <SelectTrigger className={`h-12 ${errors.method ? 'border-red-500' : ''}`}>
+          <SelectTrigger className={`h-12 ${errors.method ? 'border-destructive' : ''}`}>
             <SelectValue placeholder="Select payment method" />
           </SelectTrigger>
           <SelectContent>
@@ -100,12 +100,12 @@ export function PaymentForm({ action, defaultAmount, bookingId }: PaymentFormPro
           </SelectContent>
         </Select>
         {errors.method && (
-          <p className="text-sm text-red-600">{errors.method}</p>
+          <p className="text-sm text-destructive">{errors.method}</p>
         )}
       </div>
 
       {/* Notes */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Label htmlFor="notes" className="text-sm font-medium">
           Notes
         </Label>
@@ -113,12 +113,12 @@ export function PaymentForm({ action, defaultAmount, bookingId }: PaymentFormPro
           id="notes"
           name="notes"
           placeholder="Any additional notes..."
-          className="min-h-[80px] resize-none"
+          className="min-h-20 resize-none"
         />
       </div>
 
       {/* Submit Buttons */}
-      <div className="pt-4 flex gap-3">
+      <div className="pt-2 flex gap-3">
         <Button
           type="button"
           variant="outline"
