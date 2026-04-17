@@ -802,6 +802,46 @@ A targeted review of the mobile experience revealed several small but impactful 
 
 ---
 
+## Phase 19: Public Booking Desktop Layout Enhancement ✅
+
+**Date:** 2026-04-18
+
+### 19.1 Desktop Composition
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Wider desktop shell | ✅ Complete | `ServiceFirstLanding` upgraded to `lg:max-w-6xl` container strategy |
+| Hero split layout | ✅ Complete | Desktop two-column composition: business identity + CTA block + featured card |
+| Section rhythm | ✅ Complete | More intentional vertical spacing for desktop without changing mobile spacing |
+
+### 19.2 Service Presentation
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Desktop service grid expansion | ✅ Complete | Grid scales to 3 columns on desktop; mobile remains 2 columns |
+| Featured card desktop polish | ✅ Complete | Improved desktop ratio/scale and responsive image sizing |
+| Grid card desktop polish | ✅ Complete | Better card/image proportions and responsive `sizes` values |
+
+### 19.3 CTA Behavior by Breakpoint
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Mobile sticky CTA preserved | ✅ Complete | Existing sticky bar kept and now explicitly `lg:hidden` |
+| Desktop CTA anchoring | ✅ Complete | Added hero-level desktop booking CTA card (`hidden lg:flex`) |
+
+### 19.4 Flow Safety & Validation
+
+| Check | Status |
+|-------|--------|
+| Booking logic unchanged | ✅ |
+| Mobile booking flow preserved | ✅ |
+| `npx tsc --noEmit --incremental false` | ✅ Passes |
+| `npm run build` | ✅ Passes |
+
+**Phase 19 Progress: 100%**
+
+---
+
 ## Next Steps (Pre-Production)
 
 1. Apply DB migrations in order:
@@ -816,4 +856,4 @@ A targeted review of the mobile experience revealed several small but impactful 
 
 ---
 
-*Last Updated: 2026-04-16*
+*Last Updated: 2026-04-18*

@@ -8,6 +8,55 @@
 
 ---
 
+## Latest Session Information
+
+**Session Date:** 2026-04-18  
+**Session Type:** Phase 19 — Public Booking Desktop Layout Enhancement  
+**Status:** ✅ Complete
+
+---
+
+## What Was Completed (Phase 19)
+
+### Public Booking Desktop Layout Enhancement (Desktop-only)
+
+Targeted responsive enhancement for `/book/[businessId]` so desktop no longer feels like a narrow mobile column. Booking logic, routing, and mobile flow were preserved.
+
+### Changes
+
+**`service-first-landing.tsx`:**
+- Added wide desktop container (`lg:max-w-6xl`) and two-column hero composition.
+- Upgraded top area structure for desktop spacing and alignment.
+- Added desktop-only anchored CTA card with next available slot and Book now button.
+- Kept mobile sticky booking bar behavior and explicitly scoped it to mobile (`lg:hidden`).
+- Expanded service grid to 3 columns on desktop while preserving current mobile grid behavior.
+
+**`featured-service-card.tsx`:**
+- Improved desktop proportions (`lg:aspect-[5/4]` / `xl:aspect-[16/10]`) and responsive image sizing.
+- Added subtle desktop hover-lift polish.
+
+**`grid-service-card.tsx`:**
+- Improved desktop card/image proportions and responsive image `sizes`.
+- Added subtle desktop hover-lift polish.
+
+**`step-shell.tsx`:**
+- Increased desktop content/header width (`lg:max-w-3xl`) for steps 2–6 while preserving mobile layout.
+
+### What Was Intentionally Not Changed
+
+- Booking wizard step logic and transitions
+- Public booking server actions and data flow
+- Internal app pages (dashboard/customers/bookings/services/settings)
+- Mobile booking sticky CTA behavior and mobile-first interaction pattern
+
+### Validation
+
+- `npx tsc --noEmit --incremental false` ✅
+- `npm run build` ✅
+- Route output still includes `/book/[businessId]` and `/book/[businessId]/success` with no build regressions ✅
+
+---
+
 ## What Was Completed (Phase 14)
 
 ### Public Booking Polish, Autofill & Global Loading Bar
@@ -622,5 +671,5 @@ Further redesign of the landing into a storefront pattern:
 
 ---
 
-*Last Updated: 2026-04-16*
+*Last Updated: 2026-04-18*
 *Next Task: Deploy to Vercel, test public booking end-to-end with a real business*

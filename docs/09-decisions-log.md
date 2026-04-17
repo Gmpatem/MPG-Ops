@@ -803,4 +803,25 @@ None at this time.
 - **Rationale:** Client-only avoids SSR hydration mismatch (client has real local time; server does not). Operating hours are already in the page payload — no extra fetch needed. Real DB slot check would require a dedicated endpoint and adds latency.
 - **Impact:** Next available slot shows after hydration (~0ms for most devices); gracefully absent if operating hours not configured.
 
-*Last Updated: 2026-04-16*
+### 2026-04-18: Public Booking Desktop Layout Enhancement
+
+#### DEC-069: Desktop-Only Composition Layer for `/book/[businessId]`
+- **Date:** 2026-04-18
+- **Context:** Public booking looked like a stretched mobile page on large screens (narrow shell, underused width, weak hero balance).
+- **Decision:** Keep the existing mobile flow and logic untouched, and add desktop-only responsive composition in booking UI components:
+  - `ServiceFirstLanding` now uses a wide desktop shell (`lg:max-w-6xl`) and two-column hero composition.
+  - Desktop service grid scales to 3 columns while mobile remains 2 columns.
+  - Desktop spacing and visual rhythm were improved via `lg:` classes only.
+- **Alternatives:** Full redesign of the public booking flow; separate desktop-only booking page
+- **Rationale:** Responsive enhancement is low-risk, preserves MVP behavior, and avoids logic duplication.
+- **Impact:** Desktop users get a premium layout without changing booking behavior or mobile UX.
+
+#### DEC-070: Split Booking CTA Strategy by Breakpoint
+- **Date:** 2026-04-18
+- **Context:** Mobile sticky "Book now" CTA works well, but on desktop the same fixed bar felt less intentional.
+- **Decision:** Keep the sticky bottom CTA for mobile (`lg:hidden`) and introduce a desktop-only anchored CTA block in the hero column (`hidden lg:flex`).
+- **Alternatives:** Keep one sticky CTA for all breakpoints; add duplicate CTAs
+- **Rationale:** Prevents duplicate/conflicting CTA patterns while preserving proven mobile behavior.
+- **Impact:** Desktop call-to-action feels integrated and clear; mobile sticky behavior remains unchanged.
+
+*Last Updated: 2026-04-18*
