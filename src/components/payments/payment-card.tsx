@@ -33,7 +33,7 @@ export function PaymentCard({ payment }: PaymentCardProps) {
   };
 
   return (
-    <Card className="p-4 rounded-xl border bg-card">
+    <Card className="p-4 rounded-xl border bg-card transition-shadow hover:shadow-md">
       {/* Top row: Amount and Method */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export function PaymentCard({ payment }: PaymentCardProps) {
             ₱{payment.amount.toFixed(2)}
           </span>
         </div>
-        <Badge variant="secondary" className="bg-green-100 text-green-800">
+        <Badge variant="secondary" className="bg-success/15 text-success">
           {methodLabels[payment.method]}
         </Badge>
       </div>

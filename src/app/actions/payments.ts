@@ -1,20 +1,22 @@
 'use server';
 
+import { cache } from 'react';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { paymentSchema } from '@/schemas/payment';
+import type { Enums } from '@/lib/supabase/database.types';
 
-async function getCurrentBusinessId(userId: string): Promise<string | null> {
+const getCurrentBusinessId = cache(async function getCurrentBusinessId(userId: string): Promise<string | null> {
   const supabase = await createClient();
-  
+
   const { data: membership } = await supabase
     .from('business_members')
     .select('business_id')
     .eq('user_id', userId)
     .single();
-  
+
   return membership?.business_id || null;
-}
+});
 
 export async function recordPayment(formData: FormData) {
   const supabase = await createClient();
@@ -69,9 +71,9 @@ export async function recordPayment(formData: FormData) {
   return { success: true };
 }
 
-export async function getPaymentByBookingId(bookingId: string) {
+export const getPaymentByBookingId = cache(async function getPaymentByBookingId(bookingId: string) {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return null;
@@ -90,11 +92,11 @@ export async function getPaymentByBookingId(bookingId: string) {
     .single();
 
   return payment || null;
-}
+});
 
-export async function getDailyRevenue(date: string): Promise<number> {
+export const getDailyRevenue = cache(async function getDailyRevenue(date: string): Promise<number> {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return 0;
@@ -116,16 +118,16 @@ export async function getDailyRevenue(date: string): Promise<number> {
     .lt('created_at', end);
 
   return payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-}
+});
 
-export async function getTodayRevenue(): Promise<number> {
+export const getTodayRevenue = cache(async function getTodayRevenue(): Promise<number> {
   const today = new Date().toISOString().split('T')[0];
   return getDailyRevenue(today);
-}
+});
 
-export async function getTodayPaymentsCount(): Promise<number> {
+export const getTodayPaymentsCount = cache(async function getTodayPaymentsCount(): Promise<number> {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return 0;
@@ -148,11 +150,11 @@ export async function getTodayPaymentsCount(): Promise<number> {
     .lt('created_at', end);
 
   return count || 0;
-}
+});
 
-export async function getPayments() {
+export const getPayments = cache(async function getPayments() {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return [];
@@ -177,11 +179,98 @@ export async function getPayments() {
     .order('created_at', { ascending: false });
 
   return payments || [];
+});
+
+const DEFAULT_PAYMENTS_PAGE_SIZE = 24;
+
+type PaymentRow = {
+  id: string;
+  amount: number;
+  method: Enums<'payment_method'>;
+  status: Enums<'payment_status'>;
+  created_at: string;
+  booking: {
+    booking_date: string;
+    customer: { name: string };
+    service: { name: string };
+  };
+};
+
+export interface PaymentsPageResult {
+  items: PaymentRow[];
+  hasMore: boolean;
 }
 
-export async function getRevenueSummary() {
+export const getPaymentsPage = cache(async function getPaymentsPage(
+  limit = DEFAULT_PAYMENTS_PAGE_SIZE,
+  offset = 0
+): Promise<PaymentsPageResult> {
   const supabase = await createClient();
-  
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { items: [], hasMore: false };
+  }
+
+  const businessId = await getCurrentBusinessId(user.id);
+  if (!businessId) {
+    return { items: [], hasMore: false };
+  }
+
+  const safeLimit = Math.max(1, Math.min(limit, 100));
+  const safeOffset = Math.max(0, offset);
+
+  const { data } = await supabase
+    .from('payments')
+    .select(`
+      id,
+      amount,
+      method,
+      status,
+      created_at,
+      booking:bookings(
+        booking_date,
+        customer:customers(name),
+        service:services(name)
+      )
+    `)
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false })
+    .range(safeOffset, safeOffset + safeLimit);
+
+  const items = (data ?? []) as PaymentRow[];
+  const hasMore = items.length > safeLimit;
+
+  return {
+    items: hasMore ? items.slice(0, safeLimit) : items,
+    hasMore,
+  };
+});
+
+export const getPaymentsCount = cache(async function getPaymentsCount(): Promise<number> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return 0;
+  }
+
+  const businessId = await getCurrentBusinessId(user.id);
+  if (!businessId) {
+    return 0;
+  }
+
+  const { count } = await supabase
+    .from('payments')
+    .select('*', { count: 'exact', head: true })
+    .eq('business_id', businessId);
+
+  return count ?? 0;
+});
+
+export const getRevenueSummary = cache(async function getRevenueSummary() {
+  const supabase = await createClient();
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return { today: 0, week: 0, month: 0 };
@@ -218,4 +307,4 @@ export async function getRevenueSummary() {
     week: weekRevenue,
     month: monthRevenue,
   };
-}
+});

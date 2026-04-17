@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -61,22 +61,7 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
     return new Date();
   });
   const [selectedService, setSelectedService] = useState<string>(initialData?.service_id ?? '');
-  const [endTime, setEndTime] = useState<string>('');
-
-  // Calculate end time when service or start time changes
-  useEffect(() => {
-    if (selectedService) {
-      const service = services.find(s => s.id === selectedService);
-      const startTimeInput = document.getElementById('startTime') as HTMLInputElement;
-      if (service && startTimeInput?.value) {
-        const [hours, minutes] = startTimeInput.value.split(':').map(Number);
-        const startDateTime = new Date();
-        startDateTime.setHours(hours, minutes, 0, 0);
-        const endDateTime = new Date(startDateTime.getTime() + service.duration_minutes * 60000);
-        setEndTime(`${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}`);
-      }
-    }
-  }, [selectedService, services]);
+  const [startTime, setStartTime] = useState<string>(initialData?.start_time ?? '');
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
@@ -120,6 +105,17 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
   }
 
   const selectedServiceData = services.find(s => s.id === selectedService);
+  const endTime = useMemo(() => {
+    if (!selectedServiceData || !startTime) {
+      return '';
+    }
+
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const startDateTime = new Date();
+    startDateTime.setHours(hours, minutes, 0, 0);
+    const endDateTime = new Date(startDateTime.getTime() + selectedServiceData.duration_minutes * 60000);
+    return `${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}`;
+  }, [selectedServiceData, startTime]);
 
   return (
     <form action={handleSubmit} className="space-y-6 px-5 pt-2 pb-6">
@@ -206,17 +202,9 @@ export function BookingForm({ action, customers, services, initialData }: Bookin
             id="startTime"
             name="startTime"
             type="time"
-            defaultValue={initialData?.start_time ?? ''}
+            value={startTime}
             className={`h-12 ${errors.startTime ? 'border-destructive' : ''}`}
-            onChange={(e) => {
-              if (selectedServiceData && e.target.value) {
-                const [hours, minutes] = e.target.value.split(':').map(Number);
-                const startDateTime = new Date();
-                startDateTime.setHours(hours, minutes, 0, 0);
-                const endDateTime = new Date(startDateTime.getTime() + selectedServiceData.duration_minutes * 60000);
-                setEndTime(`${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}`);
-              }
-            }}
+            onChange={(e) => setStartTime(e.target.value)}
           />
           {errors.startTime && (
             <p className="text-sm text-destructive">{errors.startTime}</p>

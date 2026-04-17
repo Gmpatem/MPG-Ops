@@ -29,7 +29,7 @@ export function PaymentList({ payments }: PaymentListProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {payments.map((payment) => (
         <PaymentCard key={payment.id} payment={payment} />
       ))}

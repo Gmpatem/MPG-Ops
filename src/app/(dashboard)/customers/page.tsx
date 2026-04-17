@@ -7,8 +7,7 @@ import { CustomerList } from '@/components/customers/customer-list';
 import { CustomerSheet } from '@/components/customers/customer-sheet';
 import { CustomerDetailSheet } from '@/components/customers/customer-detail-sheet';
 import { CustomerEmptyState } from '@/components/customers/customer-empty-state';
-import { createCustomer, updateCustomer, getCustomers } from '@/app/actions/customers';
-import { useRouter } from 'next/navigation';
+import { createCustomer, updateCustomer, getCustomersPage } from '@/app/actions/customers';
 import { useToast } from '@/components/ui/toast';
 import { LoadingPage } from '@/components/loading-page';
 import { ErrorState } from '@/components/error-state';
@@ -23,16 +22,27 @@ interface Customer {
 }
 
 export default function CustomersPage() {
-  const router = useRouter();
   const { toast } = useToast();
+  const PAGE_SIZE = 20;
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customersOffset, setCustomersOffset] = useState(0);
+  const [hasMoreCustomers, setHasMoreCustomers] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const isSearching = searchQuery.trim().length > 0;
+
+  const loadFirstCustomersPage = useCallback(async () => {
+    const data = await getCustomersPage(PAGE_SIZE, 0);
+    setCustomers(data.items);
+    setCustomersOffset(data.items.length);
+    setHasMoreCustomers(data.hasMore);
+  }, [PAGE_SIZE]);
 
   // Fetch customers on mount
   useEffect(() => {
@@ -40,16 +50,15 @@ export default function CustomersPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await getCustomers();
-        setCustomers(data);
-      } catch (err) {
+        await loadFirstCustomersPage();
+      } catch {
         setError('Failed to load customers');
       } finally {
         setIsLoading(false);
       }
     }
-    loadCustomers();
-  }, []);
+    void loadCustomers();
+  }, [loadFirstCustomersPage]);
 
   // Filter customers based on search query
   const filteredCustomers = useMemo(() => {
@@ -92,9 +101,7 @@ export default function CustomersPage() {
     try {
       const result = await createCustomer(formData);
       if (result.success) {
-        const data = await getCustomers();
-        setCustomers(data);
-        router.refresh();
+        await loadFirstCustomersPage();
         toast({ title: 'Customer added successfully' });
         return { success: true };
       }
@@ -109,9 +116,7 @@ export default function CustomersPage() {
     try {
       const result = await updateCustomer(editingCustomer.id, formData);
       if (result.success) {
-        const data = await getCustomers();
-        setCustomers(data);
-        router.refresh();
+        await loadFirstCustomersPage();
         toast({ title: 'Customer updated successfully' });
         return { success: true };
       }
@@ -126,16 +131,31 @@ export default function CustomersPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await getCustomers();
-        setCustomers(data);
-      } catch (err) {
+        await loadFirstCustomersPage();
+      } catch {
         setError('Failed to load customers');
       } finally {
         setIsLoading(false);
       }
     }
-    loadCustomers();
+    void loadCustomers();
   };
+
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMoreCustomers) return;
+
+    try {
+      setIsLoadingMore(true);
+      const data = await getCustomersPage(PAGE_SIZE, customersOffset);
+      setCustomers((prev) => [...prev, ...data.items]);
+      setCustomersOffset((prev) => prev + data.items.length);
+      setHasMoreCustomers(data.hasMore);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [customersOffset, hasMoreCustomers, isLoadingMore, PAGE_SIZE]);
+
+  const canLoadMore = hasMoreCustomers && !isSearching;
 
   const clearSearch = () => {
     setSearchQuery('');
@@ -173,7 +193,6 @@ export default function CustomersPage() {
   }
 
   const hasCustomers = customers.length > 0;
-  const isSearching = searchQuery.trim().length > 0;
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -185,37 +204,37 @@ export default function CustomersPage() {
             Manage your customers and their contact details.
           </p>
         </div>
-        <Button
-          onClick={handleAddCustomer}
-          className="h-11 px-4 self-start"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Customer
-        </Button>
-      </div>
-
-      {/* Search Bar - Only show when there are customers */}
-      {hasCustomers && (
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search by name or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 h-11"
-          />
-          {isSearching && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <X className="w-4 h-4" />
-            </button>
+        <div className="flex items-center gap-2 self-start">
+          {hasCustomers && (
+            <div className="relative w-52 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-8 h-10"
+              />
+              {isSearching && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           )}
+          <Button
+            onClick={handleAddCustomer}
+            className="h-10 px-3 sm:px-4"
+          >
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Add Customer</span>
+          </Button>
         </div>
-      )}
+      </div>
 
       {/* Results Count */}
       {hasCustomers && isSearching && (
@@ -243,12 +262,27 @@ export default function CustomersPage() {
           </Button>
         </div>
       ) : (
-        <CustomerList
-          customers={filteredCustomers}
-          onEditCustomer={handleEditCustomer}
-          onViewCustomer={handleViewCustomer}
-          onAddCustomer={handleAddCustomer}
-        />
+        <>
+          <CustomerList
+            customers={filteredCustomers}
+            onEditCustomer={handleEditCustomer}
+            onViewCustomer={handleViewCustomer}
+            onAddCustomer={handleAddCustomer}
+          />
+          {canLoadMore && (
+            <div className="flex justify-center pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="h-10"
+              >
+                {isLoadingMore ? 'Loading…' : 'Load more customers'}
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Add/Edit Sheet */}

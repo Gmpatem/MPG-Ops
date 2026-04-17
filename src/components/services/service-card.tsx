@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -18,17 +19,19 @@ export function ServiceCard({ service, onEdit, onToggleStatus }: ServiceCardProp
   return (
     <Card
       className={`
-        p-0 rounded-xl border bg-card transition-colors overflow-hidden
+        p-0 rounded-xl border bg-card transition-all overflow-hidden hover:shadow-md
         ${!service.is_active ? 'bg-muted/30 border-muted' : ''}
       `}
     >
       {/* Image area — fixed height for grid alignment */}
-      <div className="w-full h-28 sm:h-32 bg-muted/60 overflow-hidden">
+      <div className="w-full h-28 sm:h-32 bg-muted/60 overflow-hidden relative">
         {service.image_url ? (
-          <img
+          <Image
             src={service.image_url}
             alt={service.name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

@@ -7,9 +7,14 @@ import { ServiceList } from '@/components/services/service-list';
 import { ServiceSheet } from '@/components/services/service-sheet';
 import { ServiceEmptyState } from '@/components/services/service-empty-state';
 import { ServicePublicSection } from '@/components/services/service-public-section';
-import { createService, updateService, toggleServiceStatus, getServices } from '@/app/actions/services';
+import {
+  createService,
+  updateService,
+  toggleServiceStatus,
+  getServiceCount,
+  getServicesPage,
+} from '@/app/actions/services';
 import { getCurrentBusiness } from '@/app/actions/business';
-import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 import { LoadingPage } from '@/components/loading-page';
 import { ErrorState } from '@/components/error-state';
@@ -38,16 +43,20 @@ const tabs: { id: Tab; label: string }[] = [
 ];
 
 export default function ServicesPage() {
-  const router = useRouter();
   const { toast } = useToast();
+  const PAGE_SIZE = 18;
   const [activeTab, setActiveTab] = useState<Tab>('services');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingService, setEditingService] = useState<Tables<'services'> | null>(null);
   const [services, setServices] = useState<Tables<'services'>[]>([]);
+  const [servicesOffset, setServicesOffset] = useState(0);
+  const [hasMoreServices, setHasMoreServices] = useState(false);
+  const [isLoadingMoreServices, setIsLoadingMoreServices] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ServiceFilter>('all');
   const [business, setBusiness] = useState<Tables<'businesses'> | null>(null);
+  const [totalServices, setTotalServices] = useState(0);
   const [limitModalOpen, setLimitModalOpen] = useState(false);
   const [featureGateOpen, setFeatureGateOpen] = useState(false);
   const [featureGateConfig, setFeatureGateConfig] = useState<{ featureName: string; requiredPlan: 'pro' | 'business' }>({
@@ -55,23 +64,33 @@ export default function ServicesPage() {
     requiredPlan: 'pro',
   });
 
+  const loadFirstServicesPage = useCallback(async () => {
+    const [servicesPage, count] = await Promise.all([
+      getServicesPage(PAGE_SIZE, 0),
+      getServiceCount(),
+    ]);
+    setServices(servicesPage.items);
+    setServicesOffset(servicesPage.items.length);
+    setHasMoreServices(servicesPage.hasMore);
+    setTotalServices(count);
+  }, [PAGE_SIZE]);
+
   // Fetch services and business on mount
   useEffect(() => {
     async function loadData() {
       try {
         setIsLoading(true);
         setError(null);
-        const [svcData, bizData] = await Promise.all([getServices(), getCurrentBusiness()]);
-        setServices(svcData);
+        const [, bizData] = await Promise.all([loadFirstServicesPage(), getCurrentBusiness()]);
         setBusiness(bizData);
-      } catch (err) {
+      } catch {
         setError('Failed to load services');
       } finally {
         setIsLoading(false);
       }
     }
-    loadData();
-  }, []);
+    void loadData();
+  }, [loadFirstServicesPage]);
 
   const filteredServices = useMemo(() => {
     switch (filter) {
@@ -86,7 +105,7 @@ export default function ServicesPage() {
 
   const effectivePlan = business ? (canUseFeature(business, 'business') ? 'business' : canUseFeature(business, 'pro') ? 'pro' : 'free') : 'free';
   const serviceLimit = PLAN_LIMITS[effectivePlan].maxServices;
-  const atServiceLimit = serviceLimit !== null && services.length >= serviceLimit;
+  const atServiceLimit = serviceLimit !== null && totalServices >= serviceLimit;
 
   const handleAddService = useCallback(() => {
     if (atServiceLimit) {
@@ -111,9 +130,7 @@ export default function ServicesPage() {
     try {
       const result = await createService(formData);
       if (result.success) {
-        const data = await getServices();
-        setServices(data);
-        router.refresh();
+        await loadFirstServicesPage();
         toast({ title: 'Service created successfully' });
         return { success: true };
       }
@@ -128,9 +145,7 @@ export default function ServicesPage() {
     try {
       const result = await updateService(editingService.id, formData);
       if (result.success) {
-        const data = await getServices();
-        setServices(data);
-        router.refresh();
+        await loadFirstServicesPage();
         toast({ title: 'Service updated successfully' });
         return { success: true };
       }
@@ -144,9 +159,7 @@ export default function ServicesPage() {
     try {
       const result = await toggleServiceStatus(serviceId, !currentStatus);
       if (result.success) {
-        const data = await getServices();
-        setServices(data);
-        router.refresh();
+        await loadFirstServicesPage();
         toast({
           title: currentStatus ? 'Service deactivated' : 'Service activated',
         });
@@ -161,17 +174,30 @@ export default function ServicesPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const [svcData, bizData] = await Promise.all([getServices(), getCurrentBusiness()]);
-        setServices(svcData);
+        const [, bizData] = await Promise.all([loadFirstServicesPage(), getCurrentBusiness()]);
         setBusiness(bizData);
-      } catch (err) {
+      } catch {
         setError('Failed to load services');
       } finally {
         setIsLoading(false);
       }
     }
-    loadData();
+    void loadData();
   };
+
+  const handleLoadMoreServices = useCallback(async () => {
+    if (isLoadingMoreServices || !hasMoreServices) return;
+
+    try {
+      setIsLoadingMoreServices(true);
+      const page = await getServicesPage(PAGE_SIZE, servicesOffset);
+      setServices((prev) => [...prev, ...page.items]);
+      setServicesOffset((prev) => prev + page.items.length);
+      setHasMoreServices(page.hasMore);
+    } finally {
+      setIsLoadingMoreServices(false);
+    }
+  }, [hasMoreServices, isLoadingMoreServices, PAGE_SIZE, servicesOffset]);
 
   const onTabClick = (tab: Tab) => {
     if (tab === 'payments' && business && !canUseFeature(business, 'business')) {
@@ -247,23 +273,27 @@ export default function ServicesPage() {
       {/* Limit progress bar for Free plan */}
       {business && serviceLimit !== null && activeTab === 'services' && (
         <div className="rounded-xl border bg-card px-4 py-3 text-xs text-muted-foreground">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="font-medium">Service limit</span>
-            <span className={atServiceLimit ? 'text-warning font-semibold' : 'font-medium text-foreground'}>
-              {services.length} / {serviceLimit}
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1.5 sm:mb-0 sm:gap-4">
+                <span className="font-medium">Service limit</span>
+                <span className={atServiceLimit ? 'text-warning font-semibold' : 'font-medium text-foreground'}>
+                  {totalServices} / {serviceLimit}
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${atServiceLimit ? 'bg-warning' : 'bg-primary'}`}
+                  style={{ width: `${Math.min(100, (totalServices / serviceLimit) * 100)}%` }}
+                />
+              </div>
+            </div>
+            {atServiceLimit && (
+              <p className="text-warning text-[11px] sm:max-w-[280px] sm:text-right shrink-0">
+                You&apos;ve reached the Free plan limit. Upgrade to Pro for unlimited services.
+              </p>
+            )}
           </div>
-          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${atServiceLimit ? 'bg-warning' : 'bg-primary'}`}
-              style={{ width: `${Math.min(100, (services.length / serviceLimit) * 100)}%` }}
-            />
-          </div>
-          {atServiceLimit && (
-            <p className="mt-1.5 text-warning text-[11px]">
-              You&apos;ve reached the Free plan service limit. Upgrade to Pro for unlimited services.
-            </p>
-          )}
         </div>
       )}
 
@@ -335,6 +365,19 @@ export default function ServicesPage() {
               onToggleStatus={handleToggleStatus}
               onAddService={handleAddService}
             />
+          )}
+          {hasMoreServices && (
+            <div className="flex justify-center pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10"
+                onClick={handleLoadMoreServices}
+                disabled={isLoadingMoreServices}
+              >
+                {isLoadingMoreServices ? 'Loading…' : 'Load more services'}
+              </Button>
+            </div>
           )}
         </div>
       )}

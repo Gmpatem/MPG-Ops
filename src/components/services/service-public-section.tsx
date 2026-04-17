@@ -117,7 +117,7 @@ function ServicePublicCard({
               <Badge variant="secondary" className="text-xs shrink-0">Inactive</Badge>
             )}
             {state.isFeatured && (
-              <Badge className="bg-warning/15 text-warning text-xs shrink-0 border-0">
+              <Badge className="bg-gold/15 text-gold text-xs shrink-0 border-0">
                 <Star className="w-2.5 h-2.5 mr-0.5" />Featured
               </Badge>
             )}

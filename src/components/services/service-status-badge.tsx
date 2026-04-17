@@ -13,7 +13,7 @@ export function ServiceStatusBadge({ isActive }: ServiceStatusBadgeProps) {
       variant={isActive ? 'default' : 'secondary'}
       className={cn(
         'text-xs font-medium',
-        isActive && 'bg-green-100 text-green-800 hover:bg-green-100'
+        isActive && 'bg-success/15 text-success hover:bg-success/15'
       )}
     >
       {isActive ? 'Active' : 'Inactive'}

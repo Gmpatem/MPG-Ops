@@ -52,11 +52,32 @@ export function CustomerDetailSheet({ isOpen, onClose, customer }: CustomerDetai
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!isOpen || !customer) return;
-    setIsLoading(true);
-    getBookingsByCustomer(customer.id)
-      .then((data) => setHistory(data as HistoryEntry[]))
-      .finally(() => setIsLoading(false));
+    if (!isOpen || !customer) {
+      return;
+    }
+
+    const customerId = customer.id;
+    let cancelled = false;
+
+    async function loadHistory() {
+      try {
+        setIsLoading(true);
+        const data = await getBookingsByCustomer(customerId);
+        if (!cancelled) {
+          setHistory(data as HistoryEntry[]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadHistory();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, customer]);
 
   const lastVisit = history.length > 0 ? history[0].booking_date : null;

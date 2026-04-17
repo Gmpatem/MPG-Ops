@@ -8,13 +8,16 @@ function Progress() {
   const searchParams = useSearchParams();
   const [key, setKey] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
-    setKey((k) => k + 1);
+    if (startTimer.current) clearTimeout(startTimer.current);
+    startTimer.current = setTimeout(() => setKey((k) => k + 1), 0);
     timer.current = setTimeout(() => setKey(0), 600);
     return () => {
       if (timer.current) clearTimeout(timer.current);
+      if (startTimer.current) clearTimeout(startTimer.current);
     };
   }, [pathname, searchParams]);
 

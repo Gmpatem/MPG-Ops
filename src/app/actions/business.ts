@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
@@ -115,9 +116,9 @@ export async function updatePublicSiteSettings(
   return { success: true };
 }
 
-export async function getCurrentBusiness(): Promise<Tables<'businesses'> | null> {
+export const getCurrentBusiness = cache(async function getCurrentBusiness(): Promise<Tables<'businesses'> | null> {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return null;
@@ -153,4 +154,4 @@ export async function getCurrentBusiness(): Promise<Tables<'businesses'> | null>
     .single();
 
   return memberBusiness ?? null;
-}
+});

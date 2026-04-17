@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,15 +105,18 @@ export function ServiceForm({ action, initialData }: ServiceFormProps) {
           <div className="flex items-center gap-4">
             {previewUrl ? (
               <div className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted shrink-0">
-                <img
+                <Image
                   src={previewUrl}
                   alt="Service preview"
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="80px"
+                  className="object-cover"
+                  unoptimized
                 />
                 <button
                   type="button"
                   onClick={handleRemoveImage}
-                  className="absolute top-1 right-1 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                  className="absolute top-1 right-1 p-1.5 rounded-full bg-foreground/60 text-background hover:bg-foreground/80 transition-colors"
                   aria-label="Remove image"
                 >
                   <X className="w-3.5 h-3.5" />

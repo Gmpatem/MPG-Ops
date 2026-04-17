@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PaymentList } from '@/components/payments/payment-list';
 import { PaymentEmptyState } from '@/components/payments/payment-empty-state';
-import { getPayments, getRevenueSummary } from '@/app/actions/payments';
+import { getPaymentsCount, getPaymentsPage, getRevenueSummary } from '@/app/actions/payments';
 import { CreditCard, TrendingUp, Calendar, DollarSign } from 'lucide-react';
 import { LoadingPage } from '@/components/loading-page';
 import { ErrorState } from '@/components/error-state';
@@ -41,31 +41,44 @@ interface RevenueSummary {
 type DateFilter = 'all' | 'today' | 'week' | 'month';
 
 export default function PaymentsPage() {
+  const PAGE_SIZE = 24;
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentsOffset, setPaymentsOffset] = useState(0);
+  const [hasMorePayments, setHasMorePayments] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalPayments, setTotalPayments] = useState(0);
   const [revenue, setRevenue] = useState<RevenueSummary>({ today: 0, week: 0, month: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+
+  const loadFirstPage = useCallback(async () => {
+    const [page, revenueData, totalCount] = await Promise.all([
+      getPaymentsPage(PAGE_SIZE, 0),
+      getRevenueSummary(),
+      getPaymentsCount(),
+    ]);
+    setPayments(page.items);
+    setPaymentsOffset(page.items.length);
+    setHasMorePayments(page.hasMore);
+    setRevenue(revenueData);
+    setTotalPayments(totalCount);
+  }, [PAGE_SIZE]);
 
   useEffect(() => {
     async function loadData() {
       try {
         setIsLoading(true);
         setError(null);
-        const [paymentsData, revenueData] = await Promise.all([
-          getPayments(),
-          getRevenueSummary(),
-        ]);
-        setPayments(paymentsData);
-        setRevenue(revenueData);
-      } catch (err) {
+        await loadFirstPage();
+      } catch {
         setError('Failed to load payments');
       } finally {
         setIsLoading(false);
       }
     }
-    loadData();
-  }, []);
+    void loadData();
+  }, [loadFirstPage]);
 
   // Filter payments based on date
   const filteredPayments = useMemo(() => {
@@ -113,19 +126,28 @@ export default function PaymentsPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const [paymentsData, revenueData] = await Promise.all([
-          getPayments(),
-          getRevenueSummary(),
-        ]);
-        setPayments(paymentsData);
-        setRevenue(revenueData);
-      } catch (err) {
+        await loadFirstPage();
+      } catch {
         setError('Failed to load payments');
       } finally {
         setIsLoading(false);
       }
     }
-    loadData();
+    void loadData();
+  };
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMorePayments) return;
+
+    try {
+      setIsLoadingMore(true);
+      const page = await getPaymentsPage(PAGE_SIZE, paymentsOffset);
+      setPayments((prev) => [...prev, ...page.items]);
+      setPaymentsOffset((prev) => prev + page.items.length);
+      setHasMorePayments(page.hasMore);
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   if (isLoading) {
@@ -230,7 +252,7 @@ export default function PaymentsPage() {
             <CreditCard className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{payments.length}</div>
+            <div className="text-2xl font-bold">{totalPayments}</div>
             <p className="text-xs text-muted-foreground mt-1">
               All time payments
             </p>
@@ -289,7 +311,22 @@ export default function PaymentsPage() {
             </Button>
           </div>
         ) : (
-          <PaymentList payments={filteredPayments} />
+          <>
+            <PaymentList payments={filteredPayments} />
+            {hasMorePayments && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="h-10"
+                >
+                  {isLoadingMore ? 'Loading…' : 'Load more payments'}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

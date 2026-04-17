@@ -1,20 +1,21 @@
 'use server';
 
+import { cache } from 'react';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { bookingSchema } from '@/schemas/booking';
 
-async function getCurrentBusinessId(userId: string): Promise<string | null> {
+const getCurrentBusinessId = cache(async function getCurrentBusinessId(userId: string): Promise<string | null> {
   const supabase = await createClient();
-  
+
   const { data: membership } = await supabase
     .from('business_members')
     .select('business_id')
     .eq('user_id', userId)
     .single();
-  
+
   return membership?.business_id || null;
-}
+});
 
 export async function createBooking(formData: FormData) {
   const supabase = await createClient();
@@ -126,9 +127,9 @@ export async function updateBookingStatus(bookingId: string, status: 'scheduled'
   return { success: true };
 }
 
-export async function getBookingsByDate(date: string) {
+export const getBookingsByDate = cache(async function getBookingsByDate(date: string) {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return [];
@@ -151,11 +152,11 @@ export async function getBookingsByDate(date: string) {
     .order('start_time', { ascending: true });
 
   return bookings || [];
-}
+});
 
-export async function getTodayBookingsCount(): Promise<number> {
+export const getTodayBookingsCount = cache(async function getTodayBookingsCount(): Promise<number> {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return 0;
@@ -175,7 +176,7 @@ export async function getTodayBookingsCount(): Promise<number> {
     .eq('booking_date', today);
 
   return count || 0;
-}
+});
 
 export async function updateBooking(bookingId: string, formData: FormData) {
   const supabase = await createClient();
@@ -255,7 +256,7 @@ export async function updateBooking(bookingId: string, formData: FormData) {
   return { success: true };
 }
 
-export async function getBookingsByCustomer(customerId: string) {
+export const getBookingsByCustomer = cache(async function getBookingsByCustomer(customerId: string) {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -283,11 +284,11 @@ export async function getBookingsByCustomer(customerId: string) {
     .order('booking_date', { ascending: false });
 
   return bookings || [];
-}
+});
 
-export async function getTodayCompletedCount(): Promise<number> {
+export const getTodayCompletedCount = cache(async function getTodayCompletedCount(): Promise<number> {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return 0;
@@ -308,4 +309,4 @@ export async function getTodayCompletedCount(): Promise<number> {
     .eq('status', 'completed');
 
   return count || 0;
-}
+});

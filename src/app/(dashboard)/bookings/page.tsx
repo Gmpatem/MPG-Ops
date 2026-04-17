@@ -11,7 +11,6 @@ import { createBooking, updateBooking, updateBookingStatus, getBookingsByDate } 
 import { getCustomers } from '@/app/actions/customers';
 import { getServices } from '@/app/actions/services';
 import { recordPayment, getPayments } from '@/app/actions/payments';
-import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toast';
 import { format, addDays, subDays } from 'date-fns';
 import { LoadingPage } from '@/components/loading-page';
@@ -68,7 +67,6 @@ interface EditingBooking {
 }
 
 export default function BookingsPage() {
-  const router = useRouter();
   const { toast } = useToast();
   const [isBookingSheetOpen, setIsBookingSheetOpen] = useState(false);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
@@ -84,31 +82,58 @@ export default function BookingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [isDateLoading, setIsDateLoading] = useState(false);
 
-  // Fetch data on mount and when date changes
-  useEffect(() => {
-    async function loadData() {
+  const fetchSupportData = useCallback(async () => {
+    const [customersData, servicesData] = await Promise.all([
+      getCustomers(),
+      getServices(),
+    ]);
+    setCustomers(customersData);
+    setServices(servicesData);
+  }, []);
+
+  const fetchDateData = useCallback(
+    async (date: Date, showDateLoader = false) => {
       try {
-        setIsLoading(true);
+        if (showDateLoader) {
+          setIsDateLoading(true);
+        }
         setError(null);
-        const [bookingsData, paymentsData, customersData, servicesData] = await Promise.all([
-          getBookingsByDate(format(selectedDate, 'yyyy-MM-dd')),
+        const [bookingsData, paymentsData] = await Promise.all([
+          getBookingsByDate(format(date, 'yyyy-MM-dd')),
           getPayments(),
-          getCustomers(),
-          getServices(),
         ]);
         setBookings(bookingsData);
         setPayments(paymentsData);
-        setCustomers(customersData);
-        setServices(servicesData);
-      } catch (err) {
+      } catch {
+        setError('Failed to load bookings');
+      } finally {
+        if (showDateLoader) {
+          setIsDateLoading(false);
+        }
+      }
+    },
+    []
+  );
+
+  // Initial load: static support data + date data
+  useEffect(() => {
+    async function loadInitialData() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        await fetchSupportData();
+        await fetchDateData(new Date());
+      } catch {
         setError('Failed to load bookings');
       } finally {
         setIsLoading(false);
       }
     }
-    loadData();
-  }, [selectedDate]);
+
+    void loadInitialData();
+  }, [fetchSupportData, fetchDateData]);
 
   // Filter bookings based on status
   const filteredBookings = useMemo(() => {
@@ -117,12 +142,20 @@ export default function BookingsPage() {
   }, [bookings, statusFilter]);
 
   const handlePreviousDay = useCallback(() => {
-    setSelectedDate((prev) => subDays(prev, 1));
-  }, []);
+    setSelectedDate((prev) => {
+      const nextDate = subDays(prev, 1);
+      void fetchDateData(nextDate, true);
+      return nextDate;
+    });
+  }, [fetchDateData]);
 
   const handleNextDay = useCallback(() => {
-    setSelectedDate((prev) => addDays(prev, 1));
-  }, []);
+    setSelectedDate((prev) => {
+      const nextDate = addDays(prev, 1);
+      void fetchDateData(nextDate, true);
+      return nextDate;
+    });
+  }, [fetchDateData]);
 
   const handleAddBooking = useCallback(() => {
     setIsBookingSheetOpen(true);
@@ -157,21 +190,15 @@ export default function BookingsPage() {
     setDefaultAmount(0);
   }, []);
 
-  const refreshData = async () => {
-    const [bookingsData, paymentsData] = await Promise.all([
-      getBookingsByDate(format(selectedDate, 'yyyy-MM-dd')),
-      getPayments(),
-    ]);
-    setBookings(bookingsData);
-    setPayments(paymentsData);
-  };
+  const refreshData = useCallback(async () => {
+    await fetchDateData(selectedDate);
+  }, [fetchDateData, selectedDate]);
 
   const handleCreateBooking = async (formData: FormData) => {
     try {
       const result = await createBooking(formData);
       if (result.success) {
         await refreshData();
-        router.refresh();
         toast({ title: 'Booking created successfully' });
         return { success: true };
       }
@@ -186,7 +213,6 @@ export default function BookingsPage() {
       const result = await updateBookingStatus(bookingId, 'completed');
       if (result.success) {
         await refreshData();
-        router.refresh();
         toast({ title: 'Booking marked as completed' });
       }
     } catch (err) {
@@ -199,7 +225,6 @@ export default function BookingsPage() {
       const result = await updateBookingStatus(bookingId, 'cancelled');
       if (result.success) {
         await refreshData();
-        router.refresh();
         toast({ title: 'Booking cancelled' });
       }
     } catch (err) {
@@ -212,7 +237,6 @@ export default function BookingsPage() {
       const result = await updateBookingStatus(bookingId, 'no_show');
       if (result.success) {
         await refreshData();
-        router.refresh();
         toast({ title: 'Booking marked as no-show' });
       }
     } catch (err) {
@@ -226,7 +250,6 @@ export default function BookingsPage() {
       const result = await updateBooking(editingBooking.id, formData);
       if (result.success) {
         await refreshData();
-        router.refresh();
         toast({ title: 'Booking updated successfully' });
         return { success: true };
       }
@@ -247,7 +270,6 @@ export default function BookingsPage() {
       const result = await recordPayment(formData);
       if (result.success) {
         await refreshData();
-        router.refresh();
         toast({ title: 'Payment recorded successfully' });
         return { success: true };
       }
@@ -258,27 +280,17 @@ export default function BookingsPage() {
   };
 
   const handleRetry = () => {
-    async function loadData() {
+    async function reloadData() {
       try {
         setIsLoading(true);
         setError(null);
-        const [bookingsData, paymentsData, customersData, servicesData] = await Promise.all([
-          getBookingsByDate(format(selectedDate, 'yyyy-MM-dd')),
-          getPayments(),
-          getCustomers(),
-          getServices(),
-        ]);
-        setBookings(bookingsData);
-        setPayments(paymentsData);
-        setCustomers(customersData);
-        setServices(servicesData);
-      } catch (err) {
-        setError('Failed to load bookings');
+        await Promise.all([fetchSupportData(), fetchDateData(selectedDate)]);
       } finally {
         setIsLoading(false);
       }
     }
-    loadData();
+
+    void reloadData();
   };
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
@@ -329,50 +341,53 @@ export default function BookingsPage() {
         </div>
         <Button
           onClick={handleAddBooking}
-          className="h-11 px-4 self-start"
+          className="h-10 px-3 sm:px-4 self-start"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Booking
+          <Plus className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Add Booking</span>
         </Button>
       </div>
 
-      {/* Date Selector */}
-      <div className="flex items-center justify-between bg-card rounded-xl border p-3 sm:p-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handlePreviousDay}
-          className="h-10 w-10"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </Button>
-        <div className="text-center">
-          <p className="font-semibold text-base sm:text-lg">
-            {isToday ? 'Today' : format(selectedDate, 'EEEE')}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {format(selectedDate, 'MMMM d, yyyy')}
-          </p>
+      {/* Date Selector + Filter Row */}
+      <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+        <div className="flex items-center justify-between bg-card rounded-xl border p-3 md:py-2.5 md:px-4 flex-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handlePreviousDay}
+            className="h-10 w-10"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <div className="text-center">
+            <p className="font-semibold text-base sm:text-lg">
+              {isToday ? 'Today' : format(selectedDate, 'EEEE')}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {format(selectedDate, 'MMMM d, yyyy')}
+            </p>
+            {isDateLoading && (
+              <p className="text-xs text-muted-foreground mt-0.5">Updating…</p>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleNextDay}
+            className="h-10 w-10"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleNextDay}
-          className="h-10 w-10"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </Button>
-      </div>
 
-      {/* Status Filter - Only show when there are bookings */}
-      {hasBookings && (
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        {/* Status Filter - Only show when there are bookings */}
+        {hasBookings && (
+          <div className="flex items-center gap-3 shrink-0">
             <Select
               value={statusFilter}
               onValueChange={(value) => value && setStatusFilter(value as StatusFilter)}
             >
-              <SelectTrigger className="w-40 h-10" aria-label="Filter bookings by status">
+              <SelectTrigger className="w-40 h-11" aria-label="Filter bookings by status">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -383,12 +398,12 @@ export default function BookingsPage() {
                 <SelectItem value="no_show">No Show</SelectItem>
               </SelectContent>
             </Select>
-            <span className="text-sm text-muted-foreground hidden sm:inline">
+            <span className="text-sm text-muted-foreground hidden sm:inline whitespace-nowrap">
               {filteredBookings.length} {filteredBookings.length === 1 ? 'booking' : 'bookings'}
             </span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Bookings List */}
       {!hasBookings ? (

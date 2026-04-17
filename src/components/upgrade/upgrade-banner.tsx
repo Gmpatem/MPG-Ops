@@ -26,23 +26,23 @@ export function UpgradeBanner({ business }: UpgradeBannerProps) {
   // Trial ending soon (< 3 days)
   if (trialActive && trialDaysLeft <= 3) {
     return (
-      <div className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 dark:border-warning/30 dark:bg-warning/10">
+      <div className="rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 dark:border-gold/30 dark:bg-gold/10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-gold shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-warning-foreground dark:text-warning-foreground">
+              <p className="text-sm font-medium text-gold-foreground dark:text-gold-foreground">
                 {trialDaysLeft === 0
                   ? 'Your free trial ends today'
                   : `Your free trial ends in ${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'}`}
               </p>
-              <p className="text-xs text-warning/80 dark:text-warning/80 mt-0.5">
+              <p className="text-xs text-gold/80 dark:text-gold/80 mt-0.5">
                 Upgrade to Pro to keep your premium features running smoothly.
               </p>
             </div>
           </div>
           <Link href="/settings/billing" className="shrink-0">
-            <Button size="sm" className="bg-warning text-warning-foreground hover:bg-warning/90">
+            <Button size="sm" className="bg-gold text-gold-foreground hover:bg-gold/90">
               Upgrade Now
             </Button>
           </Link>

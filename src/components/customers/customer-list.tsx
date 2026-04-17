@@ -29,7 +29,7 @@ export function CustomerList({
   }
 
   return (
-    <div className="bg-card rounded-xl border overflow-hidden">
+    <div className="bg-card rounded-xl border overflow-hidden transition-shadow hover:shadow-sm">
       {/* Column headers — desktop only */}
       <div className="hidden sm:flex items-center gap-3 px-5 py-2.5 border-b bg-muted/40">
         <div className="w-10 shrink-0" />

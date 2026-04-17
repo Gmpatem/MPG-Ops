@@ -49,15 +49,24 @@ export default async function DashboardPage() {
     );
   }
 
-  const serviceCount = await getServiceCount();
-  const customerCount = await getCustomerCount();
-  const todayBookings = await getTodayBookingsCount();
-  const todayCompleted = await getTodayCompletedCount();
-  const todayRevenue = await getTodayRevenue();
-  const todayPaymentsCount = await getTodayPaymentsCount();
-
   const today = new Date().toISOString().split('T')[0];
-  const todaysSchedule = await getBookingsByDate(today);
+  const [
+    serviceCount,
+    customerCount,
+    todayBookings,
+    todayCompleted,
+    todayRevenue,
+    todayPaymentsCount,
+    todaysSchedule,
+  ] = await Promise.all([
+    getServiceCount(),
+    getCustomerCount(),
+    getTodayBookingsCount(),
+    getTodayCompletedCount(),
+    getTodayRevenue(),
+    getTodayPaymentsCount(),
+    getBookingsByDate(today),
+  ]);
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -75,7 +84,7 @@ export default async function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Today's Bookings */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-muted-foreground truncate">
               Bookings
@@ -87,15 +96,15 @@ export default async function DashboardPage() {
           <CardContent className="px-4 pb-4">
             <div className="text-xl sm:text-2xl font-bold">{todayBookings}</div>
             <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 leading-tight">
-              {todayBookings === 0 
-                ? 'No bookings today' 
+              {todayBookings === 0
+                ? 'No bookings today'
                 : `${todayCompleted} done, ${todayBookings - todayCompleted} pending`}
             </p>
           </CardContent>
         </Card>
 
         {/* Today's Revenue */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-muted-foreground truncate">
               Revenue
@@ -107,15 +116,15 @@ export default async function DashboardPage() {
           <CardContent className="px-4 pb-4">
             <div className="text-xl sm:text-2xl font-bold">₱{todayRevenue.toFixed(0)}</div>
             <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 leading-tight">
-              {todayPaymentsCount === 0 
-                ? 'No payments today' 
+              {todayPaymentsCount === 0
+                ? 'No payments today'
                 : `${todayPaymentsCount} payment${todayPaymentsCount === 1 ? '' : 's'}`}
             </p>
           </CardContent>
         </Card>
 
         {/* Total Customers */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-muted-foreground truncate">
               Customers
@@ -133,13 +142,13 @@ export default async function DashboardPage() {
         </Card>
 
         {/* Services */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-muted-foreground truncate">
               Services
             </CardTitle>
-            <div className="h-7 w-7 rounded-md bg-warning/15 flex items-center justify-center">
-              <Scissors className="w-3.5 h-3.5 text-warning shrink-0" />
+            <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+              <Scissors className="w-3.5 h-3.5 text-primary shrink-0" />
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -151,63 +160,68 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card className="p-4 sm:p-5">
-        <h3 className="font-semibold mb-3 text-sm sm:text-base">Quick Actions</h3>
-        <DashboardQuickActions />
-      </Card>
-
-      {/* Public Booking Site */}
-      <PublicSiteCard businessId={business.id} />
-
-      {/* Today's Schedule */}
-      <Card className="p-0 overflow-hidden">
-        <div className="px-4 sm:px-5 py-3.5 border-b bg-muted/30 flex items-center justify-between">
-          <h3 className="font-semibold text-sm sm:text-base">Today&apos;s Schedule</h3>
-          <span className="text-xs text-muted-foreground">
-            {todaysSchedule.length} {todaysSchedule.length === 1 ? 'appt' : 'appts'}
-          </span>
-        </div>
-        {todaysSchedule.length === 0 ? (
-          <div className="text-center py-8 sm:py-10">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-              <Clock className="w-6 h-6 text-muted-foreground" />
+      {/* Main Content: 2-column on desktop */}
+      <div className="lg:grid lg:grid-cols-3 lg:gap-5 space-y-4 sm:space-y-5 lg:space-y-0">
+        {/* Left column (2/3): Schedule */}
+        <div className="lg:col-span-2">
+          <Card className="p-0 overflow-hidden">
+            <div className="px-4 sm:px-5 py-3.5 border-b bg-muted/30 flex items-center justify-between">
+              <h3 className="font-semibold text-sm sm:text-base">Today&apos;s Schedule</h3>
+              <span className="text-xs text-muted-foreground">
+                {todaysSchedule.length} {todaysSchedule.length === 1 ? 'appt' : 'appts'}
+              </span>
             </div>
-            <p className="text-sm font-medium text-foreground">No appointments today</p>
-            <p className="text-xs text-muted-foreground mt-1 mb-4">
-              Add a booking to get your day started.
-            </p>
-            <Link href="/bookings">
-              <Button variant="outline" size="sm">Add Booking</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="divide-y">
-            {todaysSchedule.map((booking) => (
-              <div
-                key={booking.id}
-                className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 hover:bg-muted/20 transition-colors"
-              >
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                  <div className="flex flex-col items-center justify-center shrink-0 w-14 sm:w-16 h-10 rounded-lg bg-muted/60">
-                    <span className="text-sm font-semibold leading-none">{booking.start_time.slice(0,5)}</span>
-                    <span className="text-[10px] text-muted-foreground mt-0.5">{booking.end_time.slice(0,5)}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">{booking.customer.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {booking.service.name} • {booking.service.duration_minutes} min
-                    </p>
-                  </div>
+            {todaysSchedule.length === 0 ? (
+              <div className="text-center py-8 sm:py-10">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                  <Clock className="w-6 h-6 text-muted-foreground" />
                 </div>
-                <div className="shrink-0">
-                  <BookingStatusBadge status={booking.status} />
-                </div>
+                <p className="text-sm font-medium text-foreground">No appointments today</p>
+                <p className="text-xs text-muted-foreground mt-1 mb-4">
+                  Add a booking to get your day started.
+                </p>
+                <Link href="/bookings">
+                  <Button variant="outline" size="sm">Add Booking</Button>
+                </Link>
               </div>
-            ))}
-          </div>
-        )}
-      </Card>
+            ) : (
+              <div className="divide-y">
+                {todaysSchedule.map((booking) => (
+                  <div
+                    key={booking.id}
+                    className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 hover:bg-muted/20 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                      <div className="flex flex-col items-center justify-center shrink-0 w-14 sm:w-16 h-10 rounded-lg bg-muted/60">
+                        <span className="text-sm font-semibold leading-none">{booking.start_time.slice(0, 5)}</span>
+                        <span className="text-[10px] text-muted-foreground mt-0.5">{booking.end_time.slice(0, 5)}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{booking.customer.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {booking.service.name} • {booking.service.duration_minutes} min
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      <BookingStatusBadge status={booking.status} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Right column (1/3): Quick Actions + Public Site */}
+        <div className="space-y-4 sm:space-y-5">
+          <Card className="p-4 sm:p-5 transition-shadow hover:shadow-md">
+            <h3 className="font-semibold mb-3 text-sm sm:text-base">Quick Actions</h3>
+            <DashboardQuickActions />
+          </Card>
+          <PublicSiteCard businessId={business.id} />
+        </div>
+      </div>
     </div>
   );
 }

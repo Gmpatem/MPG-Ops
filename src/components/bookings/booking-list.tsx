@@ -47,7 +47,7 @@ export function BookingList({
   const paymentMap = new Map(payments.map((p) => [p.booking_id, p]));
 
   return (
-    <div className="bg-card rounded-xl border overflow-hidden">
+    <div className="bg-card rounded-xl border overflow-hidden transition-shadow hover:shadow-sm">
       {bookings.map((booking, i) => (
         <div key={booking.id} className={i > 0 ? 'border-t' : ''}>
           <BookingCard

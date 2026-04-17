@@ -1,22 +1,23 @@
 'use server';
 
+import { cache } from 'react';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { serviceSchema } from '@/schemas/service';
 import { uploadServiceImage, deleteServiceImage } from '@/lib/supabase/storage';
 import type { Tables } from '@/lib/supabase/database.types';
 
-async function getCurrentBusinessId(userId: string): Promise<string | null> {
+const getCurrentBusinessId = cache(async function getCurrentBusinessId(userId: string): Promise<string | null> {
   const supabase = await createClient();
-  
+
   const { data: membership } = await supabase
     .from('business_members')
     .select('business_id')
     .eq('user_id', userId)
     .single();
-  
+
   return membership?.business_id || null;
-}
+});
 
 export async function createService(formData: FormData) {
   const supabase = await createClient();
@@ -199,9 +200,9 @@ export async function toggleServiceStatus(serviceId: string, isActive: boolean) 
   return { success: true };
 }
 
-export async function getServices(): Promise<Tables<'services'>[]> {
+export const getServices = cache(async function getServices(): Promise<Tables<'services'>[]> {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return [];
@@ -219,11 +220,72 @@ export async function getServices(): Promise<Tables<'services'>[]> {
     .order('created_at', { ascending: false });
 
   return services ?? [];
+});
+
+const DEFAULT_SERVICES_PAGE_SIZE = 18;
+
+export interface ServicesPageResult {
+  items: Tables<'services'>[];
+  hasMore: boolean;
 }
 
-export async function getServiceCount(): Promise<number> {
+export const getServicesPage = cache(async function getServicesPage(
+  limit = DEFAULT_SERVICES_PAGE_SIZE,
+  offset = 0
+): Promise<ServicesPageResult> {
   const supabase = await createClient();
-  
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { items: [], hasMore: false };
+  }
+
+  const businessId = await getCurrentBusinessId(user.id);
+  if (!businessId) {
+    return { items: [], hasMore: false };
+  }
+
+  const safeLimit = Math.max(1, Math.min(limit, 100));
+  const safeOffset = Math.max(0, offset);
+
+  const { data } = await supabase
+    .from('services')
+    .select(`
+      id,
+      business_id,
+      name,
+      category,
+      description,
+      duration_minutes,
+      price,
+      is_active,
+      image_url,
+      show_on_public_booking,
+      is_featured,
+      public_title,
+      public_description,
+      promo_badge,
+      promo_text,
+      display_order,
+      created_at,
+      updated_at
+    `)
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false })
+    .range(safeOffset, safeOffset + safeLimit);
+
+  const items = data ?? [];
+  const hasMore = items.length > safeLimit;
+
+  return {
+    items: hasMore ? items.slice(0, safeLimit) : items,
+    hasMore,
+  };
+});
+
+export const getServiceCount = cache(async function getServiceCount(): Promise<number> {
+  const supabase = await createClient();
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return 0;
@@ -240,4 +302,4 @@ export async function getServiceCount(): Promise<number> {
     .eq('business_id', businessId);
 
   return count || 0;
-}
+});

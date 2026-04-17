@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -69,7 +70,7 @@ export interface BookingConfirmation {
  * Gracefully falls back to base fields if public_site_settings column
  * does not yet exist (i.e. migration 001 not yet applied).
  */
-export async function getPublicBusiness(
+export const getPublicBusiness = cache(async function getPublicBusiness(
   businessId: string
 ): Promise<PublicBusiness | null> {
   try {
@@ -114,7 +115,7 @@ export async function getPublicBusiness(
   } catch {
     return null;
   }
-}
+});
 
 /**
  * Fetch public-visible services for a business (no auth required).

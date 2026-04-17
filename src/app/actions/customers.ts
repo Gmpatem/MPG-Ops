@@ -1,20 +1,22 @@
 'use server';
 
+import { cache } from 'react';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { customerSchema } from '@/schemas/customer';
+import type { Tables } from '@/lib/supabase/database.types';
 
-async function getCurrentBusinessId(userId: string): Promise<string | null> {
+const getCurrentBusinessId = cache(async function getCurrentBusinessId(userId: string): Promise<string | null> {
   const supabase = await createClient();
-  
+
   const { data: membership } = await supabase
     .from('business_members')
     .select('business_id')
     .eq('user_id', userId)
     .single();
-  
+
   return membership?.business_id || null;
-}
+});
 
 export async function createCustomer(formData: FormData) {
   const supabase = await createClient();
@@ -96,9 +98,9 @@ export async function updateCustomer(customerId: string, formData: FormData) {
   return { success: true };
 }
 
-export async function getCustomers() {
+export const getCustomers = cache(async function getCustomers() {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return [];
@@ -116,11 +118,53 @@ export async function getCustomers() {
     .order('created_at', { ascending: false });
 
   return customers || [];
+});
+
+const DEFAULT_CUSTOMERS_PAGE_SIZE = 20;
+
+export interface CustomersPageResult {
+  items: Tables<'customers'>[];
+  hasMore: boolean;
 }
 
-export async function getCustomerCount(): Promise<number> {
+export const getCustomersPage = cache(async function getCustomersPage(
+  limit = DEFAULT_CUSTOMERS_PAGE_SIZE,
+  offset = 0
+): Promise<CustomersPageResult> {
   const supabase = await createClient();
-  
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { items: [], hasMore: false };
+  }
+
+  const businessId = await getCurrentBusinessId(user.id);
+  if (!businessId) {
+    return { items: [], hasMore: false };
+  }
+
+  const safeLimit = Math.max(1, Math.min(limit, 100));
+  const safeOffset = Math.max(0, offset);
+
+  const { data } = await supabase
+    .from('customers')
+    .select('id, name, phone, email, notes, created_at, updated_at, business_id')
+    .eq('business_id', businessId)
+    .order('created_at', { ascending: false })
+    .range(safeOffset, safeOffset + safeLimit);
+
+  const items = data ?? [];
+  const hasMore = items.length > safeLimit;
+
+  return {
+    items: hasMore ? items.slice(0, safeLimit) : items,
+    hasMore,
+  };
+});
+
+export const getCustomerCount = cache(async function getCustomerCount(): Promise<number> {
+  const supabase = await createClient();
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return 0;
@@ -137,4 +181,4 @@ export async function getCustomerCount(): Promise<number> {
     .eq('business_id', businessId);
 
   return count || 0;
-}
+});

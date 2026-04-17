@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
+import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { RoutePreloader } from '@/components/route-preloader';
 import { getCurrentBusiness } from '@/app/actions/business';
 
@@ -24,8 +25,11 @@ export default async function DashboardLayout({
       {/* Header */}
       <DashboardHeader userEmail={user.email} business={business} />
 
+      {/* Desktop Top Navigation */}
+      <DashboardNav />
+
       {/* Main Content */}
-      <main className="flex-1 container mx-auto py-4 sm:py-6 px-4 sm:px-6">
+      <main className="flex-1 w-full max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 animate-page-in">
         {children}
       </main>
 
