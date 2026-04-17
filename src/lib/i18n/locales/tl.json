@@ -10,6 +10,7 @@
     "bookings": "Bookings",
     "customers": "Customers",
     "services": "Services",
+    "payments": "Payments",
     "settings": "Settings",
     "dashboard": "Dashboard"
   },
@@ -109,8 +110,29 @@
   },
   "landing": {
     "header": {
+      "features": "Features",
+      "pricing": "Pricing",
       "signIn": "Sign In",
       "startTrial": "Simulan ang Free Trial"
+    },
+    "howItWorks": {
+      "badge": "Paano gumagana",
+      "title": "Mula zero hanggang bookings sa ilang minuto",
+      "subtitle": "Walang training. Walang setup call. Mag-sign up lang at simulan.",
+      "steps": [
+        {
+          "label": "I-set up ang iyong negosyo",
+          "desc": "Idagdag ang iyong services, itakda ang iyong oras, at i-customize ang booking page sa isang wizard."
+        },
+        {
+          "label": "Ibahagi ang iyong booking link",
+          "desc": "Ipadala ang iyong unique link sa customers sa WhatsApp, Instagram, o i-paste kahit saan."
+        },
+        {
+          "label": "Pamahalaan mula sa iyong phone",
+          "desc": "Tanggapin ang mga booking, subaybayan ang mga bayad, at tingnan ang iyong buong iskedyul — lahat mula sa iyong bulsa."
+        }
+      ]
     },
     "hero": {
       "title": "Iwas-hassle sa booking at scheduling",

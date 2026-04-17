@@ -10,6 +10,7 @@
     "bookings": "Réservations",
     "customers": "Clients",
     "services": "Services",
+    "payments": "Paiements",
     "settings": "Paramètres",
     "dashboard": "Tableau de bord"
   },
@@ -109,8 +110,29 @@
   },
   "landing": {
     "header": {
+      "features": "Fonctionnalités",
+      "pricing": "Tarifs",
       "signIn": "Se connecter",
       "startTrial": "Essai gratuit"
+    },
+    "howItWorks": {
+      "badge": "Comment ça marche",
+      "title": "De zéro aux réservations en quelques minutes",
+      "subtitle": "Aucune formation requise. Pas d'appel de configuration. Inscrivez-vous et c'est parti.",
+      "steps": [
+        {
+          "label": "Configurez votre entreprise",
+          "desc": "Ajoutez vos services, définissez vos horaires et personnalisez votre page de réservation en un assistant rapide."
+        },
+        {
+          "label": "Partagez votre lien de réservation",
+          "desc": "Envoyez votre lien unique à vos clients par WhatsApp, Instagram ou collez-le n'importe où."
+        },
+        {
+          "label": "Gérez depuis votre téléphone",
+          "desc": "Acceptez les réservations, suivez les paiements et consultez votre agenda complet — depuis votre poche."
+        }
+      ]
     },
     "hero": {
       "title": "Gérez votre entreprise de services comme un pro",

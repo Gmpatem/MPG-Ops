@@ -10,6 +10,7 @@
     "bookings": "Bookings",
     "customers": "Customers",
     "services": "Services",
+    "payments": "Payments",
     "settings": "Settings",
     "dashboard": "Dashboard"
   },
@@ -109,8 +110,29 @@
   },
   "landing": {
     "header": {
+      "features": "Features",
+      "pricing": "Pricing",
       "signIn": "Sign In",
       "startTrial": "Start Free Trial"
+    },
+    "howItWorks": {
+      "badge": "How it works",
+      "title": "From zero to bookings in minutes",
+      "subtitle": "No training required. No setup call. Just sign up and go.",
+      "steps": [
+        {
+          "label": "Set up your business",
+          "desc": "Add your services, set your hours, and customise your booking page in one short wizard."
+        },
+        {
+          "label": "Share your booking link",
+          "desc": "Send your unique link to customers by WhatsApp, Instagram, or paste it anywhere."
+        },
+        {
+          "label": "Manage from your phone",
+          "desc": "Accept bookings, track payments, and see your full schedule — all from your pocket."
+        }
+      ]
     },
     "hero": {
       "title": "Run your service business like a pro",

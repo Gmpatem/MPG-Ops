@@ -10,6 +10,7 @@
     "bookings": "Reservas",
     "customers": "Clientes",
     "services": "Servicios",
+    "payments": "Pagos",
     "settings": "Configuración",
     "dashboard": "Panel"
   },
@@ -109,8 +110,29 @@
   },
   "landing": {
     "header": {
+      "features": "Características",
+      "pricing": "Precios",
       "signIn": "Iniciar sesión",
       "startTrial": "Prueba gratis"
+    },
+    "howItWorks": {
+      "badge": "Cómo funciona",
+      "title": "De cero a reservas en minutos",
+      "subtitle": "Sin formación. Sin llamada de configuración. Solo regístrate y empieza.",
+      "steps": [
+        {
+          "label": "Configura tu negocio",
+          "desc": "Agrega tus servicios, establece tus horarios y personaliza tu página de reservas en un asistente rápido."
+        },
+        {
+          "label": "Comparte tu enlace de reservas",
+          "desc": "Envía tu enlace único a tus clientes por WhatsApp, Instagram o pégalo donde quieras."
+        },
+        {
+          "label": "Gestiona desde tu teléfono",
+          "desc": "Acepta reservas, rastrea pagos y consulta tu agenda completa — todo desde tu bolsillo."
+        }
+      ]
     },
     "hero": {
       "title": "Gestiona tu negocio de servicios como un profesional",
