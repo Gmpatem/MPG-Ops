@@ -79,18 +79,14 @@ function LandingHeader() {
 
           {/* Mobile menu */}
           <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger>
-              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
-                <Menu className="h-5 w-5" />
-              </Button>
+            <SheetTrigger className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent/10 hover:text-foreground transition-colors" aria-label="Open menu">
+              <Menu className="h-5 w-5" />
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
               <SheetHeader className="flex flex-row items-center justify-between pb-2">
                 <SheetTitle className="text-left font-bold text-lg">Menu</SheetTitle>
-                <SheetClose>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <X className="h-4 w-4" />
-                  </Button>
+                <SheetClose className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/10 hover:text-foreground transition-colors" aria-label="Close menu">
+                  <X className="h-4 w-4" />
                 </SheetClose>
               </SheetHeader>
               <nav className="flex flex-col gap-1 py-2">
