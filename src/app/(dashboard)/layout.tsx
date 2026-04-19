@@ -4,6 +4,7 @@ import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { RoutePreloader } from '@/components/route-preloader';
+import { PageTransition } from '@/components/page-transition';
 import { getCurrentBusiness } from '@/app/actions/business';
 
 export default async function DashboardLayout({
@@ -29,8 +30,8 @@ export default async function DashboardLayout({
       <DashboardNav />
 
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8 animate-page-in">
-        {children}
+      <main className="flex-1 w-full max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+        <PageTransition>{children}</PageTransition>
       </main>
 
       {/* Mobile Bottom Navigation */}

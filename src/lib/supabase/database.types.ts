@@ -341,6 +341,58 @@ export interface Database {
         }
         Relationships: []
       }
+      admin_audit_logs: {
+        Row: {
+          id: string
+          admin_user_id: string
+          action: string
+          target_user_id: string | null
+          target_business_id: string | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          admin_user_id: string
+          action: string
+          target_user_id?: string | null
+          target_business_id?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          admin_user_id?: string
+          action?: string
+          target_user_id?: string | null
+          target_business_id?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'admin_audit_logs_admin_user_id_fkey'
+            columns: ['admin_user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'admin_audit_logs_target_user_id_fkey'
+            columns: ['target_user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'admin_audit_logs_target_business_id_fkey'
+            columns: ['target_business_id']
+            isOneToOne: false
+            referencedRelation: 'businesses'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       services: {
         Row: {
           id: string

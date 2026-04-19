@@ -61,7 +61,9 @@
       "startTrial": "Commencer l'essai gratuit",
       "startingTrial": "Démarrage...",
       "hasAccount": "Vous avez déjà un compte ?",
-      "signIn": "Se connecter"
+      "signIn": "Se connecter",
+      "checkEmail": "Vérifiez votre email pour confirmer votre compte.",
+      "checkEmailSub": "Après confirmation, vous continuerez vers l'intégration."
     },
     "forgotPassword": {
       "title": "Réinitialiser le mot de passe",

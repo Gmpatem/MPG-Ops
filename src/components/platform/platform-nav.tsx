@@ -10,12 +10,16 @@ import {
   CreditCard,
   BarChart3,
   ToggleLeft,
+  ClipboardList,
+  Stethoscope,
 } from 'lucide-react';
 
 const nav = [
   { href: '/platform', label: 'Overview', icon: LayoutDashboard },
   { href: '/platform/businesses', label: 'Businesses', icon: Building2 },
   { href: '/platform/users', label: 'Users', icon: Users },
+  { href: '/platform/diagnostics', label: 'Diagnostics', icon: Stethoscope },
+  { href: '/platform/audit', label: 'Audit Log', icon: ClipboardList },
   { href: '/platform/plans', label: 'Plans', icon: CreditCard },
   { href: '/platform/metrics', label: 'Metrics', icon: BarChart3 },
   { href: '/platform/feature-flags', label: 'Feature Flags', icon: ToggleLeft },
@@ -37,7 +41,10 @@ export function PlatformNav() {
       <nav className="flex md:flex-col gap-1 overflow-x-auto px-4 pb-3 md:pb-0 scrollbar-hide">
         {nav.map((item) => {
           const Icon = item.icon;
-          const active = pathname === item.href || pathname.startsWith(item.href + '/');
+          const active =
+            item.href === '/platform'
+              ? pathname === '/platform'
+              : pathname === item.href || pathname.startsWith(item.href + '/');
           return (
             <Link
               key={item.href}

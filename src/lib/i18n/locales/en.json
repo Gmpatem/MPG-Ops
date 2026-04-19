@@ -42,11 +42,11 @@
   "auth": {
     "login": {
       "title": "Welcome back",
-      "subtitle": "Sign in to your MPG Ops account",
+      "subtitle": "Log in to your MPG Ops account",
       "email": "Email",
       "password": "Password",
-      "signIn": "Sign In",
-      "signingIn": "Signing in...",
+      "signIn": "Log In",
+      "signingIn": "Logging in...",
       "forgotPassword": "Forgot your password?",
       "noAccount": "Don't have an account?",
       "signUp": "Sign up",
@@ -61,7 +61,9 @@
       "startTrial": "Start Free Trial",
       "startingTrial": "Starting trial...",
       "hasAccount": "Already have an account?",
-      "signIn": "Sign in"
+      "signIn": "Log in",
+      "checkEmail": "Check your email to confirm your account.",
+      "checkEmailSub": "After confirmation, you'll continue to onboarding."
     },
     "forgotPassword": {
       "title": "Reset password",
@@ -70,7 +72,7 @@
       "sendLink": "Send Reset Link",
       "sending": "Sending...",
       "success": "Check your email for a password reset link.",
-      "backToSignIn": "Back to sign in",
+      "backToSignIn": "Back to log in",
       "error": "Something went wrong."
     },
     "resetPassword": {
@@ -112,7 +114,7 @@
     "header": {
       "features": "Features",
       "pricing": "Pricing",
-      "signIn": "Sign In",
+      "signIn": "Log In",
       "startTrial": "Start Free Trial"
     },
     "howItWorks": {

@@ -18,7 +18,7 @@ export async function login(formData: FormData) {
   const admin = createAdminClient();
   const { data: profile } = await admin
     .from('profiles')
-    .select('id')
+    .select('id, is_platform_admin')
     .eq('email', data.email)
     .maybeSingle();
 
@@ -43,8 +43,29 @@ export async function login(formData: FormData) {
     };
   }
 
+  // Platform admins go straight to /platform
+  const whitelist = (process.env.PLATFORM_ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isPlatformAdmin =
+    profile.is_platform_admin || whitelist.includes(data.email.toLowerCase());
+
   revalidatePath('/', 'layout');
-  redirect('/dashboard');
+
+  if (isPlatformAdmin) {
+    redirect('/platform');
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: membership } = await supabase
+    .from('business_members')
+    .select('id')
+    .eq('user_id', user!.id)
+    .maybeSingle();
+
+  redirect(membership ? '/dashboard' : '/onboarding');
 }
 
 export async function register(formData: FormData) {
@@ -56,13 +77,13 @@ export async function register(formData: FormData) {
 
   const supabase = await createClient();
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
   const { error } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
     options: {
-      data: {
-        email: data.email,
-      },
+      data: { email: data.email },
+      emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
     },
   });
 
@@ -70,8 +91,10 @@ export async function register(formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath('/', 'layout');
-  redirect('/onboarding');
+  return {
+    success: true,
+    message: 'Check your email to confirm your account and continue onboarding.',
+  };
 }
 
 export async function logout() {

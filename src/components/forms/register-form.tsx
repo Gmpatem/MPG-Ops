@@ -11,18 +11,37 @@ import { useI18n } from '@/lib/i18n/i18n-provider';
 export function RegisterForm() {
   const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
     setError(null);
-    
+
     const result = await register(formData);
-    
+
     if (result?.error) {
       setError(result.error);
       setIsLoading(false);
+      return;
     }
+
+    if (result?.success) {
+      setSuccess(true);
+      setIsLoading(false);
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="space-y-4 text-center py-4">
+        <div className="flex justify-center">
+          <span className="flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary text-3xl">✓</span>
+        </div>
+        <p className="font-semibold text-foreground">{t('auth.register.checkEmail')}</p>
+        <p className="text-sm text-muted-foreground">{t('auth.register.checkEmailSub')}</p>
+      </div>
+    );
   }
 
   return (
@@ -32,7 +51,7 @@ export function RegisterForm() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      
+
       <div className="space-y-2">
         <Label htmlFor="email">{t('auth.register.email')}</Label>
         <Input
@@ -71,8 +90,8 @@ export function RegisterForm() {
         />
       </div>
 
-      <Button 
-        type="submit" 
+      <Button
+        type="submit"
         className="w-full h-12"
         disabled={isLoading}
       >

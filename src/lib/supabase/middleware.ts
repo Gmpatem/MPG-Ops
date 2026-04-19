@@ -49,13 +49,20 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   const authPaths = ['/login', '/register'];
-  const isAuthPath = authPaths.some(path => 
+  const isAuthPath = authPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   );
 
   if (isAuthPath && user) {
     const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
+    // Env-whitelist admins go straight to /platform (no DB call needed here)
+    const whitelist = (process.env.PLATFORM_ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    url.pathname = whitelist.includes(user.email?.toLowerCase() ?? '')
+      ? '/platform'
+      : '/dashboard';
     return NextResponse.redirect(url);
   }
 

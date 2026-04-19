@@ -42,11 +42,11 @@
   "auth": {
     "login": {
       "title": "Welcome back",
-      "subtitle": "Sign in sa iyong MPG Ops account",
+      "subtitle": "Log in sa iyong MPG Ops account",
       "email": "Email",
       "password": "Password",
-      "signIn": "Sign In",
-      "signingIn": "Signing in...",
+      "signIn": "Log In",
+      "signingIn": "Logging in...",
       "forgotPassword": "Nakalimutan ang password?",
       "noAccount": "Wala pang account?",
       "signUp": "Sign up",
@@ -61,7 +61,9 @@
       "startTrial": "Simulan ang Free Trial",
       "startingTrial": "Starting trial...",
       "hasAccount": "May account na?",
-      "signIn": "Sign in"
+      "signIn": "Log in",
+      "checkEmail": "I-check ang email mo para i-confirm ang account.",
+      "checkEmailSub": "Pagka-confirm, magpapatuloy ka sa onboarding."
     },
     "forgotPassword": {
       "title": "I-reset ang password",
@@ -70,7 +72,7 @@
       "sendLink": "I-send ang Reset Link",
       "sending": "Sending...",
       "success": "Tingnan ang email mo para sa password reset link.",
-      "backToSignIn": "Bumalik sa sign in",
+      "backToSignIn": "Bumalik sa log in",
       "error": "May nangyaring mali."
     },
     "resetPassword": {
@@ -112,7 +114,7 @@
     "header": {
       "features": "Features",
       "pricing": "Pricing",
-      "signIn": "Sign In",
+      "signIn": "Log In",
       "startTrial": "Simulan ang Free Trial"
     },
     "howItWorks": {

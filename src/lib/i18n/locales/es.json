@@ -61,7 +61,9 @@
       "startTrial": "Comenzar prueba gratis",
       "startingTrial": "Iniciando prueba...",
       "hasAccount": "¿Ya tienes una cuenta?",
-      "signIn": "Iniciar sesión"
+      "signIn": "Iniciar sesión",
+      "checkEmail": "Revisa tu email para confirmar tu cuenta.",
+      "checkEmailSub": "Después de confirmar, continuarás con la configuración inicial."
     },
     "forgotPassword": {
       "title": "Restablecer contraseña",
