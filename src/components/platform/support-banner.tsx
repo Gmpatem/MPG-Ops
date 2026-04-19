@@ -7,10 +7,6 @@ export async function SupportBanner() {
   const session = await getSupportSession();
   if (!session) return null;
 
-  const elapsed = Math.round(
-    (Date.now() - new Date(session.startedAt).getTime()) / 60_000
-  );
-
   return (
     <div className="flex items-center justify-between gap-3 bg-amber-500 px-4 py-2 text-sm font-medium text-white">
       <div className="flex items-center gap-2 min-w-0">
@@ -20,9 +16,9 @@ export async function SupportBanner() {
           <span className="font-bold">{session.targetBusinessName}</span>{' '}
           <span className="opacity-80">({session.targetUserEmail})</span>
         </span>
-        {elapsed > 0 && (
-          <span className="shrink-0 opacity-75 text-xs">· {elapsed}m</span>
-        )}
+        <span className="shrink-0 opacity-75 text-xs">
+          · started {new Date(session.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </span>
       </div>
       <form action={endSupportSession}>
         <Button

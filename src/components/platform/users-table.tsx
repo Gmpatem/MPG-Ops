@@ -22,7 +22,7 @@ interface Props {
 export function UsersTable({ users, query: initialQuery, filter: initialFilter, toggleAdminAction, startSupportAction }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
 

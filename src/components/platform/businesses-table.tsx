@@ -30,7 +30,7 @@ const FILTERS = [
 export function BusinessesTable({ businesses, query: initialQuery, filter: initialFilter, startSupportAction }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<BusinessWithDetails | null>(null);
 

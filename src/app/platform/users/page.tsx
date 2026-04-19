@@ -1,10 +1,5 @@
-import { Suspense } from 'react';
 import { getAllUsersEnhanced, toggleUserPlatformAdmin } from '@/app/actions/platform';
 import { startUserSupportSession } from '@/app/actions/support';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { UsersTable } from '@/components/platform/users-table';
 
 export default async function PlatformUsersPage({

@@ -68,7 +68,7 @@ export function EditSubscriptionDialog({
 
           <div className="space-y-2">
             <Label>Plan Tier</Label>
-            <Select value={plan} onValueChange={setPlan}>
+            <Select value={plan} onValueChange={(v) => v && setPlan(v)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -82,7 +82,7 @@ export function EditSubscriptionDialog({
 
           <div className="space-y-2">
             <Label>Subscription Status</Label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={(v) => v && setStatus(v)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
