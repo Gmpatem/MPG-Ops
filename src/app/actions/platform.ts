@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isCurrentUserPlatformAdmin, requirePlatformAdmin } from '@/lib/platform-admin';
-import type { Tables } from '@/lib/supabase/database.types';
+import type { Tables, Json } from '@/lib/supabase/database.types';
 
 // ─── Internal guard (kept for backward-compat with inline page actions) ────────
 
@@ -29,7 +29,7 @@ export async function logAuditEvent(
     action,
     target_user_id: targetUserId ?? null,
     target_business_id: targetBusinessId ?? null,
-    metadata: metadata ?? null,
+    metadata: (metadata ?? null) as Json,
   });
 }
 
