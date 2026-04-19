@@ -130,7 +130,7 @@ export function UsersTable({ users, query: initialQuery, filter: initialFilter, 
                         )}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                        {new Date(u.created_at).toLocaleDateString()}
+                        {new Date(u.created_at).toLocaleDateString('en-CA')}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">

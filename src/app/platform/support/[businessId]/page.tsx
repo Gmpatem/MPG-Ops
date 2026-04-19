@@ -150,7 +150,7 @@ export default async function SupportBusinessPage({
             {business.trial_ends_at && (
               <Row
                 label="Trial ends"
-                value={new Date(business.trial_ends_at).toLocaleDateString()}
+                value={new Date(business.trial_ends_at).toLocaleDateString('en-CA')}
               />
             )}
             {business.phone && <Row label="Phone" value={business.phone} />}
@@ -158,7 +158,7 @@ export default async function SupportBusinessPage({
             {business.address && <Row label="Address" value={business.address} />}
             <Row
               label="Created"
-              value={new Date(business.created_at).toLocaleDateString()}
+              value={new Date(business.created_at).toLocaleDateString('en-CA')}
             />
           </CardContent>
         </Card>
@@ -222,7 +222,7 @@ export default async function SupportBusinessPage({
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(m.created_at).toLocaleDateString()}
+                      {new Date(m.created_at).toLocaleDateString('en-CA')}
                     </td>
                     <td className="px-4 py-3">
                       {m.profile?.email && (

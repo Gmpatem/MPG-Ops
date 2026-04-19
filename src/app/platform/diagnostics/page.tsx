@@ -96,7 +96,7 @@ export default async function PlatformDiagnosticsPage({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Created</span>
-                      <span>{new Date(result.profile.created_at).toLocaleDateString()}</span>
+                      <span>{new Date(result.profile.created_at).toLocaleDateString('en-CA')}</span>
                     </div>
                   </>
                 ) : (

@@ -126,7 +126,7 @@ export function BusinessesTable({ businesses, query: initialQuery, filter: initi
                         <Badge variant={statusVariant(b)}>
                           {formatSubscriptionStatus(b.subscription_status as 'trialing' | 'active' | 'expired' | 'free')}
                           {isTrialActive(b) && b.trial_ends_at
-                            ? ` · ends ${new Date(b.trial_ends_at).toLocaleDateString()}`
+                            ? ` · ends ${new Date(b.trial_ends_at).toLocaleDateString('en-CA')}`
                             : ''}
                         </Badge>
                       </td>
@@ -137,7 +137,7 @@ export function BusinessesTable({ businesses, query: initialQuery, filter: initi
                         </span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                        {new Date(b.created_at).toLocaleDateString()}
+                        {new Date(b.created_at).toLocaleDateString('en-CA')}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
