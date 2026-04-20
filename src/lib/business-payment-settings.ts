@@ -94,10 +94,72 @@ const DEFAULT_PAYMENT_SETTINGS: BusinessPaymentSettings = {
   depositAmount: null,
 };
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
 function normalizeString(value: string | null | undefined): string | undefined {
   if (!value) return undefined;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function readFirstString(
+  raw: Record<string, unknown> | null,
+  keys: string[]
+): string | undefined {
+  if (!raw) return undefined;
+
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === 'string') {
+      const normalized = normalizeString(value);
+      if (normalized) return normalized;
+    }
+  }
+
+  return undefined;
+}
+
+function readFirstBoolean(
+  raw: Record<string, unknown> | null,
+  keys: string[]
+): boolean | undefined {
+  if (!raw) return undefined;
+
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === 'boolean') {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function readFirstNumber(
+  raw: Record<string, unknown> | null,
+  keys: string[]
+): number | undefined {
+  if (!raw) return undefined;
+
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+
+  return undefined;
 }
 
 export function getPaymentRegionForCountry(
@@ -145,7 +207,15 @@ function normalizeMethodForCountry(
   country: string,
   methodInput?: string | null
 ): BusinessDefaultPaymentMethod {
-  const parsed = businessDefaultPaymentMethodSchema.safeParse(methodInput);
+  const normalizedMethodInput = normalizeString(methodInput)?.toLowerCase();
+  const methodWithAliases =
+    normalizedMethodInput === 'gcash'
+      ? 'gcash_manual'
+      : normalizedMethodInput === 'momo'
+      ? 'momo_manual'
+      : normalizedMethodInput;
+
+  const parsed = businessDefaultPaymentMethodSchema.safeParse(methodWithAliases);
   if (parsed.success) {
     return parsed.data;
   }
@@ -169,48 +239,86 @@ function normalizePaymentSettings(
     manualInstructions?: string | null;
   }
 ): BusinessPaymentSettings {
+  const rawRecord = asRecord(raw);
   const parsed = businessPaymentSettingsSchema.safeParse(raw ?? {});
   const existing = parsed.success ? parsed.data : {};
+  const legacyDepositRequired = readFirstBoolean(rawRecord, ['depositRequired']);
+  const legacyDepositType = readFirstString(rawRecord, ['depositType']);
+  const legacyDepositAmount = readFirstNumber(rawRecord, ['depositAmount']);
 
-  const depositRequired = input.depositRequired ?? existing.depositRequired ?? false;
+  const depositRequired =
+    input.depositRequired ??
+    existing.depositRequired ??
+    legacyDepositRequired ??
+    false;
   const depositTypeParsed = depositTypeSchema.safeParse(
-    input.depositType ?? existing.depositType
+    input.depositType ?? existing.depositType ?? legacyDepositType
   );
   const depositType = depositTypeParsed.success ? depositTypeParsed.data : 'full';
 
   const inputDepositAmount =
     input.depositAmount !== null && input.depositAmount !== undefined
       ? input.depositAmount
-      : existing.depositAmount;
+      : existing.depositAmount ?? legacyDepositAmount;
   const normalizedDepositAmount =
     typeof inputDepositAmount === 'number' && Number.isFinite(inputDepositAmount)
       ? Math.max(0, inputDepositAmount)
       : null;
 
+  const legacyGcashAccountName = readFirstString(rawRecord, [
+    'accountName',
+    'gcashAccountName',
+  ]);
+  const legacyGcashNumber = readFirstString(rawRecord, ['number', 'gcashNumber']);
+  const legacyGcashQrImageUrl = readFirstString(rawRecord, [
+    'qrImageUrl',
+    'gcashQrImageUrl',
+  ]);
+  const legacyGcashInstructions = readFirstString(rawRecord, [
+    'instructions',
+    'gcashInstructions',
+  ]);
+
   const gcashAccountName =
     normalizeString(input.gcashAccountName) ??
-    normalizeString(existing.gcash?.accountName);
+    normalizeString(existing.gcash?.accountName) ??
+    legacyGcashAccountName;
   const gcashNumber =
-    normalizeString(input.gcashNumber) ?? normalizeString(existing.gcash?.number);
+    normalizeString(input.gcashNumber) ??
+    normalizeString(existing.gcash?.number) ??
+    legacyGcashNumber;
   const gcashQrImageUrl =
     normalizeString(input.gcashQrImageUrl) ??
-    normalizeString(existing.gcash?.qrImageUrl);
+    normalizeString(existing.gcash?.qrImageUrl) ??
+    legacyGcashQrImageUrl;
   const gcashInstructions =
     normalizeString(input.gcashInstructions) ??
-    normalizeString(existing.gcash?.instructions);
+    normalizeString(existing.gcash?.instructions) ??
+    legacyGcashInstructions;
+
+  const legacyMomoAccountName = readFirstString(rawRecord, ['momoAccountName']);
+  const legacyMomoNumber = readFirstString(rawRecord, ['momoNumber']);
+  const legacyMomoInstructions = readFirstString(rawRecord, ['momoInstructions']);
 
   const momoAccountName =
     normalizeString(input.momoAccountName) ??
-    normalizeString(existing.momo?.accountName);
+    normalizeString(existing.momo?.accountName) ??
+    legacyMomoAccountName;
   const momoNumber =
-    normalizeString(input.momoNumber) ?? normalizeString(existing.momo?.number);
+    normalizeString(input.momoNumber) ??
+    normalizeString(existing.momo?.number) ??
+    legacyMomoNumber;
   const momoInstructions =
     normalizeString(input.momoInstructions) ??
-    normalizeString(existing.momo?.instructions);
+    normalizeString(existing.momo?.instructions) ??
+    legacyMomoInstructions;
+
+  const legacyManualInstructions = readFirstString(rawRecord, ['manualInstructions']);
 
   const manualInstructions =
     normalizeString(input.manualInstructions) ??
-    normalizeString(existing.manual?.instructions);
+    normalizeString(existing.manual?.instructions) ??
+    legacyManualInstructions;
 
   const result: BusinessPaymentSettings = {
     depositRequired,
@@ -293,23 +401,8 @@ export function normalizeBusinessRegionPaymentConfig(input: {
 export function parseBusinessPaymentSettings(
   raw: Json | null | undefined
 ): BusinessPaymentSettings {
-  const parsed = businessPaymentSettingsSchema.safeParse(raw ?? {});
-  if (!parsed.success) {
-    return { ...DEFAULT_PAYMENT_SETTINGS };
-  }
-
-  const settings = parsed.data;
-  return {
-    depositRequired: settings.depositRequired ?? false,
-    depositType: settings.depositType ?? 'full',
-    depositAmount:
-      settings.depositRequired && settings.depositType === 'fixed'
-        ? settings.depositAmount ?? null
-        : null,
-    ...(settings.gcash ? { gcash: settings.gcash } : {}),
-    ...(settings.momo ? { momo: settings.momo } : {}),
-    ...(settings.manual ? { manual: settings.manual } : {}),
-  };
+  const normalized = normalizePaymentSettings(raw ?? {}, {});
+  return normalized ?? { ...DEFAULT_PAYMENT_SETTINGS };
 }
 
 export function isPhilippinesGcashComplete(
@@ -345,13 +438,14 @@ export function buildPublicManualPaymentState(
   const region = getPaymentRegionForCountry(config.country);
 
   if (config.defaultPaymentMethod === 'gcash_manual') {
-    if (!amountDue) {
+    if (config.paymentSettings.depositRequired && amountDue === null) {
       return {
         showPaymentStep: false,
         requiresProof: false,
         amountDue: null,
         provider: 'gcash_manual',
-        fallbackMessage: null,
+        fallbackMessage:
+          'Deposit is enabled but amount is not configured yet. You can continue booking while the business updates payment settings.',
       };
     }
 
@@ -363,6 +457,16 @@ export function buildPublicManualPaymentState(
         provider: 'gcash_manual',
         fallbackMessage:
           'GCash payment is not fully configured yet. You can continue booking without payment proof.',
+      };
+    }
+
+    if (amountDue === null) {
+      return {
+        showPaymentStep: true,
+        requiresProof: false,
+        amountDue: null,
+        provider: 'gcash_manual',
+        fallbackMessage: null,
       };
     }
 

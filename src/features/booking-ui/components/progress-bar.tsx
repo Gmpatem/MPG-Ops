@@ -1,6 +1,6 @@
 'use client';
 
-export function ProgressBar({ step, total = 6 }: { step: number; total?: number }) {
+export function ProgressBar({ step, total = 7 }: { step: number; total?: number }) {
   return (
     <div className="flex gap-1">
       {Array.from({ length: total }).map((_, i) => (

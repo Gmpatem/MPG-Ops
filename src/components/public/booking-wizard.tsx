@@ -14,6 +14,7 @@ import {
   StepDate,
   StepTime,
   StepDetails,
+  StepPayment,
   StepReview,
 } from '@/features/booking-ui';
 import type { WizardState } from '@/features/booking-ui';
@@ -39,6 +40,7 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
       phone: '',
       email: '',
       notes: '',
+      paymentChoice: 'pay_now',
       manualPaymentProof: null,
     };
 
@@ -161,7 +163,11 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
 
   async function handleConfirm() {
     if (state.services.length === 0 || !state.date || !state.time) return;
-    if (manualPaymentState.requiresProof && !state.manualPaymentProof) {
+    if (
+      state.paymentChoice === 'pay_now' &&
+      manualPaymentState.requiresProof &&
+      !state.manualPaymentProof
+    ) {
       setSubmitError('Please upload your payment screenshot before confirming.');
       return;
     }
@@ -177,6 +183,7 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
       customerPhone: state.phone,
       customerEmail: state.email,
       notes: state.notes,
+      paymentChoice: state.paymentChoice,
       manualPaymentProof: state.manualPaymentProof ?? undefined,
     });
 
@@ -289,16 +296,31 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
     );
   }
 
+  if (state.step === 6) {
+    return (
+      <StepPayment
+        paymentChoice={state.paymentChoice}
+        onPaymentChoiceChange={(choice) => set('paymentChoice', choice)}
+        currency={normalizedRegionPayment.currency}
+        manualPaymentState={manualPaymentState}
+        paymentSettings={normalizedRegionPayment.paymentSettings}
+        manualPaymentProof={state.manualPaymentProof}
+        onUploadPaymentProof={handleUploadPaymentProof}
+        onRemovePaymentProof={handleRemovePaymentProof}
+        isUploadingPaymentProof={isUploadingProof}
+        onNext={next}
+        onBack={back}
+        isSubmitting={isSubmitting}
+        error={submitError}
+      />
+    );
+  }
+
   return (
     <StepReview
       state={state}
       business={business}
       currency={normalizedRegionPayment.currency}
-      manualPaymentState={manualPaymentState}
-      paymentSettings={normalizedRegionPayment.paymentSettings}
-      onUploadPaymentProof={handleUploadPaymentProof}
-      onRemovePaymentProof={handleRemovePaymentProof}
-      isUploadingPaymentProof={isUploadingProof}
       onConfirm={handleConfirm}
       onBack={back}
       isSubmitting={isSubmitting}

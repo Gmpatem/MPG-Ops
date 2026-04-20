@@ -57,6 +57,7 @@ const submitBookingSchema = z.object({
   customerPhone: z.string().min(1, 'Phone is required'),
   customerEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   notes: z.string().optional(),
+  paymentChoice: z.enum(['pay_now', 'pay_on_site']).default('pay_now'),
   manualPaymentProof: z
     .object({
       path: z.string().min(1, 'Invalid payment proof path'),
@@ -371,8 +372,9 @@ export async function submitPublicBooking(
       },
       totalPrice
     );
+    const isPayNow = data.paymentChoice === 'pay_now';
 
-    if (manualPaymentState.requiresProof) {
+    if (isPayNow && manualPaymentState.requiresProof) {
       if (!data.manualPaymentProof?.path) {
         return {
           success: false,
@@ -469,10 +471,11 @@ export async function submitPublicBooking(
         country: normalizedRegionPayment.country,
         currency: normalizedRegionPayment.currency,
         default_method: normalizedRegionPayment.defaultPaymentMethod,
+        payment_choice: data.paymentChoice,
         amount_due: manualPaymentState.amountDue,
         requires_proof: manualPaymentState.requiresProof,
         provider: manualPaymentState.provider,
-        proof: data.manualPaymentProof ?? null,
+        proof: isPayNow ? (data.manualPaymentProof ?? null) : null,
       },
     };
 
@@ -515,11 +518,16 @@ export async function submitPublicBooking(
       return { success: false, error: joinError.message };
     }
 
-    if (manualPaymentState.requiresProof && manualPaymentState.amountDue !== null) {
+    if (
+      isPayNow &&
+      manualPaymentState.requiresProof &&
+      manualPaymentState.amountDue !== null
+    ) {
       const paymentNotes = JSON.stringify({
         provider: manualPaymentState.provider,
         currency: normalizedRegionPayment.currency,
         amount_due: manualPaymentState.amountDue,
+        payment_choice: data.paymentChoice,
         proof: data.manualPaymentProof,
         review_status: 'awaiting_business_confirmation',
       });

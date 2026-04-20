@@ -8,5 +8,6 @@ export * from './components/step-service';
 export * from './components/step-date';
 export * from './components/step-time';
 export * from './components/step-details';
+export * from './components/step-payment';
 export * from './components/step-review';
 export * from './components/booking-success-view';

@@ -124,7 +124,7 @@ export function StepDetails({
         onClick={handleNext}
         className="w-full h-14 text-[15px] font-semibold rounded-2xl bg-gradient-to-br from-foreground to-foreground/80 text-background shadow-[0_4px_20px_rgba(42,36,32,0.2)] hover:shadow-[0_8px_32px_rgba(139,110,78,0.2)] hover:-translate-y-px active:scale-95 transition-all"
       >
-        Review Booking
+        Continue
       </Button>
     </StepShell>
   );

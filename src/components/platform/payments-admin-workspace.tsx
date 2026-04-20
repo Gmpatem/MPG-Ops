@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,35 +28,73 @@ const paymentMethodLabels: Record<BusinessDefaultPaymentMethod, string> = {
   manual: 'Manual',
 };
 
+function getNormalizedConfigForBusiness(
+  business: PlatformBusinessPaymentRow | null
+) {
+  return normalizeBusinessRegionPaymentConfig({
+    country: business?.country,
+    currency: business?.currency,
+    defaultPaymentMethod: business?.default_payment_method,
+    paymentSettingsRaw: (business?.payment_settings ?? null) as Json,
+  });
+}
+
 export function PaymentsAdminWorkspace({
   businesses,
 }: {
   businesses: PlatformBusinessPaymentRow[];
 }) {
+  const initialBusiness = businesses[0] ?? null;
+  const initialNormalized = getNormalizedConfigForBusiness(initialBusiness);
+
   const [businessRows, setBusinessRows] = useState<PlatformBusinessPaymentRow[]>(businesses);
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(
-    businesses[0]?.id ?? null
+    initialBusiness?.id ?? null
   );
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
 
-  const [country, setCountry] = useState<BusinessCountry>('OTHER');
-  const [currency, setCurrency] = useState('USD');
+  const [country, setCountry] = useState<BusinessCountry>(initialNormalized.country);
+  const [currency, setCurrency] = useState(initialNormalized.currency);
   const [defaultPaymentMethod, setDefaultPaymentMethod] =
-    useState<BusinessDefaultPaymentMethod>('manual');
+    useState<BusinessDefaultPaymentMethod>(initialNormalized.defaultPaymentMethod);
   const [hasEditedPaymentMethod, setHasEditedPaymentMethod] = useState(false);
-  const [depositRequired, setDepositRequired] = useState(false);
-  const [depositType, setDepositType] = useState<DepositType>('full');
-  const [depositAmount, setDepositAmount] = useState('');
-  const [gcashAccountName, setGcashAccountName] = useState('');
-  const [gcashNumber, setGcashNumber] = useState('');
-  const [gcashQrImageUrl, setGcashQrImageUrl] = useState('');
-  const [gcashInstructions, setGcashInstructions] = useState('');
-  const [momoAccountName, setMomoAccountName] = useState('');
-  const [momoNumber, setMomoNumber] = useState('');
-  const [momoInstructions, setMomoInstructions] = useState('');
-  const [manualInstructions, setManualInstructions] = useState('');
+  const [depositRequired, setDepositRequired] = useState(
+    initialNormalized.paymentSettings.depositRequired
+  );
+  const [depositType, setDepositType] = useState<DepositType>(
+    initialNormalized.paymentSettings.depositType
+  );
+  const [depositAmount, setDepositAmount] = useState(
+    initialNormalized.paymentSettings.depositAmount !== null
+      ? String(initialNormalized.paymentSettings.depositAmount)
+      : ''
+  );
+  const [gcashAccountName, setGcashAccountName] = useState(
+    initialNormalized.paymentSettings.gcash?.accountName ?? ''
+  );
+  const [gcashNumber, setGcashNumber] = useState(
+    initialNormalized.paymentSettings.gcash?.number ?? ''
+  );
+  const [gcashQrImageUrl, setGcashQrImageUrl] = useState(
+    initialNormalized.paymentSettings.gcash?.qrImageUrl ?? ''
+  );
+  const [gcashInstructions, setGcashInstructions] = useState(
+    initialNormalized.paymentSettings.gcash?.instructions ?? ''
+  );
+  const [momoAccountName, setMomoAccountName] = useState(
+    initialNormalized.paymentSettings.momo?.accountName ?? ''
+  );
+  const [momoNumber, setMomoNumber] = useState(
+    initialNormalized.paymentSettings.momo?.number ?? ''
+  );
+  const [momoInstructions, setMomoInstructions] = useState(
+    initialNormalized.paymentSettings.momo?.instructions ?? ''
+  );
+  const [manualInstructions, setManualInstructions] = useState(
+    initialNormalized.paymentSettings.manual?.instructions ?? ''
+  );
 
   const selectedBusiness = useMemo(
     () => businessRows.find((business) => business.id === selectedBusinessId) ?? null,
@@ -68,16 +106,8 @@ export function PaymentsAdminWorkspace({
   const suggestedPaymentMethod = getSuggestedPaymentMethodForCountry(country);
   const paymentMethodOptions = getPaymentMethodOptionsForCountry(country);
 
-  useEffect(() => {
-    if (!selectedBusiness) return;
-
-    const normalized = normalizeBusinessRegionPaymentConfig({
-      country: selectedBusiness.country,
-      currency: selectedBusiness.currency,
-      defaultPaymentMethod: selectedBusiness.default_payment_method,
-      paymentSettingsRaw: selectedBusiness.payment_settings as Json,
-    });
-
+  function applyBusinessToForm(selectedRow: PlatformBusinessPaymentRow) {
+    const normalized = getNormalizedConfigForBusiness(selectedRow);
     setCountry(normalized.country);
     setCurrency(normalized.currency);
     setDefaultPaymentMethod(normalized.defaultPaymentMethod);
@@ -98,7 +128,12 @@ export function PaymentsAdminWorkspace({
     setManualInstructions(normalized.paymentSettings.manual?.instructions ?? '');
     setHasEditedPaymentMethod(false);
     setMessage(null);
-  }, [selectedBusiness]);
+  }
+
+  function handleSelectBusiness(selectedRow: PlatformBusinessPaymentRow) {
+    setSelectedBusinessId(selectedRow.id);
+    applyBusinessToForm(selectedRow);
+  }
 
   function handleCountryChange(nextCountry: BusinessCountry) {
     setCountry(nextCountry);
@@ -196,7 +231,7 @@ export function PaymentsAdminWorkspace({
               <button
                 key={business.id}
                 type="button"
-                onClick={() => setSelectedBusinessId(business.id)}
+                onClick={() => handleSelectBusiness(business)}
                 className={`rounded-lg border px-3 py-2 text-left transition ${
                   selectedBusinessId === business.id
                     ? 'border-primary bg-primary/5'

@@ -44,7 +44,17 @@ export default function SettingsSupportPage() {
   }
 
   useEffect(() => {
-    void loadRequests();
+    let cancelled = false;
+
+    getMySupportRequests(30).then((rows) => {
+      if (cancelled) return;
+      setRequests(rows);
+      setIsLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleSubmit(formData: FormData) {

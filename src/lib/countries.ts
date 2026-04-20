@@ -39,28 +39,8 @@ const ISO_COUNTRY_CODES_FALLBACK = [
 
 let cachedCountryOptions: CountryOption[] | null = null;
 
-function getRegionCodesFromIntl(): string[] {
-  const intlWithSupportedValues = Intl as unknown as {
-    supportedValuesOf?: (key: string) => string[];
-  };
-
-  if (typeof intlWithSupportedValues.supportedValuesOf !== 'function') {
-    return [];
-  }
-
-  try {
-    return intlWithSupportedValues
-      .supportedValuesOf('region')
-      .filter((code) => /^[A-Z]{2}$/.test(code));
-  } catch {
-    return [];
-  }
-}
-
 function buildCountryOptions(): CountryOption[] {
-  const regionCodes = getRegionCodesFromIntl();
-  const sourceCodes =
-    regionCodes.length > 0 ? regionCodes : [...ISO_COUNTRY_CODES_FALLBACK];
+  const sourceCodes = [...ISO_COUNTRY_CODES_FALLBACK];
 
   let displayNames: Intl.DisplayNames | null = null;
   try {
