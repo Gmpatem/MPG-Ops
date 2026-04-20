@@ -14,23 +14,65 @@ const PRIMARY_CURRENCY_BY_COUNTRY: Record<string, string> = {
   CM: 'XAF',
 };
 
+const ISO_COUNTRY_CODES_FALLBACK = [
+  'AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU',
+  'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL',
+  'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC',
+  'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV',
+  'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG',
+  'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD',
+  'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT',
+  'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM',
+  'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH',
+  'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK',
+  'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH',
+  'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW',
+  'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR',
+  'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR',
+  'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC',
+  'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS',
+  'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL',
+  'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY',
+  'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA',
+  'ZM', 'ZW',
+] as const;
+
 let cachedCountryOptions: CountryOption[] | null = null;
 
-function buildCountryOptions(): CountryOption[] {
-  const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
+function getRegionCodesFromIntl(): string[] {
   const intlWithSupportedValues = Intl as unknown as {
     supportedValuesOf?: (key: string) => string[];
   };
-  const regionCodes =
-    typeof intlWithSupportedValues.supportedValuesOf === 'function'
-      ? intlWithSupportedValues.supportedValuesOf('region')
-      : [];
 
-  const options = regionCodes
-    .filter((code) => /^[A-Z]{2}$/.test(code))
+  if (typeof intlWithSupportedValues.supportedValuesOf !== 'function') {
+    return [];
+  }
+
+  try {
+    return intlWithSupportedValues
+      .supportedValuesOf('region')
+      .filter((code) => /^[A-Z]{2}$/.test(code));
+  } catch {
+    return [];
+  }
+}
+
+function buildCountryOptions(): CountryOption[] {
+  const regionCodes = getRegionCodesFromIntl();
+  const sourceCodes =
+    regionCodes.length > 0 ? regionCodes : [...ISO_COUNTRY_CODES_FALLBACK];
+
+  let displayNames: Intl.DisplayNames | null = null;
+  try {
+    displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
+  } catch {
+    displayNames = null;
+  }
+
+  const options = sourceCodes
     .map((code) => ({
       code,
-      label: displayNames.of(code) ?? code,
+      label: displayNames?.of(code) ?? code,
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
