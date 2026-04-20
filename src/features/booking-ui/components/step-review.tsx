@@ -173,6 +173,11 @@ export function StepReview({
                 <p className="text-xs text-muted-foreground">
                   Number: {paymentSettings.gcash?.number ?? 'Not set'}
                 </p>
+                {paymentSettings.gcash?.instructions && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {paymentSettings.gcash.instructions}
+                  </p>
+                )}
               </div>
 
               {manualPaymentState.requiresProof && (
@@ -219,8 +224,16 @@ export function StepReview({
               <p className="text-sm font-semibold">Manual Mobile Money</p>
               {manualPaymentState.amountDue !== null && (
                 <p className="text-xs text-muted-foreground">
-                  Amount due: {amountDueLabel}
+                  Step 1: Send {amountDueLabel}
                 </p>
+              )}
+              {manualPaymentState.amountDue === null && (
+                <p className="text-xs text-muted-foreground">
+                  Follow the business instructions below before confirmation.
+                </p>
+              )}
+              {manualPaymentState.amountDue !== null && (
+                <p className="text-xs text-muted-foreground">Amount due: {amountDueLabel}</p>
               )}
               {paymentSettings.momo?.accountName && (
                 <p className="text-xs text-muted-foreground">
@@ -235,6 +248,21 @@ export function StepReview({
               <p className="text-xs text-muted-foreground">
                 {paymentSettings.momo?.instructions ??
                   'Mobile money confirmation is handled manually by this business.'}
+              </p>
+            </div>
+          )}
+
+          {manualPaymentState.provider === 'manual' && (
+            <div className="rounded-xl border border-border/70 bg-muted/20 px-3 py-3 space-y-2">
+              <p className="text-sm font-semibold">Manual Payment</p>
+              {manualPaymentState.amountDue !== null && (
+                <p className="text-xs text-muted-foreground">
+                  Amount due: {amountDueLabel}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {paymentSettings.manual?.instructions ??
+                  'The business will share manual payment instructions after booking.'}
               </p>
             </div>
           )}

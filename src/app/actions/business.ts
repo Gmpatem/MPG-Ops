@@ -59,9 +59,11 @@ const businessUpdateSchema = z.object({
   gcashAccountName: z.string().trim().optional(),
   gcashNumber: z.string().trim().optional(),
   gcashQrImageUrl: z.string().trim().url('Invalid GCash QR image URL').optional().or(z.literal('')),
+  gcashInstructions: z.string().trim().optional(),
   momoAccountName: z.string().trim().optional(),
   momoNumber: z.string().trim().optional(),
   momoInstructions: z.string().trim().optional(),
+  manualInstructions: z.string().trim().optional(),
 });
 
 export async function updateBusiness(formData: FormData) {
@@ -86,9 +88,11 @@ export async function updateBusiness(formData: FormData) {
     gcashAccountName: formData.get('gcashAccountName'),
     gcashNumber: formData.get('gcashNumber'),
     gcashQrImageUrl: formData.get('gcashQrImageUrl'),
+    gcashInstructions: formData.get('gcashInstructions'),
     momoAccountName: formData.get('momoAccountName'),
     momoNumber: formData.get('momoNumber'),
     momoInstructions: formData.get('momoInstructions'),
+    manualInstructions: formData.get('manualInstructions'),
   });
 
   // Parse operating hours if provided
@@ -135,9 +139,11 @@ export async function updateBusiness(formData: FormData) {
     gcashAccountName: data.gcashAccountName,
     gcashNumber: data.gcashNumber,
     gcashQrImageUrl: uploadedGcashQrImageUrl ?? data.gcashQrImageUrl,
+    gcashInstructions: data.gcashInstructions,
     momoAccountName: data.momoAccountName,
     momoNumber: data.momoNumber,
     momoInstructions: data.momoInstructions,
+    manualInstructions: data.manualInstructions,
   });
 
   const updatePayload: {

@@ -275,6 +275,120 @@ export interface Database {
           },
         ]
       }
+      support_requests: {
+        Row: {
+          id: string
+          business_id: string
+          submitted_by_user_id: string | null
+          contact_email: string | null
+          category: string
+          subject: string
+          message: string
+          status: string
+          admin_notes: string | null
+          created_at: string
+          updated_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          business_id: string
+          submitted_by_user_id?: string | null
+          contact_email?: string | null
+          category?: string
+          subject: string
+          message: string
+          status?: string
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          id?: string
+          business_id?: string
+          submitted_by_user_id?: string | null
+          contact_email?: string | null
+          category?: string
+          subject?: string
+          message?: string
+          status?: string
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'support_requests_business_id_fkey'
+            columns: ['business_id']
+            isOneToOne: false
+            referencedRelation: 'businesses'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'support_requests_submitted_by_user_id_fkey'
+            columns: ['submitted_by_user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      business_feedback: {
+        Row: {
+          id: string
+          business_id: string
+          booking_id: string | null
+          customer_name: string | null
+          customer_email: string | null
+          rating: number | null
+          comment: string
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          business_id: string
+          booking_id?: string | null
+          customer_name?: string | null
+          customer_email?: string | null
+          rating?: number | null
+          comment: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          business_id?: string
+          booking_id?: string | null
+          customer_name?: string | null
+          customer_email?: string | null
+          rating?: number | null
+          comment?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'business_feedback_booking_id_fkey'
+            columns: ['booking_id']
+            isOneToOne: false
+            referencedRelation: 'bookings'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'business_feedback_business_id_fkey'
+            columns: ['business_id']
+            isOneToOne: false
+            referencedRelation: 'businesses'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       payments: {
         Row: {
           id: string

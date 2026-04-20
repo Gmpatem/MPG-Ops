@@ -53,9 +53,11 @@ export const businessSetupSchema = z.object({
   gcashAccountName: z.string().trim().optional(),
   gcashNumber: z.string().trim().optional(),
   gcashQrImageUrl: z.string().trim().url('Please enter a valid QR image URL').optional().or(z.literal('')),
+  gcashInstructions: z.string().trim().optional(),
   momoAccountName: z.string().trim().optional(),
   momoNumber: z.string().trim().optional(),
   momoInstructions: z.string().trim().optional(),
+  manualInstructions: z.string().trim().optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

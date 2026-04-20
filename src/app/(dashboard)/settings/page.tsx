@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  getCountryOptions,
+  getPaymentMethodOptionsForCountry,
+  getPaymentRegionForCountry,
+  getSuggestedCurrencyForCountry,
+  getSuggestedPaymentMethodForCountry,
   normalizeBusinessRegionPaymentConfig,
   type BusinessCountry,
   type BusinessDefaultPaymentMethod,
@@ -32,7 +37,7 @@ import type { Json, Tables } from '@/lib/supabase/database.types';
 
 const paymentMethodLabels: Record<BusinessDefaultPaymentMethod, string> = {
   gcash_manual: 'GCash (Manual)',
-  momo_manual: 'Mobile Money (Manual)',
+  momo_manual: 'MoMo (Manual)',
   manual: 'Manual',
 };
 
@@ -108,19 +113,26 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const [country, setCountry] = useState<BusinessCountry>('other');
+  const [country, setCountry] = useState<BusinessCountry>('PH');
   const [currency, setCurrency] = useState('USD');
   const [defaultPaymentMethod, setDefaultPaymentMethod] =
     useState<BusinessDefaultPaymentMethod>('manual');
+  const [hasEditedPaymentMethod, setHasEditedPaymentMethod] = useState(false);
   const [depositRequired, setDepositRequired] = useState(false);
   const [depositType, setDepositType] = useState<DepositType>('full');
   const [depositAmount, setDepositAmount] = useState('');
   const [gcashAccountName, setGcashAccountName] = useState('');
   const [gcashNumber, setGcashNumber] = useState('');
   const [gcashQrImageUrl, setGcashQrImageUrl] = useState('');
+  const [gcashInstructions, setGcashInstructions] = useState('');
   const [momoAccountName, setMomoAccountName] = useState('');
   const [momoNumber, setMomoNumber] = useState('');
   const [momoInstructions, setMomoInstructions] = useState('');
+  const [manualInstructions, setManualInstructions] = useState('');
+  const countryOptions = useMemo(() => getCountryOptions(), []);
+  const paymentRegion = getPaymentRegionForCountry(country);
+  const suggestedPaymentMethod = getSuggestedPaymentMethodForCountry(country);
+  const paymentMethodOptions = getPaymentMethodOptionsForCountry(country);
 
   useEffect(() => {
     async function loadBusiness() {
@@ -161,25 +173,28 @@ export default function SettingsPage() {
     setGcashAccountName(normalized.paymentSettings.gcash?.accountName ?? '');
     setGcashNumber(normalized.paymentSettings.gcash?.number ?? '');
     setGcashQrImageUrl(normalized.paymentSettings.gcash?.qrImageUrl ?? '');
+    setGcashInstructions(normalized.paymentSettings.gcash?.instructions ?? '');
     setMomoAccountName(normalized.paymentSettings.momo?.accountName ?? '');
     setMomoNumber(normalized.paymentSettings.momo?.number ?? '');
     setMomoInstructions(normalized.paymentSettings.momo?.instructions ?? '');
+    setManualInstructions(normalized.paymentSettings.manual?.instructions ?? '');
+    setHasEditedPaymentMethod(false);
   }, [business]);
 
   function handleCountryChange(nextCountry: BusinessCountry) {
     setCountry(nextCountry);
-    if (nextCountry === 'philippines') {
-      setCurrency('PHP');
-      setDefaultPaymentMethod('gcash_manual');
-      return;
-    }
-    if (nextCountry === 'cameroon') {
-      setCurrency('XAF');
-      setDefaultPaymentMethod('momo_manual');
-      return;
-    }
-    setDefaultPaymentMethod('manual');
-    setCurrency((prev) => (prev.trim() ? prev : 'USD'));
+
+    const suggestedMethod = getSuggestedPaymentMethodForCountry(nextCountry);
+    const methodOptions = getPaymentMethodOptionsForCountry(nextCountry);
+    const suggestedCurrency = getSuggestedCurrencyForCountry(nextCountry, currency);
+
+    setCurrency(suggestedCurrency);
+    setDefaultPaymentMethod((prev) => {
+      if (hasEditedPaymentMethod && methodOptions.includes(prev)) {
+        return prev;
+      }
+      return suggestedMethod;
+    });
   }
 
   async function handleSubmit(formData: FormData) {
@@ -330,6 +345,21 @@ export default function SettingsPage() {
         </div>
       </Card>
 
+      {/* Support */}
+      <Card className="p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-semibold text-sm">Support</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Contact the platform admin for payment, setup, or account help.
+            </p>
+          </div>
+          <Link href="/settings/support" className="text-xs text-primary hover:underline">
+            Open support
+          </Link>
+        </div>
+      </Card>
+
       {/* Settings Form */}
       <Card className="p-6">
         <form action={handleSubmit} className="space-y-5">
@@ -425,12 +455,14 @@ export default function SettingsPage() {
                 onValueChange={(value) => handleCountryChange(value as BusinessCountry)}
               >
                 <SelectTrigger className="h-12">
-                  <SelectValue />
+                  <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="philippines">Philippines</SelectItem>
-                  <SelectItem value="cameroon">Cameroon</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {countryOptions.map((countryOption) => (
+                    <SelectItem key={countryOption.code} value={countryOption.code}>
+                      {countryOption.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -443,21 +475,37 @@ export default function SettingsPage() {
                   name="currency"
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-                  readOnly={country !== 'other'}
+                  readOnly={paymentRegion !== 'other'}
                   className="h-12"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Default method</Label>
-                <Input
-                  value={paymentMethodLabels[defaultPaymentMethod]}
-                  readOnly
-                  className="h-12"
-                />
+                <Label>Default payment method</Label>
+                <Select
+                  value={defaultPaymentMethod}
+                  onValueChange={(value) => {
+                    setDefaultPaymentMethod(value as BusinessDefaultPaymentMethod);
+                    setHasEditedPaymentMethod(true);
+                  }}
+                >
+                  <SelectTrigger className="h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentMethodOptions.map((method) => (
+                      <SelectItem key={method} value={method}>
+                        {paymentMethodLabels[method]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Suggested: {paymentMethodLabels[suggestedPaymentMethod]}
+                </p>
               </div>
             </div>
 
-            {country === 'philippines' && (
+            {defaultPaymentMethod === 'gcash_manual' && (
               <div className="space-y-4 rounded-xl border p-4">
                 <p className="text-sm font-medium">GCash setup</p>
 
@@ -509,60 +557,20 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Require deposit?</Label>
-                  <Select
-                    value={depositRequired ? 'yes' : 'no'}
-                    onValueChange={(value) => setDepositRequired(value === 'yes')}
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="gcashInstructions">Short payment instructions</Label>
+                  <Input
+                    id="gcashInstructions"
+                    name="gcashInstructions"
+                    value={gcashInstructions}
+                    onChange={(e) => setGcashInstructions(e.target.value)}
+                    placeholder="Example: Send screenshot after payment"
+                    className="h-12"
+                  />
                 </div>
-
-                {depositRequired && (
-                  <>
-                    <div className="space-y-2">
-                      <Label>Deposit type</Label>
-                      <Select
-                        value={depositType}
-                        onValueChange={(value) => setDepositType(value as DepositType)}
-                      >
-                        <SelectTrigger className="h-12">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="fixed">Fixed amount</SelectItem>
-                          <SelectItem value="full">Full service amount</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {depositType === 'fixed' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="depositAmount">Deposit amount (PHP)</Label>
-                        <Input
-                          id="depositAmount"
-                          name="depositAmount"
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          value={depositAmount}
-                          onChange={(e) => setDepositAmount(e.target.value)}
-                          className="h-12"
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
               </div>
             )}
 
-            {country === 'cameroon' && (
+            {defaultPaymentMethod === 'momo_manual' && (
               <div className="space-y-4 rounded-xl border p-4">
                 <p className="text-sm font-medium">Mobile Money setup</p>
                 <p className="text-xs text-muted-foreground">
@@ -604,13 +612,85 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {country === 'other' && (
-              <div className="rounded-xl border p-4">
-                <p className="text-sm text-muted-foreground">
-                  Manual payment fallback is enabled for this business.
+            {defaultPaymentMethod === 'manual' && (
+              <div className="space-y-4 rounded-xl border p-4">
+                <p className="text-sm font-medium">Manual payment fallback</p>
+                <p className="text-xs text-muted-foreground">
+                  Add a short instruction for customers.
                 </p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="manualInstructions">Manual instructions</Label>
+                  <Input
+                    id="manualInstructions"
+                    name="manualInstructions"
+                    value={manualInstructions}
+                    onChange={(e) => setManualInstructions(e.target.value)}
+                    placeholder="Example: Pay in-store before service starts"
+                    className="h-12"
+                  />
+                </div>
               </div>
             )}
+
+            <div className="space-y-4 rounded-xl border p-4">
+              <p className="text-sm font-medium">Booking deposit</p>
+              <p className="text-xs text-muted-foreground">
+                Choose whether customers must pay before confirmation.
+              </p>
+
+              <div className="space-y-2">
+                <Label>Require deposit?</Label>
+                <Select
+                  value={depositRequired ? 'yes' : 'no'}
+                  onValueChange={(value) => setDepositRequired(value === 'yes')}
+                >
+                  <SelectTrigger className="h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {depositRequired && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Deposit type</Label>
+                    <Select
+                      value={depositType}
+                      onValueChange={(value) => setDepositType(value as DepositType)}
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Fixed amount</SelectItem>
+                        <SelectItem value="full">Full service amount</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {depositType === 'fixed' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="depositAmount">Deposit amount ({currency})</Label>
+                      <Input
+                        id="depositAmount"
+                        name="depositAmount"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={depositAmount}
+                        onChange={(e) => setDepositAmount(e.target.value)}
+                        className="h-12"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Message */}

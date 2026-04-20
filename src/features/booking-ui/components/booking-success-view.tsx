@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { BusinessFeedbackForm } from '@/components/public/business-feedback-form';
 import { CheckCircle, Calendar, Clock, Scissors, User, ArrowRight } from 'lucide-react';
 import { formatTime12h, formatBookingDate, formatDurationMinutes } from '@/lib/booking-dates';
 import { formatCurrencyAmount } from '@/lib/business-payment-settings';
@@ -143,6 +144,8 @@ export function BookingSuccessView({
               </Button>
             </Link>
           </div>
+
+          <BusinessFeedbackForm businessId={businessId} initialName={customerName} />
         </div>
       </div>
     </div>

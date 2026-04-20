@@ -8,16 +8,22 @@ import {
   Building2,
   Users,
   CreditCard,
+  Wallet,
   BarChart3,
   ToggleLeft,
   ClipboardList,
   Stethoscope,
+  LifeBuoy,
+  MessageSquareHeart,
 } from 'lucide-react';
 
 const nav = [
   { href: '/platform', label: 'Overview', icon: LayoutDashboard },
   { href: '/platform/businesses', label: 'Businesses', icon: Building2 },
   { href: '/platform/users', label: 'Users', icon: Users },
+  { href: '/platform/payments', label: 'Payment Mgmt', icon: Wallet },
+  { href: '/platform/support-requests', label: 'Support Requests', icon: LifeBuoy },
+  { href: '/platform/feedback', label: 'Feedback', icon: MessageSquareHeart },
   { href: '/platform/diagnostics', label: 'Diagnostics', icon: Stethoscope },
   { href: '/platform/audit', label: 'Audit Log', icon: ClipboardList },
   { href: '/platform/plans', label: 'Plans', icon: CreditCard },

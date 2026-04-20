@@ -123,9 +123,11 @@ export async function setupBusiness(formData: FormData) {
     gcashAccountName: formData.get('gcashAccountName'),
     gcashNumber: formData.get('gcashNumber'),
     gcashQrImageUrl: formData.get('gcashQrImageUrl'),
+    gcashInstructions: formData.get('gcashInstructions'),
     momoAccountName: formData.get('momoAccountName'),
     momoNumber: formData.get('momoNumber'),
     momoInstructions: formData.get('momoInstructions'),
+    manualInstructions: formData.get('manualInstructions'),
   });
 
   // Parse operating hours if provided
@@ -172,9 +174,11 @@ export async function setupBusiness(formData: FormData) {
     gcashAccountName: data.gcashAccountName,
     gcashNumber: data.gcashNumber,
     gcashQrImageUrl: uploadedGcashQrImageUrl ?? data.gcashQrImageUrl,
+    gcashInstructions: data.gcashInstructions,
     momoAccountName: data.momoAccountName,
     momoNumber: data.momoNumber,
     momoInstructions: data.momoInstructions,
+    manualInstructions: data.manualInstructions,
   });
 
   // Generate unique slug

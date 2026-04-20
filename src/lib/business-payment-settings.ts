@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import type { Json } from '@/lib/supabase/database.types';
+import {
+  getCountryLabel,
+  getCountryOptions,
+  getSuggestedCurrencyForCountry,
+  normalizeCountryCode,
+} from '@/lib/countries';
 
-export const BUSINESS_COUNTRIES = ['philippines', 'cameroon', 'other'] as const;
 export const BUSINESS_DEFAULT_PAYMENT_METHODS = [
   'gcash_manual',
   'momo_manual',
@@ -9,27 +14,33 @@ export const BUSINESS_DEFAULT_PAYMENT_METHODS = [
 ] as const;
 export const DEPOSIT_TYPES = ['fixed', 'full'] as const;
 
-export const businessCountrySchema = z.enum(BUSINESS_COUNTRIES);
+export const businessCountrySchema = z.string().trim().min(2).max(64);
 export const businessDefaultPaymentMethodSchema = z.enum(
   BUSINESS_DEFAULT_PAYMENT_METHODS
 );
 export const depositTypeSchema = z.enum(DEPOSIT_TYPES);
 
-export type BusinessCountry = z.infer<typeof businessCountrySchema>;
+export type BusinessCountry = string;
 export type BusinessDefaultPaymentMethod = z.infer<
   typeof businessDefaultPaymentMethodSchema
 >;
 export type DepositType = z.infer<typeof depositTypeSchema>;
+export type BusinessPaymentRegion = 'philippines' | 'cameroon' | 'other';
 
 const gcashSettingsSchema = z.object({
   accountName: z.string().trim().min(1).optional(),
   number: z.string().trim().min(1).optional(),
   qrImageUrl: z.string().trim().url().optional(),
+  instructions: z.string().trim().min(1).optional(),
 });
 
 const momoSettingsSchema = z.object({
   accountName: z.string().trim().min(1).optional(),
   number: z.string().trim().min(1).optional(),
+  instructions: z.string().trim().min(1).optional(),
+});
+
+const manualSettingsSchema = z.object({
   instructions: z.string().trim().min(1).optional(),
 });
 
@@ -39,6 +50,7 @@ const businessPaymentSettingsSchema = z.object({
   depositAmount: z.number().min(0).nullable().optional(),
   gcash: gcashSettingsSchema.optional(),
   momo: momoSettingsSchema.optional(),
+  manual: manualSettingsSchema.optional(),
 });
 
 export interface BusinessPaymentSettings {
@@ -49,16 +61,20 @@ export interface BusinessPaymentSettings {
     accountName?: string;
     number?: string;
     qrImageUrl?: string;
+    instructions?: string;
   };
   momo?: {
     accountName?: string;
     number?: string;
     instructions?: string;
   };
+  manual?: {
+    instructions?: string;
+  };
 }
 
 export interface NormalizedBusinessRegionPaymentConfig {
-  country: BusinessCountry;
+  country: string;
   currency: string;
   defaultPaymentMethod: BusinessDefaultPaymentMethod;
   paymentSettings: BusinessPaymentSettings;
@@ -84,26 +100,57 @@ function normalizeString(value: string | null | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+export function getPaymentRegionForCountry(
+  countryInput: string | null | undefined
+): BusinessPaymentRegion {
+  const normalized = normalizeCountryCode(countryInput);
+  if (normalized === 'PH') return 'philippines';
+  if (normalized === 'CM') return 'cameroon';
+  return 'other';
+}
+
+export function getSuggestedPaymentMethodForCountry(
+  countryInput: string | null | undefined
+): BusinessDefaultPaymentMethod {
+  const region = getPaymentRegionForCountry(countryInput);
+  if (region === 'philippines') return 'gcash_manual';
+  if (region === 'cameroon') return 'momo_manual';
+  return 'manual';
+}
+
+export function getPaymentMethodOptionsForCountry(
+  countryInput: string | null | undefined
+): BusinessDefaultPaymentMethod[] {
+  const region = getPaymentRegionForCountry(countryInput);
+
+  if (region === 'philippines') {
+    return ['gcash_manual', 'manual'];
+  }
+
+  if (region === 'cameroon') {
+    return ['momo_manual', 'manual'];
+  }
+
+  return ['manual'];
+}
+
 function normalizeCurrencyForCountry(
-  country: BusinessCountry,
+  country: string,
   currencyInput?: string | null
 ): string {
-  if (country === 'philippines') return 'PHP';
-  if (country === 'cameroon') return 'XAF';
-
-  const cleaned = normalizeString(currencyInput)?.toUpperCase();
-  return cleaned ?? 'USD';
+  return getSuggestedCurrencyForCountry(country, currencyInput);
 }
 
 function normalizeMethodForCountry(
-  country: BusinessCountry,
+  country: string,
   methodInput?: string | null
 ): BusinessDefaultPaymentMethod {
-  if (country === 'philippines') return 'gcash_manual';
-  if (country === 'cameroon') return 'momo_manual';
-
   const parsed = businessDefaultPaymentMethodSchema.safeParse(methodInput);
-  return parsed.success ? parsed.data : 'manual';
+  if (parsed.success) {
+    return parsed.data;
+  }
+
+  return getSuggestedPaymentMethodForCountry(country);
 }
 
 function normalizePaymentSettings(
@@ -115,9 +162,11 @@ function normalizePaymentSettings(
     gcashAccountName?: string | null;
     gcashNumber?: string | null;
     gcashQrImageUrl?: string | null;
+    gcashInstructions?: string | null;
     momoAccountName?: string | null;
     momoNumber?: string | null;
     momoInstructions?: string | null;
+    manualInstructions?: string | null;
   }
 ): BusinessPaymentSettings {
   const parsed = businessPaymentSettingsSchema.safeParse(raw ?? {});
@@ -146,6 +195,9 @@ function normalizePaymentSettings(
   const gcashQrImageUrl =
     normalizeString(input.gcashQrImageUrl) ??
     normalizeString(existing.gcash?.qrImageUrl);
+  const gcashInstructions =
+    normalizeString(input.gcashInstructions) ??
+    normalizeString(existing.gcash?.instructions);
 
   const momoAccountName =
     normalizeString(input.momoAccountName) ??
@@ -156,6 +208,10 @@ function normalizePaymentSettings(
     normalizeString(input.momoInstructions) ??
     normalizeString(existing.momo?.instructions);
 
+  const manualInstructions =
+    normalizeString(input.manualInstructions) ??
+    normalizeString(existing.manual?.instructions);
+
   const result: BusinessPaymentSettings = {
     depositRequired,
     depositType,
@@ -163,11 +219,12 @@ function normalizePaymentSettings(
       depositRequired && depositType === 'fixed' ? normalizedDepositAmount : null,
   };
 
-  if (gcashAccountName || gcashNumber || gcashQrImageUrl) {
+  if (gcashAccountName || gcashNumber || gcashQrImageUrl || gcashInstructions) {
     result.gcash = {
       ...(gcashAccountName ? { accountName: gcashAccountName } : {}),
       ...(gcashNumber ? { number: gcashNumber } : {}),
       ...(gcashQrImageUrl ? { qrImageUrl: gcashQrImageUrl } : {}),
+      ...(gcashInstructions ? { instructions: gcashInstructions } : {}),
     };
   }
 
@@ -177,6 +234,10 @@ function normalizePaymentSettings(
       ...(momoNumber ? { number: momoNumber } : {}),
       ...(momoInstructions ? { instructions: momoInstructions } : {}),
     };
+  }
+
+  if (manualInstructions) {
+    result.manual = { instructions: manualInstructions };
   }
 
   return result;
@@ -193,14 +254,13 @@ export function normalizeBusinessRegionPaymentConfig(input: {
   gcashAccountName?: string | null;
   gcashNumber?: string | null;
   gcashQrImageUrl?: string | null;
+  gcashInstructions?: string | null;
   momoAccountName?: string | null;
   momoNumber?: string | null;
   momoInstructions?: string | null;
+  manualInstructions?: string | null;
 }): NormalizedBusinessRegionPaymentConfig {
-  const normalizedCountry = businessCountrySchema.safeParse(
-    normalizeString(input.country)?.toLowerCase()
-  );
-  const country = normalizedCountry.success ? normalizedCountry.data : 'other';
+  const country = normalizeCountryCode(input.country);
 
   const currency = normalizeCurrencyForCountry(country, input.currency);
   const defaultPaymentMethod = normalizeMethodForCountry(
@@ -215,9 +275,11 @@ export function normalizeBusinessRegionPaymentConfig(input: {
     gcashAccountName: input.gcashAccountName,
     gcashNumber: input.gcashNumber,
     gcashQrImageUrl: input.gcashQrImageUrl,
+    gcashInstructions: input.gcashInstructions,
     momoAccountName: input.momoAccountName,
     momoNumber: input.momoNumber,
     momoInstructions: input.momoInstructions,
+    manualInstructions: input.manualInstructions,
   });
 
   return {
@@ -246,6 +308,7 @@ export function parseBusinessPaymentSettings(
         : null,
     ...(settings.gcash ? { gcash: settings.gcash } : {}),
     ...(settings.momo ? { momo: settings.momo } : {}),
+    ...(settings.manual ? { manual: settings.manual } : {}),
   };
 }
 
@@ -279,8 +342,9 @@ export function buildPublicManualPaymentState(
   totalAmount: number
 ): PublicManualPaymentState {
   const amountDue = computeDepositAmountDue(totalAmount, config.paymentSettings);
+  const region = getPaymentRegionForCountry(config.country);
 
-  if (config.country === 'philippines' && config.defaultPaymentMethod === 'gcash_manual') {
+  if (config.defaultPaymentMethod === 'gcash_manual') {
     if (!amountDue) {
       return {
         showPaymentStep: false,
@@ -311,7 +375,7 @@ export function buildPublicManualPaymentState(
     };
   }
 
-  if (config.country === 'cameroon' && config.defaultPaymentMethod === 'momo_manual') {
+  if (config.defaultPaymentMethod === 'momo_manual') {
     const hasMomoDetails = Boolean(
       config.paymentSettings.momo?.number ||
         config.paymentSettings.momo?.accountName ||
@@ -326,6 +390,17 @@ export function buildPublicManualPaymentState(
       fallbackMessage: hasMomoDetails
         ? null
         : 'Manual mobile money setup is still being configured for this business.',
+    };
+  }
+
+  const hasManualInstructions = Boolean(config.paymentSettings.manual?.instructions);
+  if (hasManualInstructions || amountDue !== null || region === 'other') {
+    return {
+      showPaymentStep: hasManualInstructions || amountDue !== null,
+      requiresProof: false,
+      amountDue,
+      provider: 'manual',
+      fallbackMessage: null,
     };
   }
 
@@ -358,3 +433,10 @@ export function formatCurrencyAmount(
     return `${symbol}${safeAmount.toFixed(options?.maximumFractionDigits ?? 2)}`;
   }
 }
+
+export {
+  getCountryLabel,
+  getCountryOptions,
+  normalizeCountryCode,
+  getSuggestedCurrencyForCountry,
+};
