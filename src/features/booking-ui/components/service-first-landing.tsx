@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import type { PublicBusiness, PublicService, PublicSiteSettings } from '@/app/actions/public-booking';
 import { computeNextAvailableSlot } from '@/lib/booking-dates';
+import { normalizeBusinessRegionPaymentConfig } from '@/lib/business-payment-settings';
 import { FeaturedServiceCard } from './featured-service-card';
 import { GridServiceCard } from './grid-service-card';
 
@@ -25,6 +26,16 @@ export function ServiceFirstLanding({
 
   const settings: PublicSiteSettings = business.public_site_settings ?? {};
   const instructions = settings.instructions ?? null;
+  const bookingCurrency = useMemo(
+    () =>
+      normalizeBusinessRegionPaymentConfig({
+        country: business.country,
+        currency: business.currency,
+        defaultPaymentMethod: business.default_payment_method,
+        paymentSettingsRaw: business.payment_settings,
+      }).currency,
+    [business.country, business.currency, business.default_payment_method, business.payment_settings]
+  );
 
   // ── Featured cycle logic ──────────────────────────────────────────────────
   const explicitlyFeatured = services.filter((s) => s.is_featured);
@@ -150,6 +161,7 @@ export function ServiceFirstLanding({
               >
                 <FeaturedServiceCard
                   service={currentFeatured}
+                  currency={bookingCurrency}
                   onBook={() => onSelectService(currentFeatured)}
                 />
 
@@ -202,6 +214,7 @@ export function ServiceFirstLanding({
               >
                 <GridServiceCard
                   service={service}
+                  currency={bookingCurrency}
                   onBook={() => onSelectService(service)}
                 />
               </div>

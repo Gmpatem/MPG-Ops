@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Calendar, Clock, Scissors, User, ArrowRight } from 'lucide-react';
 import { formatTime12h, formatBookingDate, formatDurationMinutes } from '@/lib/booking-dates';
+import { formatCurrencyAmount } from '@/lib/business-payment-settings';
 
 interface BookingSuccessViewProps {
   businessId: string;
@@ -14,6 +15,7 @@ interface BookingSuccessViewProps {
   customerName: string;
   duration: number | null;
   price: number | null;
+  currency: string;
 }
 
 export function BookingSuccessView({
@@ -25,6 +27,7 @@ export function BookingSuccessView({
   customerName,
   duration,
   price,
+  currency,
 }: BookingSuccessViewProps) {
   const firstName = customerName.split(' ')[0];
 
@@ -117,7 +120,7 @@ export function BookingSuccessView({
                   )}
                 </div>
                 <span className="font-display text-2xl font-semibold text-gold">
-                  {price !== null ? `₱${price.toFixed(2)}` : '—'}
+                  {price !== null ? formatCurrencyAmount(price, currency) : '—'}
                 </span>
               </div>
             )}

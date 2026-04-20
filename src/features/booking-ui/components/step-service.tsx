@@ -7,17 +7,20 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Star } from 'lucide-react';
 import type { PublicService } from '@/app/actions/public-booking';
 import { formatDurationMinutes } from '@/lib/booking-dates';
+import { formatCurrencyAmount } from '@/lib/business-payment-settings';
 import { StepShell } from './step-shell';
 
 export function StepService({
   services,
   selected,
+  currency,
   onToggle,
   onNext,
   onBack,
 }: {
   services: PublicService[];
   selected: PublicService[];
+  currency: string;
   onToggle: (service: PublicService) => void;
   onNext: () => void;
   onBack: () => void;
@@ -109,7 +112,12 @@ export function StepService({
                   </p>
                 )}
                 <div className="flex items-center gap-1.5 mt-1.5">
-                  <span className="text-sm font-bold text-gold">₱{service.price.toFixed(0)}</span>
+                  <span className="text-sm font-bold text-gold">
+                    {formatCurrencyAmount(service.price, currency, {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    })}
+                  </span>
                   <span className="w-[3px] h-[3px] rounded-full bg-stone-400" />
                   <span className="text-xs text-muted-foreground">{service.duration_minutes} min</span>
                 </div>
@@ -131,7 +139,12 @@ export function StepService({
             </p>
           </div>
           <div className="text-right shrink-0">
-            <p className="font-display text-2xl font-semibold text-gold leading-none">₱{totalPrice.toFixed(0)}</p>
+            <p className="font-display text-2xl font-semibold text-gold leading-none">
+              {formatCurrencyAmount(totalPrice, currency, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
+            </p>
             <p className="text-[11px] text-muted-foreground mt-0.5">{formatDurationMinutes(totalDuration)}</p>
           </div>
         </div>

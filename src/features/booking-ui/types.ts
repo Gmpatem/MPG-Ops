@@ -1,4 +1,5 @@
 import type { PublicService } from '@/app/actions/public-booking';
+import type { UploadedPublicPaymentProof } from '@/app/actions/public-booking';
 
 export interface WizardState {
   step: 1 | 2 | 3 | 4 | 5 | 6;
@@ -9,6 +10,7 @@ export interface WizardState {
   phone: string;
   email: string;
   notes: string;
+  manualPaymentProof: UploadedPublicPaymentProof | null;
 }
 
 export interface BookingWizardProps {

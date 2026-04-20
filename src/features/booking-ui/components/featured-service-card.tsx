@@ -3,12 +3,15 @@
 import Image from 'next/image';
 import { Scissors, Star, ArrowRight } from 'lucide-react';
 import type { PublicService } from '@/app/actions/public-booking';
+import { formatCurrencyAmount } from '@/lib/business-payment-settings';
 
 export function FeaturedServiceCard({
   service,
+  currency,
   onBook,
 }: {
   service: PublicService;
+  currency: string;
   onBook: () => void;
 }) {
   const name = service.public_title ?? service.name;
@@ -80,7 +83,10 @@ export function FeaturedServiceCard({
         <div className="flex items-end justify-between gap-4">
           <div className="flex items-baseline gap-2.5">
             <span className="font-display text-[30px] font-semibold text-background lg:text-[34px]">
-              ₱{service.price.toFixed(0)}
+              {formatCurrencyAmount(service.price, currency, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
             </span>
             <span className="text-xs text-background/45 font-medium">
               {service.duration_minutes} min

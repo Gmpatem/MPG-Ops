@@ -7,6 +7,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { loginSchema, registerSchema, businessSetupSchema } from '@/schemas/auth';
 import { generateUniqueSlug } from '@/lib/slug';
 import type { Json } from '@/lib/supabase/database.types';
+import { normalizeBusinessRegionPaymentConfig } from '@/lib/business-payment-settings';
+import { uploadBusinessPaymentQrImage } from '@/lib/supabase/payment-storage';
 
 export async function login(formData: FormData) {
   const data = loginSchema.parse({
@@ -112,6 +114,18 @@ export async function setupBusiness(formData: FormData) {
     phone: formData.get('phone'),
     email: formData.get('email'),
     address: formData.get('address'),
+    country: formData.get('country'),
+    currency: formData.get('currency'),
+    defaultPaymentMethod: formData.get('defaultPaymentMethod'),
+    depositRequired: formData.get('depositRequired'),
+    depositType: formData.get('depositType'),
+    depositAmount: formData.get('depositAmount'),
+    gcashAccountName: formData.get('gcashAccountName'),
+    gcashNumber: formData.get('gcashNumber'),
+    gcashQrImageUrl: formData.get('gcashQrImageUrl'),
+    momoAccountName: formData.get('momoAccountName'),
+    momoNumber: formData.get('momoNumber'),
+    momoInstructions: formData.get('momoInstructions'),
   });
 
   // Parse operating hours if provided
@@ -132,6 +146,36 @@ export async function setupBusiness(formData: FormData) {
   if (!user) {
     return { error: 'Not authenticated' };
   }
+
+  let uploadedGcashQrImageUrl: string | null = null;
+  const maybeGcashQrFile = formData.get('gcashQrFile');
+  if (maybeGcashQrFile instanceof File && maybeGcashQrFile.size > 0) {
+    try {
+      uploadedGcashQrImageUrl = await uploadBusinessPaymentQrImage(
+        user.id,
+        maybeGcashQrFile
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to upload GCash QR image';
+      return { error: message };
+    }
+  }
+
+  const normalizedRegionPayment = normalizeBusinessRegionPaymentConfig({
+    country: data.country,
+    currency: data.currency,
+    defaultPaymentMethod: data.defaultPaymentMethod,
+    depositRequired: data.depositRequired,
+    depositType: data.depositType,
+    depositAmount: data.depositAmount,
+    gcashAccountName: data.gcashAccountName,
+    gcashNumber: data.gcashNumber,
+    gcashQrImageUrl: uploadedGcashQrImageUrl ?? data.gcashQrImageUrl,
+    momoAccountName: data.momoAccountName,
+    momoNumber: data.momoNumber,
+    momoInstructions: data.momoInstructions,
+  });
 
   // Generate unique slug
   const slugBase = (data.slug ?? data.name).trim();
@@ -162,27 +206,63 @@ export async function setupBusiness(formData: FormData) {
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + 14);
 
-  const { data: business, error: businessError } = await supabase
-    .from('businesses')
-    .insert({
-      owner_id: user.id,
-      name: data.name,
-      slug,
-      business_type: data.businessType,
-      phone: data.phone || null,
-      email: data.email || null,
-      address: data.address || null,
-      operating_hours: operatingHours as Json,
-      plan_tier: 'pro',
-      trial_started_at: trialStartedAt,
-      trial_ends_at: trialEndsAt.toISOString(),
-      subscription_status: 'trialing',
-    })
-    .select('id')
-    .single();
+  const baseBusinessPayload = {
+    owner_id: user.id,
+    name: data.name,
+    slug,
+    business_type: data.businessType,
+    phone: data.phone || null,
+    email: data.email || null,
+    address: data.address || null,
+    operating_hours: operatingHours as Json,
+    plan_tier: 'pro',
+    trial_started_at: trialStartedAt,
+    trial_ends_at: trialEndsAt.toISOString(),
+    subscription_status: 'trialing',
+  };
+
+  let business: { id: string } | null = null;
+  let businessError: { message: string } | null = null;
+
+  {
+    const insertResult = await supabase
+      .from('businesses')
+      .insert({
+        ...baseBusinessPayload,
+        country: normalizedRegionPayment.country,
+        currency: normalizedRegionPayment.currency,
+        default_payment_method: normalizedRegionPayment.defaultPaymentMethod,
+        payment_settings:
+          normalizedRegionPayment.paymentSettings as unknown as Json,
+      })
+      .select('id')
+      .single();
+
+    business = insertResult.data;
+    businessError = insertResult.error
+      ? { message: insertResult.error.message }
+      : null;
+  }
+
+  if (businessError && /column .* does not exist/i.test(businessError.message)) {
+    const fallbackInsertResult = await supabase
+      .from('businesses')
+      .insert(baseBusinessPayload)
+      .select('id')
+      .single();
+
+    business = fallbackInsertResult.data;
+    businessError = fallbackInsertResult.error
+      ? { message: fallbackInsertResult.error.message }
+      : null;
+  }
 
   if (businessError) {
     return { error: businessError.message };
+  }
+
+  if (!business) {
+    return { error: 'Failed to create business' };
   }
 
   // Create business membership (owner role)

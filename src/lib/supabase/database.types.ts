@@ -175,6 +175,10 @@ export interface Database {
           trial_started_at: string | null
           trial_ends_at: string | null
           subscription_status: string
+          country: string | null
+          currency: string | null
+          default_payment_method: string | null
+          payment_settings: Json
         }
         Insert: {
           id?: string
@@ -193,6 +197,10 @@ export interface Database {
           trial_started_at?: string | null
           trial_ends_at?: string | null
           subscription_status?: string
+          country?: string | null
+          currency?: string | null
+          default_payment_method?: string | null
+          payment_settings?: Json
         }
         Update: {
           id?: string
@@ -211,6 +219,10 @@ export interface Database {
           trial_started_at?: string | null
           trial_ends_at?: string | null
           subscription_status?: string
+          country?: string | null
+          currency?: string | null
+          default_payment_method?: string | null
+          payment_settings?: Json
         }
         Relationships: [
           {

@@ -114,6 +114,7 @@ export const getDailyRevenue = cache(async function getDailyRevenue(date: string
     .from('payments')
     .select('amount')
     .eq('business_id', businessId)
+    .eq('status', 'paid')
     .gte('created_at', start)
     .lt('created_at', end);
 
@@ -289,6 +290,7 @@ export const getRevenueSummary = cache(async function getRevenueSummary() {
     .from('payments')
     .select('amount, created_at')
     .eq('business_id', businessId)
+    .eq('status', 'paid')
     .gte('created_at', monthAgo);
 
   const todayRevenue = payments

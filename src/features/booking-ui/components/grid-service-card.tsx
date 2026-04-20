@@ -3,12 +3,15 @@
 import Image from 'next/image';
 import { Scissors } from 'lucide-react';
 import type { PublicService } from '@/app/actions/public-booking';
+import { formatCurrencyAmount } from '@/lib/business-payment-settings';
 
 export function GridServiceCard({
   service,
+  currency,
   onBook,
 }: {
   service: PublicService;
+  currency: string;
   onBook: () => void;
 }) {
   const name = service.public_title ?? service.name;
@@ -50,7 +53,12 @@ export function GridServiceCard({
           {name}
         </p>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3.5">
-          <span className="font-semibold text-gold text-[13px]">₱{service.price.toFixed(0)}</span>
+          <span className="font-semibold text-gold text-[13px]">
+            {formatCurrencyAmount(service.price, currency, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
+          </span>
           <span className="w-[3px] h-[3px] rounded-full bg-stone-400" />
           <span>{service.duration_minutes} min</span>
         </div>

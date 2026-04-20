@@ -4,6 +4,12 @@ import { cache } from 'react';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
+import type { Json } from '@/lib/supabase/database.types';
+import {
+  buildPublicManualPaymentState,
+  normalizeBusinessRegionPaymentConfig,
+} from '@/lib/business-payment-settings';
+import { uploadManualPaymentProof } from '@/lib/supabase/payment-storage';
 
 export interface PublicSiteSettings {
   headline?: string;
@@ -18,6 +24,10 @@ export interface PublicBusiness {
   business_type: string;
   operating_hours: Record<string, { isOpen: boolean; open: string; close: string }> | null;
   public_site_settings?: PublicSiteSettings | null;
+  country: string | null;
+  currency: string | null;
+  default_payment_method: string | null;
+  payment_settings: Json | null;
 }
 
 export interface PublicService {
@@ -47,6 +57,14 @@ const submitBookingSchema = z.object({
   customerPhone: z.string().min(1, 'Phone is required'),
   customerEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   notes: z.string().optional(),
+  manualPaymentProof: z
+    .object({
+      path: z.string().min(1, 'Invalid payment proof path'),
+      mimeType: z.string().optional(),
+      size: z.number().min(0).optional(),
+      uploadedAt: z.string().optional(),
+    })
+    .optional(),
 });
 
 export type SubmitBookingInput = z.infer<typeof submitBookingSchema>;
@@ -76,10 +94,12 @@ export const getPublicBusiness = cache(async function getPublicBusiness(
   try {
     const supabase = createAdminClient();
 
-    // Attempt full query including public_site_settings
+    // Attempt full query including region/payment fields.
     const { data, error } = await supabase
       .from('businesses')
-      .select('id, name, business_type, operating_hours, public_site_settings')
+      .select(
+        'id, name, business_type, operating_hours, public_site_settings, country, currency, default_payment_method, payment_settings'
+      )
       .eq('id', businessId)
       .single();
 
@@ -91,10 +111,14 @@ export const getPublicBusiness = cache(async function getPublicBusiness(
         operating_hours: data.operating_hours as PublicBusiness['operating_hours'],
         public_site_settings:
           (data.public_site_settings as PublicSiteSettings | null) ?? null,
+        country: data.country ?? null,
+        currency: data.currency ?? null,
+        default_payment_method: data.default_payment_method ?? null,
+        payment_settings: (data.payment_settings as Json | null) ?? null,
       };
     }
 
-    // Graceful fallback — column may not exist yet (pre-migration)
+    // Graceful fallback for pre-migration databases.
     if (error) {
       const { data: fallback, error: fallbackErr } = await supabase
         .from('businesses')
@@ -107,6 +131,10 @@ export const getPublicBusiness = cache(async function getPublicBusiness(
           name: fallback.name,
           business_type: fallback.business_type,
           operating_hours: fallback.operating_hours as PublicBusiness['operating_hours'],
+          country: null,
+          currency: null,
+          default_payment_method: null,
+          payment_settings: null,
         };
       }
     }
@@ -209,6 +237,54 @@ export async function getPublicBookingsForDate(
   }
 }
 
+const uploadPaymentProofSchema = z.object({
+  businessId: z.string().uuid('Invalid business'),
+});
+
+export interface UploadedPublicPaymentProof {
+  path: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: string;
+}
+
+export async function uploadPublicBookingPaymentProof(
+  formData: FormData
+): Promise<{ success: true; proof: UploadedPublicPaymentProof } | { success: false; error: string }> {
+  const parsed = uploadPaymentProofSchema.safeParse({
+    businessId: formData.get('businessId'),
+  });
+
+  if (!parsed.success) {
+    const msg = parsed.error.issues[0]?.message ?? 'Invalid business';
+    return { success: false, error: msg };
+  }
+
+  const proofFile = formData.get('proofFile');
+  if (!(proofFile instanceof File) || proofFile.size <= 0) {
+    return { success: false, error: 'Please upload a payment screenshot.' };
+  }
+
+  try {
+    const supabase = createAdminClient();
+    const { data: business } = await supabase
+      .from('businesses')
+      .select('id')
+      .eq('id', parsed.data.businessId)
+      .single();
+
+    if (!business) {
+      return { success: false, error: 'Business not found' };
+    }
+
+    const uploaded = await uploadManualPaymentProof(parsed.data.businessId, proofFile);
+    return { success: true, proof: uploaded };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to upload payment proof.';
+    return { success: false, error: message };
+  }
+}
+
 /**
  * Submit a public booking. No auth required.
  * Supports multi-service bookings by storing the primary service in service_id
@@ -229,14 +305,39 @@ export async function submitPublicBooking(
   try {
     const supabase = createAdminClient();
 
-    // 1. Verify business exists
-    const { data: business, error: bizError } = await supabase
-      .from('businesses')
-      .select('id, name')
-      .eq('id', data.businessId)
-      .single();
+    // 1. Verify business exists (with graceful fallback for pre-migration DBs)
+    let business: {
+      id: string;
+      name: string;
+      country?: string | null;
+      currency?: string | null;
+      default_payment_method?: string | null;
+      payment_settings?: Json | null;
+    } | null = null;
 
-    if (bizError || !business) {
+    {
+      const fullBusinessQuery = await supabase
+        .from('businesses')
+        .select('id, name, country, currency, default_payment_method, payment_settings')
+        .eq('id', data.businessId)
+        .single();
+
+      if (!fullBusinessQuery.error && fullBusinessQuery.data) {
+        business = fullBusinessQuery.data;
+      } else {
+        const fallbackBusinessQuery = await supabase
+          .from('businesses')
+          .select('id, name')
+          .eq('id', data.businessId)
+          .single();
+
+        if (!fallbackBusinessQuery.error && fallbackBusinessQuery.data) {
+          business = fallbackBusinessQuery.data;
+        }
+      }
+    }
+
+    if (!business) {
       return { success: false, error: 'Business not found' };
     }
 
@@ -256,6 +357,35 @@ export async function submitPublicBooking(
     const totalDurationMinutes = services.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
     const totalPrice = services.reduce((sum, s) => sum + (s.price || 0), 0);
     const allServiceNames = services.map((s) => s.name);
+    const normalizedRegionPayment = normalizeBusinessRegionPaymentConfig({
+      country: business.country,
+      currency: business.currency,
+      defaultPaymentMethod: business.default_payment_method,
+      paymentSettingsRaw: business.payment_settings ?? null,
+    });
+    const manualPaymentState = buildPublicManualPaymentState(
+      {
+        country: normalizedRegionPayment.country,
+        defaultPaymentMethod: normalizedRegionPayment.defaultPaymentMethod,
+        paymentSettings: normalizedRegionPayment.paymentSettings,
+      },
+      totalPrice
+    );
+
+    if (manualPaymentState.requiresProof) {
+      if (!data.manualPaymentProof?.path) {
+        return {
+          success: false,
+          error: 'Please upload your payment screenshot before confirming.',
+        };
+      }
+      if (manualPaymentState.amountDue === null) {
+        return {
+          success: false,
+          error: 'Payment setup is incomplete for this business.',
+        };
+      }
+    }
 
     // 3. Find existing customer by phone in this business
     let customerId: string;
@@ -335,6 +465,15 @@ export async function submitPublicBooking(
       })),
       total_duration_minutes: totalDurationMinutes,
       total_price: totalPrice,
+      region_payment: {
+        country: normalizedRegionPayment.country,
+        currency: normalizedRegionPayment.currency,
+        default_method: normalizedRegionPayment.defaultPaymentMethod,
+        amount_due: manualPaymentState.amountDue,
+        requires_proof: manualPaymentState.requiresProof,
+        provider: manualPaymentState.provider,
+        proof: data.manualPaymentProof ?? null,
+      },
     };
 
     const { data: booking, error: bookingError } = await supabase
@@ -349,7 +488,7 @@ export async function submitPublicBooking(
         status: 'scheduled',
         notes: data.notes?.trim() || null,
         source: 'public_booking',
-        source_meta: sourceMeta as import('@/lib/supabase/database.types').Json,
+        source_meta: sourceMeta as Json,
       })
       .select('id')
       .single();
@@ -374,6 +513,37 @@ export async function submitPublicBooking(
       // Best-effort rollback: delete the orphaned booking
       await supabase.from('bookings').delete().eq('id', booking.id);
       return { success: false, error: joinError.message };
+    }
+
+    if (manualPaymentState.requiresProof && manualPaymentState.amountDue !== null) {
+      const paymentNotes = JSON.stringify({
+        provider: manualPaymentState.provider,
+        currency: normalizedRegionPayment.currency,
+        amount_due: manualPaymentState.amountDue,
+        proof: data.manualPaymentProof,
+        review_status: 'awaiting_business_confirmation',
+      });
+
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          business_id: data.businessId,
+          booking_id: booking.id,
+          amount: manualPaymentState.amountDue,
+          method: 'mobile_money',
+          status: 'pending',
+          notes: paymentNotes,
+        });
+
+      if (paymentError) {
+        console.error('payment insert error:', paymentError.message);
+        await supabase.from('booking_services').delete().eq('booking_id', booking.id);
+        await supabase.from('bookings').delete().eq('id', booking.id);
+        return {
+          success: false,
+          error: 'Failed to save payment proof. Please try again.',
+        };
+      }
     }
 
     // Revalidate internal pages so the booking appears immediately

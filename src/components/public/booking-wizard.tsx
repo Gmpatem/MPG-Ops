@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Scissors } from 'lucide-react';
-import { submitPublicBooking } from '@/app/actions/public-booking';
+import {
+  submitPublicBooking,
+  uploadPublicBookingPaymentProof,
+} from '@/app/actions/public-booking';
 import type { PublicBusiness, PublicService } from '@/app/actions/public-booking';
 import {
   ServiceFirstLanding,
@@ -14,6 +17,10 @@ import {
   StepReview,
 } from '@/features/booking-ui';
 import type { WizardState } from '@/features/booking-ui';
+import {
+  buildPublicManualPaymentState,
+  normalizeBusinessRegionPaymentConfig,
+} from '@/lib/business-payment-settings';
 
 interface BookingWizardProps {
   business: PublicBusiness;
@@ -32,6 +39,7 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
       phone: '',
       email: '',
       notes: '',
+      manualPaymentProof: null,
     };
 
     if (typeof window === 'undefined') {
@@ -54,7 +62,39 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
     }
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const totalDurationMinutes = useMemo(
+    () => state.services.reduce((sum, service) => sum + service.duration_minutes, 0),
+    [state.services]
+  );
+  const totalPrice = useMemo(
+    () => state.services.reduce((sum, service) => sum + service.price, 0),
+    [state.services]
+  );
+  const normalizedRegionPayment = useMemo(
+    () =>
+      normalizeBusinessRegionPaymentConfig({
+        country: business.country,
+        currency: business.currency,
+        defaultPaymentMethod: business.default_payment_method,
+        paymentSettingsRaw: business.payment_settings,
+      }),
+    [business.country, business.currency, business.default_payment_method, business.payment_settings]
+  );
+  const manualPaymentState = useMemo(
+    () =>
+      buildPublicManualPaymentState(
+        {
+          country: normalizedRegionPayment.country,
+          defaultPaymentMethod: normalizedRegionPayment.defaultPaymentMethod,
+          paymentSettings: normalizedRegionPayment.paymentSettings,
+        },
+        totalPrice
+      ),
+    [normalizedRegionPayment, totalPrice]
+  );
 
   function next() {
     setState((s) => ({ ...s, step: (s.step + 1) as WizardState['step'] }));
@@ -89,8 +129,42 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
     });
   }
 
+  async function handleUploadPaymentProof(file: File): Promise<{ success: true } | { success: false; error: string }> {
+    setIsUploadingProof(true);
+    setSubmitError(null);
+
+    const formData = new FormData();
+    formData.set('businessId', business.id);
+    formData.set('proofFile', file);
+
+    const result = await uploadPublicBookingPaymentProof(formData);
+    setIsUploadingProof(false);
+
+    if (!result.success) {
+      setSubmitError(result.error);
+      return { success: false, error: result.error };
+    }
+
+    setState((current) => ({
+      ...current,
+      manualPaymentProof: result.proof,
+    }));
+    return { success: true };
+  }
+
+  function handleRemovePaymentProof() {
+    setState((current) => ({
+      ...current,
+      manualPaymentProof: null,
+    }));
+  }
+
   async function handleConfirm() {
     if (state.services.length === 0 || !state.date || !state.time) return;
+    if (manualPaymentState.requiresProof && !state.manualPaymentProof) {
+      setSubmitError('Please upload your payment screenshot before confirming.');
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -103,6 +177,7 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
       customerPhone: state.phone,
       customerEmail: state.email,
       notes: state.notes,
+      manualPaymentProof: state.manualPaymentProof ?? undefined,
     });
 
     if (!result.success) {
@@ -130,6 +205,7 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
       business: result.confirmation.businessName,
       duration: String(result.confirmation.totalDurationMinutes),
       price: String(result.confirmation.totalPrice),
+      currency: normalizedRegionPayment.currency,
     });
     router.push(`/book/${business.id}/success?${params.toString()}`);
   }
@@ -163,6 +239,7 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
       <StepService
         services={services}
         selected={state.services}
+        currency={normalizedRegionPayment.currency}
         onToggle={handleToggleService}
         onNext={next}
         onBack={back}
@@ -190,7 +267,7 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
         date={state.date}
         time={state.time}
         business={business}
-        totalDurationMinutes={state.services.reduce((sum, s) => sum + s.duration_minutes, 0)}
+        totalDurationMinutes={totalDurationMinutes}
         onTimeSelect={(t) => set('time', t)}
         onNext={next}
         onBack={back}
@@ -216,6 +293,12 @@ export function BookingWizard({ business, services }: BookingWizardProps) {
     <StepReview
       state={state}
       business={business}
+      currency={normalizedRegionPayment.currency}
+      manualPaymentState={manualPaymentState}
+      paymentSettings={normalizedRegionPayment.paymentSettings}
+      onUploadPaymentProof={handleUploadPaymentProof}
+      onRemovePaymentProof={handleRemovePaymentProof}
+      isUploadingPaymentProof={isUploadingProof}
       onConfirm={handleConfirm}
       onBack={back}
       isSubmitting={isSubmitting}

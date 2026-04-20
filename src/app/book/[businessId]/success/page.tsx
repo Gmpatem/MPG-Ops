@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getPublicBusiness } from '@/app/actions/public-booking';
 import { BookingSuccessView } from '@/features/booking-ui';
+import { normalizeBusinessRegionPaymentConfig } from '@/lib/business-payment-settings';
 
 interface SuccessPageProps {
   params: Promise<{ businessId: string }>;
@@ -13,6 +14,7 @@ interface SuccessPageProps {
     name?: string;
     duration?: string;
     price?: string;
+    currency?: string;
   }>;
 }
 
@@ -56,6 +58,13 @@ export default async function BookingSuccessPage({ params, searchParams }: Succe
   const customerName = sp.name ?? 'you';
   const duration = sp.duration ? parseInt(sp.duration, 10) : null;
   const price = sp.price ? parseFloat(sp.price) : null;
+  const fallbackCurrency = normalizeBusinessRegionPaymentConfig({
+    country: business.country,
+    currency: business.currency,
+    defaultPaymentMethod: business.default_payment_method,
+    paymentSettingsRaw: business.payment_settings,
+  }).currency;
+  const currency = sp.currency ?? fallbackCurrency;
 
   return (
     <>
@@ -71,6 +80,7 @@ export default async function BookingSuccessPage({ params, searchParams }: Succe
         customerName={customerName}
         duration={duration}
         price={price}
+        currency={currency}
       />
     </>
   );

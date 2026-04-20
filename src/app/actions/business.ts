@@ -5,6 +5,13 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import type { Tables, Json } from '@/lib/supabase/database.types';
+import {
+  businessCountrySchema,
+  businessDefaultPaymentMethodSchema,
+  depositTypeSchema,
+  normalizeBusinessRegionPaymentConfig,
+} from '@/lib/business-payment-settings';
+import { uploadBusinessPaymentQrImage } from '@/lib/supabase/payment-storage';
 
 // ─── Public Site Settings ─────────────────────────────────────────────────────
 
@@ -22,11 +29,39 @@ const publicSiteSettingsSchema = z.object({
   accent: z.enum(['default', 'blue', 'green', 'purple', 'rose']).optional(),
 });
 
+const booleanFromFormSchema = z.preprocess((value) => {
+  if (value === true || value === 'true') return true;
+  if (value === false || value === 'false') return false;
+  return undefined;
+}, z.boolean().optional());
+
+const nonNegativeNumberFromFormSchema = z.preprocess((value) => {
+  if (value === null || value === undefined || value === '') return undefined;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : value;
+  }
+  return value;
+}, z.number().min(0).optional());
+
 const businessUpdateSchema = z.object({
   name: z.string().min(1, 'Business name is required'),
   phone: z.string().optional(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   address: z.string().optional(),
+  country: businessCountrySchema.optional(),
+  currency: z.string().trim().max(8).optional().or(z.literal('')),
+  defaultPaymentMethod: businessDefaultPaymentMethodSchema.optional(),
+  depositRequired: booleanFromFormSchema,
+  depositType: depositTypeSchema.optional(),
+  depositAmount: nonNegativeNumberFromFormSchema,
+  gcashAccountName: z.string().trim().optional(),
+  gcashNumber: z.string().trim().optional(),
+  gcashQrImageUrl: z.string().trim().url('Invalid GCash QR image URL').optional().or(z.literal('')),
+  momoAccountName: z.string().trim().optional(),
+  momoNumber: z.string().trim().optional(),
+  momoInstructions: z.string().trim().optional(),
 });
 
 export async function updateBusiness(formData: FormData) {
@@ -42,6 +77,18 @@ export async function updateBusiness(formData: FormData) {
     phone: formData.get('phone'),
     email: formData.get('email'),
     address: formData.get('address'),
+    country: formData.get('country'),
+    currency: formData.get('currency'),
+    defaultPaymentMethod: formData.get('defaultPaymentMethod'),
+    depositRequired: formData.get('depositRequired'),
+    depositType: formData.get('depositType'),
+    depositAmount: formData.get('depositAmount'),
+    gcashAccountName: formData.get('gcashAccountName'),
+    gcashNumber: formData.get('gcashNumber'),
+    gcashQrImageUrl: formData.get('gcashQrImageUrl'),
+    momoAccountName: formData.get('momoAccountName'),
+    momoNumber: formData.get('momoNumber'),
+    momoInstructions: formData.get('momoInstructions'),
   });
 
   // Parse operating hours if provided
@@ -55,12 +102,54 @@ export async function updateBusiness(formData: FormData) {
     }
   }
 
+  const { data: currentBusiness } = await supabase
+    .from('businesses')
+    .select('id, country, currency, default_payment_method, payment_settings')
+    .eq('owner_id', user.id)
+    .single();
+
+  let uploadedGcashQrImageUrl: string | null = null;
+  const maybeGcashQrFile = formData.get('gcashQrFile');
+  if (maybeGcashQrFile instanceof File && maybeGcashQrFile.size > 0) {
+    try {
+      uploadedGcashQrImageUrl = await uploadBusinessPaymentQrImage(
+        user.id,
+        maybeGcashQrFile
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to upload GCash QR image';
+      return { error: message };
+    }
+  }
+
+  const normalizedRegionPayment = normalizeBusinessRegionPaymentConfig({
+    country: data.country ?? currentBusiness?.country,
+    currency: data.currency || currentBusiness?.currency,
+    defaultPaymentMethod:
+      data.defaultPaymentMethod ?? currentBusiness?.default_payment_method,
+    paymentSettingsRaw: currentBusiness?.payment_settings ?? null,
+    depositRequired: data.depositRequired,
+    depositType: data.depositType,
+    depositAmount: data.depositAmount,
+    gcashAccountName: data.gcashAccountName,
+    gcashNumber: data.gcashNumber,
+    gcashQrImageUrl: uploadedGcashQrImageUrl ?? data.gcashQrImageUrl,
+    momoAccountName: data.momoAccountName,
+    momoNumber: data.momoNumber,
+    momoInstructions: data.momoInstructions,
+  });
+
   const updatePayload: {
     name: string;
     phone: string | null;
     email: string | null;
     address: string | null;
     updated_at: string;
+    country: string;
+    currency: string;
+    default_payment_method: string;
+    payment_settings: Json;
     operating_hours?: Json;
   } = {
     name: data.name,
@@ -68,6 +157,11 @@ export async function updateBusiness(formData: FormData) {
     email: data.email || null,
     address: data.address || null,
     updated_at: new Date().toISOString(),
+    country: normalizedRegionPayment.country,
+    currency: normalizedRegionPayment.currency,
+    default_payment_method: normalizedRegionPayment.defaultPaymentMethod,
+    payment_settings:
+      normalizedRegionPayment.paymentSettings as unknown as Json,
   };
 
   if (operatingHours !== undefined) {
@@ -79,7 +173,25 @@ export async function updateBusiness(formData: FormData) {
     .update(updatePayload)
     .eq('owner_id', user.id);
 
-  if (error) {
+  if (error && /column .* does not exist/i.test(error.message)) {
+    const { error: fallbackError } = await supabase
+      .from('businesses')
+      .update({
+        name: data.name,
+        phone: data.phone || null,
+        email: data.email || null,
+        address: data.address || null,
+        updated_at: new Date().toISOString(),
+        ...(operatingHours !== undefined
+          ? { operating_hours: operatingHours as Json }
+          : {}),
+      })
+      .eq('owner_id', user.id);
+
+    if (fallbackError) {
+      return { error: fallbackError.message };
+    }
+  } else if (error) {
     return { error: error.message };
   }
 
