@@ -9,6 +9,8 @@ import { generateUniqueSlug } from '@/lib/slug';
 import type { Json } from '@/lib/supabase/database.types';
 import { normalizeBusinessRegionPaymentConfig } from '@/lib/business-payment-settings';
 import { uploadBusinessPaymentQrImage } from '@/lib/supabase/payment-storage';
+import { getPostAuthRoute } from '@/lib/auth-routing';
+import { computeSetupChecklist, syncSetupState } from '@/lib/onboarding';
 
 export async function login(formData: FormData) {
   const data = loginSchema.parse({
@@ -45,29 +47,13 @@ export async function login(formData: FormData) {
     };
   }
 
-  // Platform admins go straight to /platform
-  const whitelist = (process.env.PLATFORM_ADMIN_EMAILS || '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  const isPlatformAdmin =
-    profile.is_platform_admin || whitelist.includes(data.email.toLowerCase());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   revalidatePath('/', 'layout');
-
-  if (isPlatformAdmin) {
-    redirect('/platform');
-  }
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const { data: membership } = await supabase
-    .from('business_members')
-    .select('id')
-    .eq('user_id', user!.id)
-    .maybeSingle();
-
-  redirect(membership ? '/dashboard' : '/onboarding');
+  const route = await getPostAuthRoute(supabase, user!.id, data.email);
+  redirect(route);
 }
 
 export async function register(formData: FormData) {
@@ -97,6 +83,31 @@ export async function register(formData: FormData) {
     success: true,
     message: 'Check your email to confirm your account and continue onboarding.',
   };
+}
+
+export async function signInWithMagicLink(formData: FormData) {
+  const email = ((formData.get('email') as string) ?? '').trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    return { error: 'Please enter a valid email address.' };
+  }
+
+  const supabase = await createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${siteUrl}/auth/callback`,
+      // Creates a new account if the email is not registered yet
+      shouldCreateUser: true,
+    },
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
 }
 
 export async function logout() {
@@ -192,12 +203,15 @@ export async function setupBusiness(formData: FormData) {
     return !!existing;
   });
 
-  // Create or update profile
+  // Ensure profile row exists; mark onboarding as started
   const { error: profileError } = await supabase
     .from('profiles')
     .upsert({
       id: user.id,
       email: user.email || '',
+      onboarding_status: 'in_progress',
+      onboarding_started_at: new Date().toISOString(),
+      last_onboarding_step: 'payment_setup',
       updated_at: new Date().toISOString(),
     });
 
@@ -281,6 +295,14 @@ export async function setupBusiness(formData: FormData) {
   if (memberError) {
     return { error: memberError.message };
   }
+
+  // Sync onboarding completion state
+  // (no services yet right after wizard — first_service will be filled later)
+  const checklist = computeSetupChecklist(
+    { name: data.name, business_type: data.businessType, phone: data.phone || null },
+    false
+  );
+  await syncSetupState(supabase, user.id, business.id, checklist);
 
   revalidatePath('/', 'layout');
   redirect('/dashboard');

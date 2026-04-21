@@ -73,14 +73,6 @@ export default async function DashboardPage() {
       {/* Upgrade Banner */}
       <UpgradeBanner business={business} />
 
-      {/* Page Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Welcome back to {business.name}
-        </p>
-      </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Today's Bookings */}

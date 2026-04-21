@@ -48,9 +48,13 @@
       "signIn": "Log In",
       "signingIn": "Logging in...",
       "forgotPassword": "Forgot your password?",
-      "noAccount": "Don't have an account?",
+      "noAccount": "New to MPG Ops?",
       "signUp": "Sign up",
-      "createAccount": "Create an account"
+      "createAccount": "Create an account",
+      "continueWithGoogle": "Continue with Google",
+      "orEmail": "or continue with email",
+      "signInWithPassword": "Sign in with password instead",
+      "hidePassword": "Hide password form"
     },
     "register": {
       "title": "Start your free trial",
@@ -62,6 +66,7 @@
       "startingTrial": "Starting trial...",
       "hasAccount": "Already have an account?",
       "signIn": "Log in",
+      "orEmail": "or sign up with email",
       "checkEmail": "Check your email to confirm your account.",
       "checkEmailSub": "After confirmation, you'll continue to onboarding."
     },

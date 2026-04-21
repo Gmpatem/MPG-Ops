@@ -179,6 +179,10 @@ export interface Database {
           currency: string | null
           default_payment_method: string | null
           payment_settings: Json
+          setup_completed_at: string | null
+          setup_checklist: Json
+          onboarding_version: number
+          first_service_created_at: string | null
         }
         Insert: {
           id?: string
@@ -201,6 +205,10 @@ export interface Database {
           currency?: string | null
           default_payment_method?: string | null
           payment_settings?: Json
+          setup_completed_at?: string | null
+          setup_checklist?: Json
+          onboarding_version?: number
+          first_service_created_at?: string | null
         }
         Update: {
           id?: string
@@ -223,6 +231,10 @@ export interface Database {
           currency?: string | null
           default_payment_method?: string | null
           payment_settings?: Json
+          setup_completed_at?: string | null
+          setup_checklist?: Json
+          onboarding_version?: number
+          first_service_created_at?: string | null
         }
         Relationships: [
           {
@@ -448,6 +460,13 @@ export interface Database {
           created_at: string
           updated_at: string
           is_platform_admin: boolean
+          avatar_url: string | null
+          auth_provider: string | null
+          last_sign_in_at: string | null
+          onboarding_status: string
+          last_onboarding_step: string | null
+          onboarding_started_at: string | null
+          onboarding_completed_at: string | null
         }
         Insert: {
           id: string
@@ -456,6 +475,13 @@ export interface Database {
           created_at?: string
           updated_at?: string
           is_platform_admin?: boolean
+          avatar_url?: string | null
+          auth_provider?: string | null
+          last_sign_in_at?: string | null
+          onboarding_status?: string
+          last_onboarding_step?: string | null
+          onboarding_started_at?: string | null
+          onboarding_completed_at?: string | null
         }
         Update: {
           id?: string
@@ -464,6 +490,13 @@ export interface Database {
           created_at?: string
           updated_at?: string
           is_platform_admin?: boolean
+          avatar_url?: string | null
+          auth_provider?: string | null
+          last_sign_in_at?: string | null
+          onboarding_status?: string
+          last_onboarding_step?: string | null
+          onboarding_started_at?: string | null
+          onboarding_completed_at?: string | null
         }
         Relationships: []
       }

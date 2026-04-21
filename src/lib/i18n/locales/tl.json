@@ -48,9 +48,13 @@
       "signIn": "Log In",
       "signingIn": "Logging in...",
       "forgotPassword": "Nakalimutan ang password?",
-      "noAccount": "Wala pang account?",
+      "noAccount": "Bago sa MPG Ops?",
       "signUp": "Sign up",
-      "createAccount": "Gumawa ng account"
+      "createAccount": "Gumawa ng account",
+      "continueWithGoogle": "Ituloy gamit ang Google",
+      "orEmail": "o ituloy gamit ang email",
+      "signInWithPassword": "Mag-login gamit ang password",
+      "hidePassword": "Itago ang password form"
     },
     "register": {
       "title": "Simulan ang free trial",
@@ -62,6 +66,7 @@
       "startingTrial": "Starting trial...",
       "hasAccount": "May account na?",
       "signIn": "Log in",
+      "orEmail": "o mag-sign up gamit ang email",
       "checkEmail": "I-check ang email mo para i-confirm ang account.",
       "checkEmailSub": "Pagka-confirm, magpapatuloy ka sa onboarding."
     },

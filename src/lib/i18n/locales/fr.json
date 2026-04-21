@@ -48,9 +48,13 @@
       "signIn": "Se connecter",
       "signingIn": "Connexion...",
       "forgotPassword": "Mot de passe oublié ?",
-      "noAccount": "Vous n'avez pas de compte ?",
+      "noAccount": "Nouveau sur MPG Ops ?",
       "signUp": "S'inscrire",
-      "createAccount": "Créer un compte"
+      "createAccount": "Créer un compte",
+      "continueWithGoogle": "Continuer avec Google",
+      "orEmail": "ou continuer avec l'email",
+      "signInWithPassword": "Se connecter avec un mot de passe",
+      "hidePassword": "Masquer le formulaire"
     },
     "register": {
       "title": "Commencez votre essai gratuit",
@@ -62,6 +66,7 @@
       "startingTrial": "Démarrage...",
       "hasAccount": "Vous avez déjà un compte ?",
       "signIn": "Se connecter",
+      "orEmail": "ou s'inscrire avec l'email",
       "checkEmail": "Vérifiez votre email pour confirmer votre compte.",
       "checkEmailSub": "Après confirmation, vous continuerez vers l'intégration."
     },

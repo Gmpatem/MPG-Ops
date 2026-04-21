@@ -35,18 +35,6 @@ export function DashboardHeader({ userEmail, business }: DashboardHeaderProps) {
           {business?.name || 'MPG Ops'}
         </Link>
         <div className="flex items-center gap-1 sm:gap-2">
-          {business && (
-            <div className="hidden sm:flex items-center gap-2 mr-1">
-              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                {planLabel}
-              </span>
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                {statusLabel}
-              </span>
-            </div>
-          )}
-
-          <LanguageSwitcher variant="dropdown" />
           <NotificationBell />
 
           <Popover>
@@ -80,6 +68,10 @@ export function DashboardHeader({ userEmail, business }: DashboardHeaderProps) {
                   </div>
                 </div>
               )}
+              <div className="mt-3 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Language</span>
+                <LanguageSwitcher variant="dropdown" />
+              </div>
               <form action={logout} className="mt-3">
                 <Button type="submit" variant="outline" className="w-full h-10 text-sm">
                   {t('common.logOut')}

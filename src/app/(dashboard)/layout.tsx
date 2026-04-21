@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
@@ -20,6 +21,16 @@ export default async function DashboardLayout({
   }
 
   const business = await getCurrentBusiness();
+
+  // If the user has no business at all, send them to onboarding —
+  // but only when they're not already there (avoid redirect loop).
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') ?? '';
+  const onOnboarding = pathname === '/onboarding' || pathname.startsWith('/onboarding?');
+
+  if (!business && !onOnboarding) {
+    redirect('/onboarding');
+  }
 
   return (
     <div className="min-h-svh flex flex-col pb-[calc(4rem+var(--safe-bottom))]">
