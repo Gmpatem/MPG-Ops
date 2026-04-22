@@ -2,15 +2,32 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
 import { MagicLinkForm } from '@/components/auth/magic-link-form';
 import { LoginForm } from '@/components/forms/login-form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const errorCode = searchParams.get('error');
+
+  const callbackErrorMessage =
+    errorCode === 'auth_callback_failed'
+      ? 'Sign-in could not be completed. Please try again.'
+      : errorCode === 'profile_bootstrap_failed'
+        ? 'Your account was authenticated, but profile setup failed. Please retry or contact support.'
+        : null;
 
   return (
     <div className="flex flex-col items-center gap-6">
+      {callbackErrorMessage ? (
+        <Alert variant="destructive" className="w-full">
+          <AlertDescription>{callbackErrorMessage}</AlertDescription>
+        </Alert>
+      ) : null}
+
       {/* Brand mark */}
       <div className="text-center space-y-3">
         <Link

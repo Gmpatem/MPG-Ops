@@ -11,27 +11,29 @@ import { normalizeBusinessRegionPaymentConfig } from '@/lib/business-payment-set
 import { uploadBusinessPaymentQrImage } from '@/lib/supabase/payment-storage';
 import { getPostAuthRoute } from '@/lib/auth-routing';
 import { computeSetupChecklist, syncSetupState } from '@/lib/onboarding';
+import { ensureProfileForUser } from '@/lib/auth/profile-bootstrap';
+
+function getAuthRedirectBaseUrl(): string | null {
+  const candidate =
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+    process.env.SITE_URL?.trim() ||
+    null;
+
+  if (!candidate) return null;
+  if (!/^https?:\/\//i.test(candidate)) return null;
+  return candidate.replace(/\/+$/, '');
+}
+
+function buildAuthRedirectUrl(path: string): string | undefined {
+  const base = getAuthRedirectBaseUrl();
+  return base ? `${base}${path}` : undefined;
+}
 
 export async function login(formData: FormData) {
   const data = loginSchema.parse({
-    email: formData.get('email'),
+    email: String(formData.get('email') ?? '').trim().toLowerCase(),
     password: formData.get('password'),
   });
-
-  // Check whether the account exists in our app before attempting sign-in
-  const admin = createAdminClient();
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('id, is_platform_admin')
-    .eq('email', data.email)
-    .maybeSingle();
-
-  if (!profile) {
-    return {
-      error: 'Business account not found. Please register instead.',
-      code: 'account_not_found' as const,
-    };
-  }
 
   const supabase = await createClient();
 
@@ -41,6 +43,28 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
+    const normalized = error.message.toLowerCase();
+
+    if (normalized.includes('invalid login credentials')) {
+      try {
+        const admin = createAdminClient();
+        const { data: profile } = await admin
+          .from('profiles')
+          .select('id')
+          .eq('email', data.email)
+          .maybeSingle();
+
+        if (!profile) {
+          return {
+            error: 'Business account not found. Please register instead.',
+            code: 'account_not_found' as const,
+          };
+        }
+      } catch {
+        // Ignore admin lookup failures and fall through to wrong-password style messaging.
+      }
+    }
+
     return {
       error: 'Wrong password.',
       code: 'wrong_password' as const,
@@ -51,8 +75,23 @@ export async function login(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    return {
+      error: 'Sign-in completed, but no active session was found. Please try again.',
+      code: undefined,
+    };
+  }
+
+  const profileResult = await ensureProfileForUser(supabase, user);
+  if (!profileResult.ok) {
+    return {
+      error: 'We could not prepare your account profile. Please try signing in again.',
+      code: undefined,
+    };
+  }
+
   revalidatePath('/', 'layout');
-  const route = await getPostAuthRoute(supabase, user!.id, data.email);
+  const route = await getPostAuthRoute(supabase, user.id, user.email ?? data.email);
   redirect(route);
 }
 
@@ -65,13 +104,13 @@ export async function register(formData: FormData) {
 
   const supabase = await createClient();
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  const emailRedirectTo = buildAuthRedirectUrl('/auth/callback?next=/onboarding');
   const { error } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
     options: {
       data: { email: data.email },
-      emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
+      ...(emailRedirectTo ? { emailRedirectTo } : {}),
     },
   });
 
@@ -92,12 +131,12 @@ export async function signInWithMagicLink(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  const emailRedirectTo = buildAuthRedirectUrl('/auth/callback');
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${siteUrl}/auth/callback`,
+      ...(emailRedirectTo ? { emailRedirectTo } : {}),
       // Creates a new account if the email is not registered yet
       shouldCreateUser: true,
     },
@@ -315,9 +354,10 @@ export async function forgotPassword(formData: FormData) {
   }
 
   const supabase = await createClient();
+  const redirectTo = buildAuthRedirectUrl('/auth/callback?next=/reset-password');
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || ''}/auth/callback?next=/reset-password`,
+    ...(redirectTo ? { redirectTo } : {}),
   });
 
   if (error) {

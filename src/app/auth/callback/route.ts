@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/database.types';
 import { getPostAuthRoute } from '@/lib/auth-routing';
+import { ensureProfileForUser } from '@/lib/auth/profile-bootstrap';
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
 
   const code = searchParams.get('code');
   const tokenHash = searchParams.get('token_hash');
@@ -17,7 +17,19 @@ export async function GET(request: NextRequest) {
   // handled by getPostAuthRoute() so new and returning users land correctly.
   const trustedNext = rawNext === '/reset-password' ? rawNext : null;
 
-  const cookieStore = await cookies();
+  const pendingCookies: Array<{
+    name: string;
+    value: string;
+    options?: {
+      domain?: string;
+      expires?: Date;
+      httpOnly?: boolean;
+      maxAge?: number;
+      path?: string;
+      sameSite?: boolean | 'lax' | 'strict' | 'none';
+      secure?: boolean;
+    };
+  }> = [];
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,16 +37,27 @@ export async function GET(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll();
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            pendingCookies.push({ name, value, options });
+          });
         },
       },
     }
   );
+
+  const withCookies = (response: NextResponse) => {
+    pendingCookies.forEach(({ name, value, options }) => {
+      response.cookies.set(name, value, options);
+    });
+    return response;
+  };
+
+  const redirectTo = (path: string) =>
+    withCookies(NextResponse.redirect(new URL(path, request.url)));
 
   let authError = false;
 
@@ -51,7 +74,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (authError) {
-    return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+    return redirectTo('/login?error=auth_callback_failed');
   }
 
   // Session is now established — get the user
@@ -60,51 +83,26 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+    return redirectTo('/login?error=auth_callback_failed');
   }
 
-  // Ensure profile row exists, enriching it with OAuth provider metadata.
-  // We preserve any name/avatar the user has already set explicitly.
-  const { data: existingProfile } = await supabase
-    .from('profiles')
-    .select('full_name, avatar_url')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  const metadata   = user.user_metadata  as Record<string, unknown>;
-  const appMeta    = user.app_metadata   as Record<string, unknown>;
-
-  const providerName =
-    (metadata.full_name as string | undefined) ??
-    (metadata.name      as string | undefined) ??
-    null;
-
-  const providerAvatar =
-    (metadata.avatar_url as string | undefined) ??
-    (metadata.picture    as string | undefined) ??
-    null;
-
-  const authProvider = (appMeta.provider as string | undefined) ?? null;
-
-  await supabase.from('profiles').upsert(
-    {
-      id: user.id,
-      email:            user.email ?? '',
-      full_name:        existingProfile?.full_name   ?? providerName,
-      avatar_url:       existingProfile?.avatar_url  ?? providerAvatar,
-      auth_provider:    authProvider,
-      last_sign_in_at:  new Date().toISOString(),
-      updated_at:       new Date().toISOString(),
-    },
-    { onConflict: 'id' }
-  );
+  const profileResult = await ensureProfileForUser(supabase, user);
+  if (!profileResult.ok) {
+    return redirectTo('/login?error=profile_bootstrap_failed');
+  }
 
   // Honour trusted 'next' param (password reset only)
   if (trustedNext) {
-    return NextResponse.redirect(`${origin}${trustedNext}`);
+    return redirectTo(trustedNext);
   }
 
   // Smart routing: determines /platform, /onboarding, /onboarding?resume=1, or /dashboard
-  const route = await getPostAuthRoute(supabase, user.id, user.email ?? '');
-  return NextResponse.redirect(`${origin}${route}`);
+  let route = '/onboarding';
+  try {
+    route = await getPostAuthRoute(supabase, user.id, user.email ?? '');
+  } catch {
+    route = '/onboarding';
+  }
+
+  return redirectTo(route);
 }

@@ -7,6 +7,7 @@ import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { RoutePreloader } from '@/components/route-preloader';
 import { PageTransition } from '@/components/page-transition';
 import { getCurrentBusiness } from '@/app/actions/business';
+import { getUserOnboardingState } from '@/lib/auth-routing';
 
 export default async function DashboardLayout({
   children,
@@ -27,9 +28,18 @@ export default async function DashboardLayout({
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') ?? '';
   const onOnboarding = pathname === '/onboarding' || pathname.startsWith('/onboarding?');
+  const onboardingState = await getUserOnboardingState(supabase, user.id);
 
-  if (!business && !onOnboarding) {
-    redirect('/onboarding');
+  if (!onOnboarding) {
+    if (onboardingState === 'NEW') {
+      redirect('/onboarding');
+    }
+
+    if (onboardingState === 'PARTIAL') {
+      redirect('/onboarding?resume=1');
+    }
+  } else if (onboardingState === 'COMPLETE') {
+    redirect('/dashboard');
   }
 
   return (

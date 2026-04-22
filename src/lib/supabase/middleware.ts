@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getPostAuthRoute } from '@/lib/auth-routing';
 
 export async function updateSession(request: NextRequest) {
   // Forward pathname so server layouts can read it without needing the URL
@@ -19,9 +20,9 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({
-            request,
+            request: { headers: requestHeaders },
           });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -40,7 +41,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/onboarding', '/bookings', '/customers', '/services', '/payments', '/settings'];
+  const protectedPaths = ['/dashboard', '/onboarding', '/bookings', '/customers', '/services', '/payments', '/settings', '/platform'];
   const isProtectedPath = protectedPaths.some(path => 
     request.nextUrl.pathname.startsWith(path)
   );
@@ -58,16 +59,8 @@ export async function updateSession(request: NextRequest) {
   );
 
   if (isAuthPath && user) {
-    const url = request.nextUrl.clone();
-    // Env-whitelist admins go straight to /platform (no DB call needed here)
-    const whitelist = (process.env.PLATFORM_ADMIN_EMAILS || '')
-      .split(',')
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
-    url.pathname = whitelist.includes(user.email?.toLowerCase() ?? '')
-      ? '/platform'
-      : '/dashboard';
-    return NextResponse.redirect(url);
+    const route = await getPostAuthRoute(supabase, user.id, user.email ?? '');
+    return NextResponse.redirect(new URL(route, request.url));
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
