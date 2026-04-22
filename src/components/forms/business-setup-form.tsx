@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { setupBusiness } from '@/app/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,45 +43,175 @@ const paymentMethodLabels: Record<BusinessDefaultPaymentMethod, string> = {
 
 type Step = 1 | 2 | 3 | 4;
 
+const ONBOARDING_DRAFT_KEY = 'mpg-ops:onboarding:business-setup-draft:v1';
+const SUPPORTED_COUNTRIES: BusinessCountry[] = ['PH', 'CM', 'US', 'FR'];
+const SUPPORTED_PAYMENT_METHODS: BusinessDefaultPaymentMethod[] = [
+  'gcash_manual',
+  'momo_manual',
+  'manual',
+];
+const SUPPORTED_DEPOSIT_TYPES: DepositType[] = ['fixed', 'full'];
+
+interface OnboardingDraft {
+  step: Step;
+  name: string;
+  slug: string;
+  businessType: string;
+  phone: string;
+  email: string;
+  address: string;
+  country: BusinessCountry;
+  currency: string;
+  defaultPaymentMethod: BusinessDefaultPaymentMethod;
+  hasEditedPaymentMethod: boolean;
+  gcashAccountName: string;
+  gcashNumber: string;
+  gcashQrImageUrl: string;
+  gcashInstructions: string;
+  depositRequired: boolean;
+  depositType: DepositType;
+  depositAmount: string;
+  momoAccountName: string;
+  momoNumber: string;
+  momoInstructions: string;
+  manualInstructions: string;
+  hasEditedSlug: boolean;
+}
+
+function loadOnboardingDraft(): Partial<OnboardingDraft> {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
+  try {
+    const rawDraft = window.sessionStorage.getItem(ONBOARDING_DRAFT_KEY);
+    if (!rawDraft) {
+      return {};
+    }
+
+    const draft = JSON.parse(rawDraft) as Partial<OnboardingDraft>;
+
+    return {
+      step:
+        draft.step === 1 || draft.step === 2 || draft.step === 3 || draft.step === 4
+          ? draft.step
+          : 1,
+      name: typeof draft.name === 'string' ? draft.name : '',
+      slug: typeof draft.slug === 'string' ? draft.slug : '',
+      businessType: typeof draft.businessType === 'string' ? draft.businessType : '',
+      phone: typeof draft.phone === 'string' ? draft.phone : '',
+      email: typeof draft.email === 'string' ? draft.email : '',
+      address: typeof draft.address === 'string' ? draft.address : '',
+      country:
+        draft.country && SUPPORTED_COUNTRIES.includes(draft.country)
+          ? draft.country
+          : 'PH',
+      currency: typeof draft.currency === 'string' ? draft.currency : 'PHP',
+      defaultPaymentMethod:
+        draft.defaultPaymentMethod &&
+        SUPPORTED_PAYMENT_METHODS.includes(draft.defaultPaymentMethod)
+          ? draft.defaultPaymentMethod
+          : 'gcash_manual',
+      hasEditedPaymentMethod:
+        typeof draft.hasEditedPaymentMethod === 'boolean'
+          ? draft.hasEditedPaymentMethod
+          : false,
+      gcashAccountName:
+        typeof draft.gcashAccountName === 'string' ? draft.gcashAccountName : '',
+      gcashNumber: typeof draft.gcashNumber === 'string' ? draft.gcashNumber : '',
+      gcashQrImageUrl:
+        typeof draft.gcashQrImageUrl === 'string' ? draft.gcashQrImageUrl : '',
+      gcashInstructions:
+        typeof draft.gcashInstructions === 'string' ? draft.gcashInstructions : '',
+      depositRequired:
+        typeof draft.depositRequired === 'boolean' ? draft.depositRequired : false,
+      depositType:
+        draft.depositType && SUPPORTED_DEPOSIT_TYPES.includes(draft.depositType)
+          ? draft.depositType
+          : 'full',
+      depositAmount:
+        typeof draft.depositAmount === 'string' ? draft.depositAmount : '',
+      momoAccountName:
+        typeof draft.momoAccountName === 'string' ? draft.momoAccountName : '',
+      momoNumber: typeof draft.momoNumber === 'string' ? draft.momoNumber : '',
+      momoInstructions:
+        typeof draft.momoInstructions === 'string' ? draft.momoInstructions : '',
+      manualInstructions:
+        typeof draft.manualInstructions === 'string' ? draft.manualInstructions : '',
+      hasEditedSlug:
+        typeof draft.hasEditedSlug === 'boolean' ? draft.hasEditedSlug : false,
+    };
+  } catch {
+    return {};
+  }
+}
+
 export function BusinessSetupForm() {
   const { t } = useI18n();
   const formRef = useRef<HTMLFormElement | null>(null);
+  const [initialDraft] = useState<Partial<OnboardingDraft>>(() =>
+    loadOnboardingDraft()
+  );
 
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<Step>(initialDraft.step ?? 1);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Business basics
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [businessType, setBusinessType] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
+  const [name, setName] = useState(initialDraft.name ?? '');
+  const [slug, setSlug] = useState(initialDraft.slug ?? '');
+  const [businessType, setBusinessType] = useState(initialDraft.businessType ?? '');
+  const [phone, setPhone] = useState(initialDraft.phone ?? '');
+  const [email, setEmail] = useState(initialDraft.email ?? '');
+  const [address, setAddress] = useState(initialDraft.address ?? '');
 
   // Region/payment setup
-  const [country, setCountry] = useState<BusinessCountry>('PH');
-  const [currency, setCurrency] = useState('PHP');
+  const [country, setCountry] = useState<BusinessCountry>(initialDraft.country ?? 'PH');
+  const [currency, setCurrency] = useState(initialDraft.currency ?? 'PHP');
   const [defaultPaymentMethod, setDefaultPaymentMethod] =
-    useState<BusinessDefaultPaymentMethod>('gcash_manual');
-  const [hasEditedPaymentMethod, setHasEditedPaymentMethod] = useState(false);
+    useState<BusinessDefaultPaymentMethod>(
+      initialDraft.defaultPaymentMethod ?? 'gcash_manual'
+    );
+  const [hasEditedPaymentMethod, setHasEditedPaymentMethod] = useState(
+    initialDraft.hasEditedPaymentMethod ?? false
+  );
 
-  const [gcashAccountName, setGcashAccountName] = useState('');
-  const [gcashNumber, setGcashNumber] = useState('');
-  const [gcashQrImageUrl, setGcashQrImageUrl] = useState('');
-  const [gcashInstructions, setGcashInstructions] = useState('');
+  const [gcashAccountName, setGcashAccountName] = useState(
+    initialDraft.gcashAccountName ?? ''
+  );
+  const [gcashNumber, setGcashNumber] = useState(initialDraft.gcashNumber ?? '');
+  const [gcashQrImageUrl, setGcashQrImageUrl] = useState(
+    initialDraft.gcashQrImageUrl ?? ''
+  );
+  const [gcashInstructions, setGcashInstructions] = useState(
+    initialDraft.gcashInstructions ?? ''
+  );
 
-  const [depositRequired, setDepositRequired] = useState(false);
-  const [depositType, setDepositType] = useState<DepositType>('full');
-  const [depositAmount, setDepositAmount] = useState('');
+  const [depositRequired, setDepositRequired] = useState(
+    initialDraft.depositRequired ?? false
+  );
+  const [depositType, setDepositType] = useState<DepositType>(
+    initialDraft.depositType ?? 'full'
+  );
+  const [depositAmount, setDepositAmount] = useState(
+    initialDraft.depositAmount ?? ''
+  );
 
-  const [momoAccountName, setMomoAccountName] = useState('');
-  const [momoNumber, setMomoNumber] = useState('');
-  const [momoInstructions, setMomoInstructions] = useState('');
-  const [manualInstructions, setManualInstructions] = useState('');
+  const [momoAccountName, setMomoAccountName] = useState(
+    initialDraft.momoAccountName ?? ''
+  );
+  const [momoNumber, setMomoNumber] = useState(initialDraft.momoNumber ?? '');
+  const [momoInstructions, setMomoInstructions] = useState(
+    initialDraft.momoInstructions ?? ''
+  );
+  const [manualInstructions, setManualInstructions] = useState(
+    initialDraft.manualInstructions ?? ''
+  );
 
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
-  const [hasEditedSlug, setHasEditedSlug] = useState(false);
+  const [hasEditedSlug, setHasEditedSlug] = useState(
+    initialDraft.hasEditedSlug ?? false
+  );
 
   const progressPercent = useMemo(() => {
     const pct: Record<Step, number> = { 1: 25, 2: 50, 3: 75, 4: 100 };
@@ -91,6 +221,64 @@ export function BusinessSetupForm() {
   const paymentRegion = getPaymentRegionForCountry(country);
   const suggestedPaymentMethod = getSuggestedPaymentMethodForCountry(country);
   const paymentMethodOptions = getPaymentMethodOptionsForCountry(country);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const draft: OnboardingDraft = {
+      step,
+      name,
+      slug,
+      businessType,
+      phone,
+      email,
+      address,
+      country,
+      currency,
+      defaultPaymentMethod,
+      hasEditedPaymentMethod,
+      gcashAccountName,
+      gcashNumber,
+      gcashQrImageUrl,
+      gcashInstructions,
+      depositRequired,
+      depositType,
+      depositAmount,
+      momoAccountName,
+      momoNumber,
+      momoInstructions,
+      manualInstructions,
+      hasEditedSlug,
+    };
+
+    window.sessionStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify(draft));
+  }, [
+    step,
+    name,
+    slug,
+    businessType,
+    phone,
+    email,
+    address,
+    country,
+    currency,
+    defaultPaymentMethod,
+    hasEditedPaymentMethod,
+    gcashAccountName,
+    gcashNumber,
+    gcashQrImageUrl,
+    gcashInstructions,
+    depositRequired,
+    depositType,
+    depositAmount,
+    momoAccountName,
+    momoNumber,
+    momoInstructions,
+    manualInstructions,
+    hasEditedSlug,
+  ]);
 
   function handleCountryChange(nextCountry: BusinessCountry) {
     setCountry(nextCountry);
@@ -173,11 +361,20 @@ export function BusinessSetupForm() {
     setIsLoading(true);
     setError(null);
 
-    const result = await setupBusiness(formData);
+    try {
+      const result = await setupBusiness(formData);
 
-    if (result?.error) {
-      setError(result.error);
-      setIsLoading(false);
+      if (result?.error) {
+        setError(result.error);
+        setIsLoading(false);
+      } else if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(ONBOARDING_DRAFT_KEY);
+      }
+    } catch {
+      // Redirect-driven success paths can short-circuit promise handling.
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(ONBOARDING_DRAFT_KEY);
+      }
     }
   }
 
@@ -311,7 +508,6 @@ export function BusinessSetupForm() {
                 value={name}
                 onChange={(event) => handleNameChange(event.target.value)}
                 className={`h-14 text-base ${stepErrors.name ? 'border-destructive' : ''}`}
-                autoFocus
               />
               {stepErrors.name && (
                 <p className="text-sm text-destructive">{stepErrors.name}</p>

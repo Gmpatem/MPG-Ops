@@ -21,26 +21,37 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  const business = await getCurrentBusiness();
-
-  // If the user has no business at all, send them to onboarding —
-  // but only when they're not already there (avoid redirect loop).
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') ?? '';
   const onOnboarding = pathname === '/onboarding' || pathname.startsWith('/onboarding?');
   const onboardingState = await getUserOnboardingState(supabase, user.id);
 
-  if (!onOnboarding) {
-    if (onboardingState === 'NEW') {
-      redirect('/onboarding');
+  if (onOnboarding) {
+    if (onboardingState === 'COMPLETE') {
+      redirect('/dashboard');
     }
 
-    if (onboardingState === 'PARTIAL') {
-      redirect('/onboarding?resume=1');
-    }
-  } else if (onboardingState === 'COMPLETE') {
-    redirect('/dashboard');
+    // Onboarding gets a simplified shell on mobile:
+    // avoid sticky/fixed dashboard chrome that can cause iOS Safari
+    // viewport repaint glitches when the keyboard opens.
+    return (
+      <div className="min-h-[100dvh] bg-background">
+        <main className="mx-auto w-full max-w-md px-4 py-6 sm:py-10 pb-[calc(1.5rem+var(--safe-bottom))]">
+          {children}
+        </main>
+      </div>
+    );
   }
+
+  if (onboardingState === 'NEW') {
+    redirect('/onboarding');
+  }
+
+  if (onboardingState === 'PARTIAL') {
+    redirect('/onboarding?resume=1');
+  }
+
+  const business = await getCurrentBusiness();
 
   return (
     <div className="min-h-svh flex flex-col pb-[calc(4rem+var(--safe-bottom))]">
